@@ -112,6 +112,22 @@ therapist, so it's ready when you need it.
 - **Less screen time:** the app should help you put the phone down, not keep you on it
 - **Privacy first:** your data belongs to you
 
+## Documentation
+
+The [documentation](documentation) folder collects the scientific evidence behind each idea:
+studies, meta-analyses and clinical guidelines, what they mean for the design, and where the
+evidence is still thin.
+
+| Topic                                 | File                                                                       |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| Foundation: behavioral activation     | [00-behavioral-activation.md](documentation/00-behavioral-activation.md)   |
+| 1. Structure your day, week and month | [01-daily-structure.md](documentation/01-daily-structure.md)               |
+| 2. Gentle gamification                | [02-gamification.md](documentation/02-gamification.md)                     |
+| 3. Media consumption                  | [03-media-consumption.md](documentation/03-media-consumption.md)           |
+| 4. Stay connected                     | [04-social-connection.md](documentation/04-social-connection.md)           |
+| 5. Therapist access                   | [05-therapist-access.md](documentation/05-therapist-access.md)             |
+| 6. Safety plan                        | [06-safety-plan.md](documentation/06-safety-plan.md)                       |
+
 ## Goal of this repo
 
 - Visualize the main screens and user flows
