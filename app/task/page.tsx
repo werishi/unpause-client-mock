@@ -24,12 +24,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFlow } from "@/lib/store/flow-store";
+import { useUserData } from "@/lib/store/user-store";
 import { getTaskById } from "@/lib/repo/activity-repo";
 import { TASK_SCREEN } from "@/lib/copy";
 
 export default function TaskPage() {
   const router = useRouter();
   const { state, setOutcome } = useFlow();
+  const store = useUserData();
 
   // Prerequisite guard: replace so the back button cannot return here out of order.
   useEffect(() => {
@@ -112,6 +114,18 @@ export default function TaskPage() {
           type="button"
           onClick={() => {
             setOutcome("skip");
+            store.recordActivity({
+              id: crypto.randomUUID(),
+              personaId: store.personaId,
+              date: new Date().toISOString().slice(0, 10),
+              dayOffset: 0,
+              activityId: state.taskId ?? "",
+              templateId: state.templateId ?? "",
+              outcome: "skip",
+              version: "full",
+              moodBefore: null,
+              moodAfter: null,
+            });
             router.push("/done");
           }}
           className="min-h-[44px] w-full rounded-md border border-gray-300 bg-white px-4

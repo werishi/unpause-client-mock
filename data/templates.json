@@ -1,0 +1,114 @@
+[
+  {
+    "id": "tpl-starter",
+    "title": "A gentle start",
+    "summary": "An easy first week for anyone coming in without a specific reason: short walks, a small tidy, morning light, and a song you enjoy.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-ba-ekers", "src-exercise-noetel"]
+  },
+  {
+    "id": "tpl-small-steps",
+    "title": "Small steps back",
+    "summary": "Rebuilds a basic weekly rhythm when everything feels heavy: a steady wake time, morning light, short walks, dishes, music, and one message to someone.",
+    "level": 2,
+    "nextTemplateId": "tpl-a-bit-more",
+    "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel"]
+  },
+  {
+    "id": "tpl-a-bit-more",
+    "title": "A bit more each week",
+    "summary": "A busier week to step into once the basics feel steady: consistent wake time, longer walks, cooking, errands, something for a personal value, and calls with people.",
+    "level": 2,
+    "nextTemplateId": null,
+    "sourceIds": ["src-ba-lejuez", "src-exercise-noetel"]
+  },
+  {
+    "id": "tpl-reconnect",
+    "title": "Back in touch",
+    "summary": "Reintroduces contact with people in gradual steps: a coffee or visit, phone calls, a walk with someone, a group outing, cooking, and messages.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu"]
+  },
+  {
+    "id": "tpl-steady-rhythm",
+    "title": "A steady rhythm",
+    "summary": "Anchors the day around sleep timing: rising at the same hour every morning, morning light, a wind-down routine each evening, and afternoon walks.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-rhythm-fang", "src-ipsrt-frank", "src-daylight-burns"]
+  },
+  {
+    "id": "tpl-shape-the-day",
+    "title": "Shape for your days",
+    "summary": "Gives structure to days that have lost their shape: a consistent wake time, regular meals, a focused morning block, walks, a community spot, and time for something meaningful.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-latent-paul", "src-ipsrt-frank"]
+  },
+  {
+    "id": "tpl-life-beyond-work",
+    "title": "Life beyond work",
+    "summary": "Protects time outside work with a clear workday end, outdoor walks, reaching out to someone, shared time with people, a new skill, and a personal value activity.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+  },
+  {
+    "id": "tpl-games-in-balance",
+    "title": "Games, in balance",
+    "summary": "Keeps gaming as a planned, enjoyable part of the week while making room for movement, offline creativity, and time with others.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+  },
+  {
+    "id": "tpl-scroll-less-live-more",
+    "title": "Scroll less, live more",
+    "summary": "Replaces unplanned screen time with structure: phone away at bedtime, walks with a podcast, intentional viewing, screen-free evenings, and one in-person meet.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  },
+  {
+    "id": "tpl-start-tiny",
+    "title": "Start tiny",
+    "summary": "For when starting is the hardest part: two-minute openers for anything daunting, breaking tasks into steps, dishes, short walks, and music.",
+    "level": 1,
+    "nextTemplateId": "tpl-small-steps",
+    "sourceIds": ["src-ifthen-gollwitzer", "src-effort-horne"]
+  },
+  {
+    "id": "tpl-small-approach",
+    "title": "One small step closer",
+    "summary": "Builds gentle momentum toward avoided things: one small step toward what you've been putting off, walks, music, a call, and a warm drink at the window.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-ba-anxiety-stein"]
+  },
+  {
+    "id": "tpl-gentle-days",
+    "title": "Gentle days",
+    "summary": "A soft week for going through loss or a big change: short walks, making the bed, one message, time to honour what matters, and a warm drink.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-grief-eisma"]
+  },
+  {
+    "id": "tpl-keep-it-going",
+    "title": "Keep it going",
+    "summary": "Maintains progress when things are going well: regular walks, time for a personal value, one social meet, a weekly look back, and stretching.",
+    "level": 1,
+    "nextTemplateId": null,
+    "sourceIds": ["src-relapse-dobson"]
+  },
+  {
+    "id": "tpl-strong-and-steady",
+    "title": "Strong and steady",
+    "summary": "A movement-forward week available through the Plan library: strength exercises, outdoor walks, stretching, and time for a personal value.",
+    "level": 2,
+    "nextTemplateId": null,
+    "sourceIds": ["src-exercise-noetel", "src-strength-acsm"]
+  }
+]

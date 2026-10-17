@@ -1,0 +1,207 @@
+[
+  {
+    "id": "act-wake-steady", "title": "Get up at your set time, give or take an hour", "cue": "After my alarm goes off, I …", "twoMinuteVersion": "Sit up and put your feet on the floor",
+    "minutes": 5, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-rhythm-fang", "src-ipsrt-frank", "src-daylight-burns", "src-latent-paul"]
+  },
+  {
+    "id": "act-morning-light", "title": "Spend 15 minutes outside or by an open window in the morning", "cue": "After getting dressed, I …", "twoMinuteVersion": "Open the curtains and stand at the window",
+    "minutes": 15, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health", "val-nature"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-rhythm-fang", "src-ipsrt-frank", "src-daylight-burns"]
+  },
+  {
+    "id": "act-wind-down", "title": "Start winding down at your set time, screens away", "cue": "After dinner, I …", "twoMinuteVersion": "Dim the lights",
+    "minutes": 20, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-rhythm-fang", "src-ipsrt-frank", "src-daylight-burns"]
+  },
+  {
+    "id": "act-workday-end", "title": "End the workday: write down what's open and when you'll do it, then close the laptop", "cue": "After my last work task, I …", "twoMinuteVersion": "Write one line \"tomorrow first: …\" and close the laptop",
+    "minutes": 10, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+  },
+  {
+    "id": "act-phone-out-of-bedroom", "title": "Let your phone sleep outside the bedroom", "cue": "After brushing my teeth, I …", "twoMinuteVersion": "Plug the charger in somewhere else",
+    "minutes": 2, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre", "src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  },
+  {
+    "id": "act-regular-meal", "title": "Eat dinner around the same time", "cue": "When the evening comes, I …", "twoMinuteVersion": "Eat something at your set time",
+    "minutes": 30, "energyRequired": "low", "category": "anchor",
+    "strenuous": false, "valueIds": ["val-health", "val-home"], "sourceIds": ["src-latent-paul", "src-ipsrt-frank"]
+  },
+  {
+    "id": "act-walk-short", "title": "A 10–20 minute walk", "cue": "After putting on my shoes, I …", "twoMinuteVersion": "Walk to the front door and back",
+    "minutes": 15, "energyRequired": "low", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-rhythm-fang", "src-ipsrt-frank", "src-daylight-burns", "src-ifthen-gollwitzer", "src-effort-horne", "src-ba-anxiety-stein", "src-grief-eisma"]
+  },
+  {
+    "id": "act-walk-outside", "title": "A 30-minute walk outside", "cue": "After breakfast, I …", "twoMinuteVersion": "Step outside and walk to the corner",
+    "minutes": 30, "energyRequired": "medium", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health", "val-nature"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-latent-paul", "src-ipsrt-frank", "src-values-napier", "src-detach-smit", "src-workaholism-clark", "src-gaming-stevens", "src-gaming-king", "src-play-vuorre", "src-relapse-dobson", "src-strength-acsm"]
+  },
+  {
+    "id": "act-walk-with-someone", "title": "A walk with someone, or somewhere with people", "cue": "After reaching out to a friend, I …", "twoMinuteVersion": "Two minutes outside",
+    "minutes": 30, "energyRequired": "medium", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health", "val-friends"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu"]
+  },
+  {
+    "id": "act-stretch", "title": "Gentle stretching or yoga", "cue": "After waking up, I …", "twoMinuteVersion": "Two minutes of stretching",
+    "minutes": 15, "energyRequired": "low", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-relapse-dobson", "src-exercise-noetel", "src-strength-acsm"]
+  },
+  {
+    "id": "act-strength-simple", "title": "Simple strength exercises at home", "cue": "After breakfast, I …", "twoMinuteVersion": "Five slow squats",
+    "minutes": 20, "energyRequired": "medium", "category": "movement",
+    "strenuous": true, "valueIds": ["val-health"], "sourceIds": ["src-exercise-noetel", "src-strength-acsm"]
+  },
+  {
+    "id": "act-bundled-walk", "title": "A walk with your favourite podcast — only while walking", "cue": "After putting on headphones, I …", "twoMinuteVersion": "Put on headphones and step outside",
+    "minutes": 30, "energyRequired": "medium", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health", "val-play"], "sourceIds": ["src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  },
+  {
+    "id": "act-dishes", "title": "Wash the dishes", "cue": "After dinner, I …", "twoMinuteVersion": "Wash one plate",
+    "minutes": 15, "energyRequired": "low", "category": "routine",
+    "strenuous": false, "valueIds": ["val-home"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-ifthen-gollwitzer", "src-effort-horne"]
+  },
+  {
+    "id": "act-make-bed", "title": "Make the bed", "cue": "After getting up, I …", "twoMinuteVersion": "Straighten the pillow",
+    "minutes": 3, "energyRequired": "low", "category": "routine",
+    "strenuous": false, "valueIds": ["val-home"], "sourceIds": ["src-grief-eisma"]
+  },
+  {
+    "id": "act-shower", "title": "Take a shower", "cue": "After getting out of bed, I …", "twoMinuteVersion": "Turn on the water",
+    "minutes": 10, "energyRequired": "low", "category": "routine",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": ["src-ba-ekers", "src-cobra"]
+  },
+  {
+    "id": "act-one-letter", "title": "Deal with one letter or bill", "cue": "After my morning coffee, I …", "twoMinuteVersion": "Open one letter",
+    "minutes": 15, "energyRequired": "low", "category": "routine",
+    "strenuous": false, "valueIds": ["val-home"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel"]
+  },
+  {
+    "id": "act-tidy-corner", "title": "Tidy one corner", "cue": "After finishing a meal, I …", "twoMinuteVersion": "Put three things back",
+    "minutes": 15, "energyRequired": "low", "category": "routine",
+    "strenuous": false, "valueIds": ["val-home"], "sourceIds": ["src-ba-ekers", "src-exercise-noetel"]
+  },
+  {
+    "id": "act-cook-meal", "title": "Cook a real meal", "cue": "After getting home, I …", "twoMinuteVersion": "Put one ingredient on the counter",
+    "minutes": 45, "energyRequired": "medium", "category": "routine",
+    "strenuous": false, "valueIds": ["val-home", "val-health"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu"]
+  },
+  {
+    "id": "act-day-block", "title": "Do a two-hour \"day block\" — a set time for one useful thing", "cue": "After lunch, I …", "twoMinuteVersion": "Write down what the block is for",
+    "minutes": 120, "energyRequired": "medium", "category": "routine",
+    "strenuous": false, "valueIds": ["val-learning"], "sourceIds": ["src-latent-paul", "src-ipsrt-frank"]
+  },
+  {
+    "id": "act-beginner-thing", "title": "Try something you're a beginner at — a chord, a word, a recipe", "cue": "After clearing an hour, I …", "twoMinuteVersion": "Learn one chord or word",
+    "minutes": 45, "energyRequired": "medium", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-learning", "val-creativity"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+  },
+  {
+    "id": "act-new-offscreen", "title": "Make something with your hands — draw, build, cook something new", "cue": "After dinner, I …", "twoMinuteVersion": "Get the things out",
+    "minutes": 40, "energyRequired": "medium", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-creativity"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+  },
+  {
+    "id": "act-avoided-step", "title": "Take one small step toward something you've been avoiding", "cue": "After sitting quietly for a moment, I …", "twoMinuteVersion": "Write down what the step would be",
+    "minutes": 15, "energyRequired": "medium", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-learning"], "sourceIds": ["src-ba-anxiety-stein"]
+  },
+  {
+    "id": "act-starter-two-min", "title": "Pick one thing and do only its first two minutes", "cue": "After noticing something I've put off, I …", "twoMinuteVersion": "Choose the thing",
+    "minutes": 2, "energyRequired": "low", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-learning"], "sourceIds": ["src-ifthen-gollwitzer", "src-effort-horne"]
+  },
+  {
+    "id": "act-break-down-task", "title": "Break one big task into three small steps", "cue": "After making a cup of tea, I …", "twoMinuteVersion": "Write the first step",
+    "minutes": 10, "energyRequired": "low", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-learning"], "sourceIds": ["src-ifthen-gollwitzer", "src-effort-horne"]
+  },
+  {
+    "id": "act-week-look-back", "title": "Look back: what did I do this week that wasn't work?", "cue": "After Sunday dinner, I …", "twoMinuteVersion": "Tick one thing",
+    "minutes": 10, "energyRequired": "low", "category": "mastery",
+    "strenuous": false, "valueIds": ["val-learning"], "sourceIds": ["src-relapse-dobson"]
+  },
+  {
+    "id": "act-favourite-song", "title": "Listen to music you love, sitting up", "cue": "After a hard moment, I …", "twoMinuteVersion": "Play one song",
+    "minutes": 20, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-play"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-ifthen-gollwitzer", "src-effort-horne", "src-ba-anxiety-stein"]
+  },
+  {
+    "id": "act-tea-window", "title": "Make a warm drink and drink it by the window", "cue": "After a low moment, I …", "twoMinuteVersion": "Put the kettle on",
+    "minutes": 10, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-play"], "sourceIds": ["src-ba-anxiety-stein", "src-grief-eisma"]
+  },
+  {
+    "id": "act-value-thing", "title": "Do one thing for a value you picked", "cue": "After thinking about what matters, I …", "twoMinuteVersion": "Name the value and do one tiny thing for it",
+    "minutes": 60, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-care", "val-play"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-latent-paul", "src-ipsrt-frank", "src-values-napier", "src-detach-smit", "src-workaholism-clark", "src-relapse-dobson", "src-strength-acsm"]
+  },
+  {
+    "id": "act-half-day-off", "title": "A half-day with no work and no plan", "cue": "After waking up on a slow day, I …", "twoMinuteVersion": "Take a new route home and stop for two minutes",
+    "minutes": 210, "energyRequired": "high", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-play"], "sourceIds": ["src-ba-lejuez", "src-values-napier"]
+  },
+  {
+    "id": "act-honour-memory", "title": "Do something that honours what matters to you", "cue": "After something reminds me of who I love, I …", "twoMinuteVersion": "Look at one photo or write one line",
+    "minutes": 20, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-care"], "sourceIds": ["src-grief-eisma"]
+  },
+  {
+    "id": "act-message-one", "title": "Message one person", "cue": "After thinking of someone I miss, I …", "twoMinuteVersion": "Open the chat with one person",
+    "minutes": 5, "energyRequired": "low", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-grief-eisma"]
+  },
+  {
+    "id": "act-call-one", "title": "Call someone or send a voice message", "cue": "After a quiet evening, I …", "twoMinuteVersion": "Send one voice message",
+    "minutes": 15, "energyRequired": "low", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-ba-anxiety-stein"]
+  },
+  {
+    "id": "act-meet-in-person", "title": "Meet someone for coffee or a visit", "cue": "After reaching out, I …", "twoMinuteVersion": "Say hello to a neighbour",
+    "minutes": 60, "energyRequired": "medium", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-social-hunt", "src-social-may", "src-bundling-milkman", "src-relapse-dobson"]
+  },
+  {
+    "id": "act-group-place", "title": "Go to a group or shared place — a class, club, library or volunteering", "cue": "After checking the schedule, I …", "twoMinuteVersion": "Look up one group's time and place",
+    "minutes": 75, "energyRequired": "high", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-latent-paul", "src-ipsrt-frank"]
+  },
+  {
+    "id": "act-shared-time", "title": "Shared time with someone, phones and work talk away", "cue": "After putting my phone away, I …", "twoMinuteVersion": "Two minutes of full attention",
+    "minutes": 60, "energyRequired": "medium", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+  },
+  {
+    "id": "act-neglected-contact", "title": "Reach out to someone you've been meaning to", "cue": "After a long day, I …", "twoMinuteVersion": "Send \"thinking of you\"",
+    "minutes": 30, "energyRequired": "low", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+  },
+  {
+    "id": "act-play-together", "title": "Play or watch together with friends — online counts", "cue": "After messaging a friend, I …", "twoMinuteVersion": "Send one message suggesting a time",
+    "minutes": 60, "energyRequired": "low", "category": "social",
+    "strenuous": false, "valueIds": ["val-friends", "val-play"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+  },
+  {
+    "id": "act-planned-game", "title": "A planned game session, with a start and an end", "cue": "After dinner, I …", "twoMinuteVersion": "Write down when and how long you'll play",
+    "minutes": 90, "energyRequired": "low", "category": "media",
+    "strenuous": false, "valueIds": ["val-play"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+  },
+  {
+    "id": "act-game-free-evening", "title": "A game-free evening with something else planned", "cue": "After finishing dinner, I …", "twoMinuteVersion": "Decide what you'll do instead tonight",
+    "minutes": 180, "energyRequired": "medium", "category": "media",
+    "strenuous": false, "valueIds": ["val-play", "val-learning"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+  },
+  {
+    "id": "act-watch-on-purpose", "title": "Watch one episode or film you picked in advance, then stop", "cue": "After choosing what to watch, I …", "twoMinuteVersion": "Name the episode before pressing play",
+    "minutes": 60, "energyRequired": "low", "category": "media",
+    "strenuous": false, "valueIds": ["val-play"], "sourceIds": ["src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  },
+  {
+    "id": "act-screen-free-evening", "title": "A screen-free evening", "cue": "After putting my phone in a drawer, I …", "twoMinuteVersion": "Phone in a drawer for the first 15 minutes",
+    "minutes": 180, "energyRequired": "medium", "category": "media",
+    "strenuous": false, "valueIds": ["val-play", "val-friends"], "sourceIds": ["src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  }
+]

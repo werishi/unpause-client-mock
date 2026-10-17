@@ -1,41 +1,61 @@
 /**
- * Data-access layer for activity tasks.
+ * Data-access layer for activities.
  *
- * This is the only permitted importer of `@/data/tasks.json`. Pages and
+ * This is the only permitted importer of `@/data/activities.json`. Pages and
  * feature modules must use this module as their single import path for both
- * task data and the `Task` type; importing from `@/data` or relative `data/`
- * paths is banned by the project ESLint rule (see part 1.2).
+ * activity data and the `Task` / `Activity` types; importing from `@/data` or
+ * relative `data/` paths is banned by the project ESLint rule.
  *
  * Contains no business logic — it is a thin getter over the JSON file. The
  * domain function `suggestTaskForEnergy` in `lib/domain/energy.ts` owns all
  * matching and selection logic; pass `getTasks()` to it rather than calling
  * it here.
+ *
+ * `Activity extends Task` (see `lib/domain/types.ts`), so casting an
+ * `Activity[]` as `Task[]` is structurally sound. `getTasks()` and
+ * `getTaskById()` signatures are unchanged so existing callers
+ * (`suggestTaskForEnergy`, `tests/energy.test.ts`, check-in page) continue
+ * to compile without any modification.
  */
 
-import tasksJson from "@/data/tasks.json";
+import activitiesJson from "@/data/activities.json";
 import type { Task } from "@/lib/domain/energy";
+import type { Activity } from "@/lib/domain/types";
 
 export type { Task } from "@/lib/domain/energy";
+export type { Activity } from "@/lib/domain/types";
 
 /**
- * Returns the full task list as typed `Task[]`.
+ * Returns the full activity catalogue cast as `Task[]`.
  *
- * The JSON is imported at module load time via `resolveJsonModule` (tsconfig
- * strict preset). The cast is safe as long as `data/tasks.json` is kept in
- * sync with the `Task` interface in `lib/domain/energy.ts`.
+ * The cast is structurally sound because `Activity extends Task`; every
+ * activity row carries all `Task` fields. Callers that only need `Task`
+ * fields continue to work without change.
  */
 export function getTasks(): Task[] {
-  return tasksJson as Task[];
+  return activitiesJson as unknown as Task[];
 }
 
 /**
- * Finds a single task by its `id` field.
+ * Finds a single task by its `id` field, returning it as `Task`.
  *
- * Returns `undefined` when no task with that id exists — callers must guard
- * against that case, for example when resolving a URL param to a task.
+ * Returns `undefined` when no activity with that id exists — callers must
+ * guard against that case, for example when resolving a URL param.
  *
- * @param id - The task's `id` string as stored in `data/tasks.json`.
+ * @param id - The activity's `id` string as stored in `data/activities.json`.
  */
 export function getTaskById(id: string): Task | undefined {
-  return (tasksJson as Task[]).find((t) => t.id === id);
+  return (activitiesJson as unknown as Task[]).find((t) => t.id === id);
+}
+
+/**
+ * Returns the full activity catalogue as `Activity[]`.
+ *
+ * Prefer this getter over `getTasks()` in slices that need Activity-specific
+ * fields (`category`, `valueIds`, `strenuous`, `sourceIds`). The repo layer
+ * owns the cast; callers receive a typed `Activity[]` and must not re-import
+ * `@/data/activities.json` directly.
+ */
+export function getActivities(): Activity[] {
+  return activitiesJson as unknown as Activity[];
 }

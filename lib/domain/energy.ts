@@ -66,3 +66,5 @@ export function suggestTaskForEnergy(energy: EnergyLevel, tasks: Task[]): Task {
     energyRank[task.energyRequired] < energyRank[best.energyRequired] ? task : best
   );
 }
+
+export type { Activity } from './types';

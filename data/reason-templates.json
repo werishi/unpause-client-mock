@@ -1,0 +1,30 @@
+[
+  { "reasonId": "rsn-cant-get-going", "templateId": "tpl-small-steps", "rank": 1 },
+  { "reasonId": "rsn-cant-get-going", "templateId": "tpl-reconnect", "rank": 2 },
+
+  { "reasonId": "rsn-no-shape", "templateId": "tpl-shape-the-day", "rank": 1 },
+  { "reasonId": "rsn-no-shape", "templateId": "tpl-small-steps", "rank": 2 },
+
+  { "reasonId": "rsn-pulled-away", "templateId": "tpl-reconnect", "rank": 1 },
+
+  { "reasonId": "rsn-sleep-rhythm", "templateId": "tpl-steady-rhythm", "rank": 1 },
+
+  { "reasonId": "rsn-only-work", "templateId": "tpl-life-beyond-work", "rank": 1 },
+  { "reasonId": "rsn-only-work", "templateId": "tpl-reconnect", "rank": 2 },
+
+  { "reasonId": "rsn-running-on-empty", "templateId": "tpl-small-steps", "rank": 1 },
+  { "reasonId": "rsn-running-on-empty", "templateId": "tpl-life-beyond-work", "rank": 2 },
+
+  { "reasonId": "rsn-games", "templateId": "tpl-games-in-balance", "rank": 1 },
+
+  { "reasonId": "rsn-scrolling", "templateId": "tpl-scroll-less-live-more", "rank": 1 },
+
+  { "reasonId": "rsn-hard-to-start", "templateId": "tpl-start-tiny", "rank": 1 },
+
+  { "reasonId": "rsn-worry-avoid", "templateId": "tpl-small-approach", "rank": 1 },
+  { "reasonId": "rsn-worry-avoid", "templateId": "tpl-small-steps", "rank": 2 },
+
+  { "reasonId": "rsn-loss-change", "templateId": "tpl-gentle-days", "rank": 1 },
+
+  { "reasonId": "rsn-keep-it-going", "templateId": "tpl-keep-it-going", "rank": 1 }
+]

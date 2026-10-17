@@ -1,0 +1,10 @@
+[
+  { "id": "val-friends",    "label": "Friends & family",        "emoji": "👨‍👩‍👧" },
+  { "id": "val-health",     "label": "Health",                  "emoji": "❤️" },
+  { "id": "val-creativity", "label": "Creativity",              "emoji": "🎨" },
+  { "id": "val-learning",   "label": "Learning",                "emoji": "📚" },
+  { "id": "val-home",       "label": "A home that feels good",  "emoji": "🏠" },
+  { "id": "val-nature",     "label": "Nature",                  "emoji": "🌿" },
+  { "id": "val-play",       "label": "Play & fun",              "emoji": "🎮" },
+  { "id": "val-care",       "label": "Caring for others",       "emoji": "🤲" }
+]

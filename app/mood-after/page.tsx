@@ -19,12 +19,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFlow } from "@/lib/store/flow-store";
+import { useUserData } from "@/lib/store/user-store";
 import MoodRating from "@/components/MoodRating";
 import { MOOD_AFTER_PAGE } from "@/lib/copy";
 
 export default function MoodAfterPage() {
   const router = useRouter();
   const { state, setMoodAfter, setOutcome } = useFlow();
+  const store = useUserData();
 
   // Prerequisite guard: moodBefore must be set before rating after.
   // Replace so the back button cannot return the user here out of order.
@@ -50,6 +52,18 @@ export default function MoodAfterPage() {
         onSelect={(value) => {
           setMoodAfter(value);
           setOutcome("done");
+          store.recordActivity({
+            id: crypto.randomUUID(),
+            personaId: store.personaId,
+            date: new Date().toISOString().slice(0, 10),
+            dayOffset: 0,
+            activityId: state.taskId ?? "",
+            templateId: state.templateId ?? "",
+            outcome: "done",
+            version: "full",
+            moodBefore: state.moodBefore ?? null,
+            moodAfter: value,
+          });
           router.push("/done");
         }}
       />

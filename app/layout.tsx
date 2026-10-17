@@ -13,6 +13,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { FlowProvider } from "@/lib/store/flow-store";
+import { UserDataProvider } from "@/lib/store/user-store";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
@@ -29,9 +30,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <FlowProvider>
-          <AppShell>{children}</AppShell>
-        </FlowProvider>
+        <UserDataProvider>
+          <FlowProvider>
+            <AppShell>{children}</AppShell>
+          </FlowProvider>
+        </UserDataProvider>
       </body>
     </html>
   );

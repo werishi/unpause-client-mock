@@ -22,6 +22,8 @@ import type { EnergyLevel } from "@/lib/domain/energy";
 export interface FlowState {
   energy: EnergyLevel | null;
   taskId: string | null;
+  /** templateId from the planner result; null when no plan was produced. */
+  templateId: string | null;
   moodBefore: 1 | 2 | 3 | 4 | 5 | null;
   moodAfter: 1 | 2 | 3 | 4 | 5 | null;
   /** "skip" is exact — downstream route pages depend on this literal. */
@@ -33,6 +35,7 @@ export interface FlowContextValue {
   state: FlowState;
   setEnergy: (energy: EnergyLevel) => void;
   setTaskId: (taskId: string) => void;
+  setTemplateId: (templateId: string | null) => void;
   setMoodBefore: (mood: 1 | 2 | 3 | 4 | 5) => void;
   setMoodAfter: (mood: 1 | 2 | 3 | 4 | 5) => void;
   setOutcome: (outcome: "done" | "skip") => void;
@@ -43,6 +46,7 @@ export interface FlowContextValue {
 const INITIAL_STATE: FlowState = {
   energy: null,
   taskId: null,
+  templateId: null,
   moodBefore: null,
   moodAfter: null,
   outcome: null,
@@ -62,6 +66,8 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, energy }));
   const setTaskId = (taskId: string) =>
     setState((prev) => ({ ...prev, taskId }));
+  const setTemplateId = (templateId: string | null) =>
+    setState((prev) => ({ ...prev, templateId }));
   const setMoodBefore = (moodBefore: 1 | 2 | 3 | 4 | 5) =>
     setState((prev) => ({ ...prev, moodBefore }));
   const setMoodAfter = (moodAfter: 1 | 2 | 3 | 4 | 5) =>
@@ -72,7 +78,7 @@ export function FlowProvider({ children }: { children: ReactNode }) {
 
   return (
     <FlowContext.Provider
-      value={{ state, setEnergy, setTaskId, setMoodBefore, setMoodAfter, setOutcome, reset }}
+      value={{ state, setEnergy, setTaskId, setTemplateId, setMoodBefore, setMoodAfter, setOutcome, reset }}
     >
       {children}
     </FlowContext.Provider>

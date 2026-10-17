@@ -1,0 +1,88 @@
+[
+  { "id": "ti-tpl-starter-act-walk-short", "templateId": "tpl-starter", "activityId": "act-walk-short", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-starter-act-tidy-corner", "templateId": "tpl-starter", "activityId": "act-tidy-corner", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-starter-act-morning-light", "templateId": "tpl-starter", "activityId": "act-morning-light", "timesPerWeek": 2, "partOfDay": "morning" },
+  { "id": "ti-tpl-starter-act-favourite-song", "templateId": "tpl-starter", "activityId": "act-favourite-song", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-small-steps-act-wake-steady", "templateId": "tpl-small-steps", "activityId": "act-wake-steady", "timesPerWeek": 5, "partOfDay": "morning" },
+  { "id": "ti-tpl-small-steps-act-morning-light", "templateId": "tpl-small-steps", "activityId": "act-morning-light", "timesPerWeek": 5, "partOfDay": "morning" },
+  { "id": "ti-tpl-small-steps-act-walk-short", "templateId": "tpl-small-steps", "activityId": "act-walk-short", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-small-steps-act-dishes", "templateId": "tpl-small-steps", "activityId": "act-dishes", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-small-steps-act-favourite-song", "templateId": "tpl-small-steps", "activityId": "act-favourite-song", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-small-steps-act-message-one", "templateId": "tpl-small-steps", "activityId": "act-message-one", "timesPerWeek": 1, "partOfDay": "any" },
+
+  { "id": "ti-tpl-a-bit-more-act-wake-steady", "templateId": "tpl-a-bit-more", "activityId": "act-wake-steady", "timesPerWeek": 5, "partOfDay": "any" },
+  { "id": "ti-tpl-a-bit-more-act-walk-outside", "templateId": "tpl-a-bit-more", "activityId": "act-walk-outside", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-a-bit-more-act-cook-meal", "templateId": "tpl-a-bit-more", "activityId": "act-cook-meal", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-a-bit-more-act-one-letter", "templateId": "tpl-a-bit-more", "activityId": "act-one-letter", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-a-bit-more-act-value-thing", "templateId": "tpl-a-bit-more", "activityId": "act-value-thing", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-a-bit-more-act-call-one", "templateId": "tpl-a-bit-more", "activityId": "act-call-one", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-reconnect-act-meet-in-person", "templateId": "tpl-reconnect", "activityId": "act-meet-in-person", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-reconnect-act-call-one", "templateId": "tpl-reconnect", "activityId": "act-call-one", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-reconnect-act-walk-with-someone", "templateId": "tpl-reconnect", "activityId": "act-walk-with-someone", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-reconnect-act-group-place", "templateId": "tpl-reconnect", "activityId": "act-group-place", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-reconnect-act-cook-meal", "templateId": "tpl-reconnect", "activityId": "act-cook-meal", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-reconnect-act-message-one", "templateId": "tpl-reconnect", "activityId": "act-message-one", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-steady-rhythm-act-wake-steady", "templateId": "tpl-steady-rhythm", "activityId": "act-wake-steady", "timesPerWeek": 7, "partOfDay": "morning" },
+  { "id": "ti-tpl-steady-rhythm-act-morning-light", "templateId": "tpl-steady-rhythm", "activityId": "act-morning-light", "timesPerWeek": 5, "partOfDay": "morning" },
+  { "id": "ti-tpl-steady-rhythm-act-wind-down", "templateId": "tpl-steady-rhythm", "activityId": "act-wind-down", "timesPerWeek": 5, "partOfDay": "evening" },
+  { "id": "ti-tpl-steady-rhythm-act-walk-short", "templateId": "tpl-steady-rhythm", "activityId": "act-walk-short", "timesPerWeek": 3, "partOfDay": "afternoon" },
+
+  { "id": "ti-tpl-shape-the-day-act-wake-steady", "templateId": "tpl-shape-the-day", "activityId": "act-wake-steady", "timesPerWeek": 5, "partOfDay": "any" },
+  { "id": "ti-tpl-shape-the-day-act-regular-meal", "templateId": "tpl-shape-the-day", "activityId": "act-regular-meal", "timesPerWeek": 5, "partOfDay": "evening" },
+  { "id": "ti-tpl-shape-the-day-act-day-block", "templateId": "tpl-shape-the-day", "activityId": "act-day-block", "timesPerWeek": 3, "partOfDay": "morning" },
+  { "id": "ti-tpl-shape-the-day-act-walk-outside", "templateId": "tpl-shape-the-day", "activityId": "act-walk-outside", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-shape-the-day-act-group-place", "templateId": "tpl-shape-the-day", "activityId": "act-group-place", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-shape-the-day-act-value-thing", "templateId": "tpl-shape-the-day", "activityId": "act-value-thing", "timesPerWeek": 1, "partOfDay": "any" },
+
+  { "id": "ti-tpl-life-beyond-work-act-workday-end", "templateId": "tpl-life-beyond-work", "activityId": "act-workday-end", "timesPerWeek": 5, "partOfDay": "evening" },
+  { "id": "ti-tpl-life-beyond-work-act-walk-outside", "templateId": "tpl-life-beyond-work", "activityId": "act-walk-outside", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-life-beyond-work-act-neglected-contact", "templateId": "tpl-life-beyond-work", "activityId": "act-neglected-contact", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-life-beyond-work-act-shared-time", "templateId": "tpl-life-beyond-work", "activityId": "act-shared-time", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-life-beyond-work-act-beginner-thing", "templateId": "tpl-life-beyond-work", "activityId": "act-beginner-thing", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-life-beyond-work-act-value-thing", "templateId": "tpl-life-beyond-work", "activityId": "act-value-thing", "timesPerWeek": 1, "partOfDay": "any" },
+
+  { "id": "ti-tpl-games-in-balance-act-planned-game", "templateId": "tpl-games-in-balance", "activityId": "act-planned-game", "timesPerWeek": 4, "partOfDay": "evening" },
+  { "id": "ti-tpl-games-in-balance-act-game-free-evening", "templateId": "tpl-games-in-balance", "activityId": "act-game-free-evening", "timesPerWeek": 2, "partOfDay": "evening" },
+  { "id": "ti-tpl-games-in-balance-act-walk-outside", "templateId": "tpl-games-in-balance", "activityId": "act-walk-outside", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-games-in-balance-act-new-offscreen", "templateId": "tpl-games-in-balance", "activityId": "act-new-offscreen", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-games-in-balance-act-play-together", "templateId": "tpl-games-in-balance", "activityId": "act-play-together", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-games-in-balance-act-phone-out-of-bedroom", "templateId": "tpl-games-in-balance", "activityId": "act-phone-out-of-bedroom", "timesPerWeek": 3, "partOfDay": "evening" },
+
+  { "id": "ti-tpl-scroll-less-live-more-act-phone-out-of-bedroom", "templateId": "tpl-scroll-less-live-more", "activityId": "act-phone-out-of-bedroom", "timesPerWeek": 4, "partOfDay": "evening" },
+  { "id": "ti-tpl-scroll-less-live-more-act-bundled-walk", "templateId": "tpl-scroll-less-live-more", "activityId": "act-bundled-walk", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-scroll-less-live-more-act-watch-on-purpose", "templateId": "tpl-scroll-less-live-more", "activityId": "act-watch-on-purpose", "timesPerWeek": 2, "partOfDay": "evening" },
+  { "id": "ti-tpl-scroll-less-live-more-act-screen-free-evening", "templateId": "tpl-scroll-less-live-more", "activityId": "act-screen-free-evening", "timesPerWeek": 2, "partOfDay": "evening" },
+  { "id": "ti-tpl-scroll-less-live-more-act-meet-in-person", "templateId": "tpl-scroll-less-live-more", "activityId": "act-meet-in-person", "timesPerWeek": 1, "partOfDay": "any" },
+
+  { "id": "ti-tpl-start-tiny-act-starter-two-min", "templateId": "tpl-start-tiny", "activityId": "act-starter-two-min", "timesPerWeek": 5, "partOfDay": "any" },
+  { "id": "ti-tpl-start-tiny-act-break-down-task", "templateId": "tpl-start-tiny", "activityId": "act-break-down-task", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-start-tiny-act-dishes", "templateId": "tpl-start-tiny", "activityId": "act-dishes", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-start-tiny-act-walk-short", "templateId": "tpl-start-tiny", "activityId": "act-walk-short", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-start-tiny-act-favourite-song", "templateId": "tpl-start-tiny", "activityId": "act-favourite-song", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-small-approach-act-avoided-step", "templateId": "tpl-small-approach", "activityId": "act-avoided-step", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-small-approach-act-walk-short", "templateId": "tpl-small-approach", "activityId": "act-walk-short", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-small-approach-act-favourite-song", "templateId": "tpl-small-approach", "activityId": "act-favourite-song", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-small-approach-act-call-one", "templateId": "tpl-small-approach", "activityId": "act-call-one", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-small-approach-act-tea-window", "templateId": "tpl-small-approach", "activityId": "act-tea-window", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-gentle-days-act-walk-short", "templateId": "tpl-gentle-days", "activityId": "act-walk-short", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-gentle-days-act-make-bed", "templateId": "tpl-gentle-days", "activityId": "act-make-bed", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-gentle-days-act-message-one", "templateId": "tpl-gentle-days", "activityId": "act-message-one", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-gentle-days-act-honour-memory", "templateId": "tpl-gentle-days", "activityId": "act-honour-memory", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-gentle-days-act-tea-window", "templateId": "tpl-gentle-days", "activityId": "act-tea-window", "timesPerWeek": 3, "partOfDay": "any" },
+
+  { "id": "ti-tpl-keep-it-going-act-walk-outside", "templateId": "tpl-keep-it-going", "activityId": "act-walk-outside", "timesPerWeek": 3, "partOfDay": "any" },
+  { "id": "ti-tpl-keep-it-going-act-value-thing", "templateId": "tpl-keep-it-going", "activityId": "act-value-thing", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-keep-it-going-act-meet-in-person", "templateId": "tpl-keep-it-going", "activityId": "act-meet-in-person", "timesPerWeek": 1, "partOfDay": "any" },
+  { "id": "ti-tpl-keep-it-going-act-week-look-back", "templateId": "tpl-keep-it-going", "activityId": "act-week-look-back", "timesPerWeek": 1, "partOfDay": "evening" },
+  { "id": "ti-tpl-keep-it-going-act-stretch", "templateId": "tpl-keep-it-going", "activityId": "act-stretch", "timesPerWeek": 2, "partOfDay": "any" },
+
+  { "id": "ti-tpl-strong-and-steady-act-strength-simple", "templateId": "tpl-strong-and-steady", "activityId": "act-strength-simple", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-strong-and-steady-act-walk-outside", "templateId": "tpl-strong-and-steady", "activityId": "act-walk-outside", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-strong-and-steady-act-stretch", "templateId": "tpl-strong-and-steady", "activityId": "act-stretch", "timesPerWeek": 2, "partOfDay": "any" },
+  { "id": "ti-tpl-strong-and-steady-act-value-thing", "templateId": "tpl-strong-and-steady", "activityId": "act-value-thing", "timesPerWeek": 1, "partOfDay": "any" }
+]

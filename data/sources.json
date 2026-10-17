@@ -1,0 +1,192 @@
+[
+  {
+    "id": "src-ba-ekers",
+    "citation": "Ekers et al. 2014, PLoS ONE",
+    "url": "https://doi.org/10.1371/journal.pone.0100100",
+    "strength": "strong"
+  },
+  {
+    "id": "src-cobra",
+    "citation": "Richards et al. 2016, Lancet",
+    "url": "https://doi.org/10.1016/S0140-6736(16)31140-0",
+    "strength": "strong"
+  },
+  {
+    "id": "src-ba-lejuez",
+    "citation": "Lejuez et al. 2011, Behav Modif",
+    "url": "https://doi.org/10.1177/0145445510390929",
+    "strength": "moderate",
+    "note": "DOI given from memory; verify before displaying in UI."
+  },
+  {
+    "id": "src-exercise-noetel",
+    "citation": "Noetel et al. 2024, BMJ",
+    "url": "https://doi.org/10.1136/bmj-2023-075847",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-dose-pearce",
+    "citation": "Pearce et al. 2022, JAMA Psychiatry",
+    "url": "https://doi.org/10.1001/jamapsychiatry.2022.0609",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-group-heissel",
+    "citation": "Heissel et al. 2023, BJSM",
+    "url": "https://doi.org/10.1136/bjsports-2022-106282",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-contact-teo",
+    "citation": "Teo et al. 2015, J Am Geriatr Soc",
+    "url": "https://doi.org/10.1111/jgs.13697",
+    "strength": "moderate",
+    "note": "DOI given from memory; verify before displaying in UI."
+  },
+  {
+    "id": "src-reachout-liu",
+    "citation": "Liu et al. 2023, J Pers Soc Psychol",
+    "url": "https://doi.org/10.1037/pspi0000402",
+    "strength": "thin"
+  },
+  {
+    "id": "src-rhythm-fang",
+    "citation": "Fang et al. 2021, npj Digit Med",
+    "url": "https://doi.org/10.1038/s41746-021-00400-z",
+    "strength": "thin"
+  },
+  {
+    "id": "src-ipsrt-frank",
+    "citation": "Frank et al. 2005, Arch Gen Psychiatry",
+    "url": "https://doi.org/10.1001/archpsyc.62.9.996",
+    "strength": "thin",
+    "note": "DOI given from memory; verify before displaying in UI."
+  },
+  {
+    "id": "src-daylight-burns",
+    "citation": "Burns et al. 2021, J Affect Disord",
+    "url": "https://doi.org/10.1016/j.jad.2021.08.056",
+    "strength": "thin"
+  },
+  {
+    "id": "src-latent-paul",
+    "citation": "Paul et al. 2023, Front Psychol",
+    "url": "https://doi.org/10.3389/fpsyg.2023.1017358",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-values-napier",
+    "citation": "Napier & Mangat 2026, J Posit Psychol",
+    "url": "https://doi.org/10.1080/17439760.2026.2714053",
+    "strength": "thin"
+  },
+  {
+    "id": "src-detach-smit",
+    "citation": "Smit 2016, J Occup Organ Psychol",
+    "url": "https://doi.org/10.1111/joop.12124",
+    "strength": "thin"
+  },
+  {
+    "id": "src-workaholism-clark",
+    "citation": "Clark et al. 2016, J Manag",
+    "url": "https://doi.org/10.1177/0149206314522301",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-gaming-stevens",
+    "citation": "Stevens et al. 2019, Clin Psychol Psychother",
+    "url": "https://doi.org/10.1002/cpp.2341",
+    "strength": "moderate",
+    "note": "DOI given from memory; verify before displaying in UI."
+  },
+  {
+    "id": "src-gaming-king",
+    "citation": "King et al. 2016, Comput Hum Behav",
+    "url": "https://doi.org/10.1016/j.chb.2016.04.020",
+    "strength": "thin"
+  },
+  {
+    "id": "src-play-vuorre",
+    "citation": "Vuorre et al. 2022, R Soc Open Sci",
+    "url": "https://doi.org/10.1098/rsos.220411",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-social-hunt",
+    "citation": "Hunt et al. 2018, J Soc Clin Psychol",
+    "url": "https://doi.org/10.1521/jscp.2018.37.10.751",
+    "strength": "thin"
+  },
+  {
+    "id": "src-social-may",
+    "citation": "May et al. 2025, EJIHPE",
+    "url": "https://doi.org/10.3390/ejihpe15110222",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-bundling-milkman",
+    "citation": "Milkman et al. 2014, Manag Sci",
+    "url": "https://doi.org/10.1287/mnsc.2013.1784",
+    "strength": "thin"
+  },
+  {
+    "id": "src-ifthen-gollwitzer",
+    "citation": "Gollwitzer & Sheeran 2006, Adv Exp Soc Psychol",
+    "url": "https://doi.org/10.1016/S0065-2601(06)38002-1",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-effort-horne",
+    "citation": "Horne et al. 2021, Clin Psychol Rev",
+    "url": "https://doi.org/10.1016/j.cpr.2021.102065",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-ba-anxiety-stein",
+    "citation": "Stein et al. 2021, Psychol Med",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32138802/",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-grief-eisma",
+    "citation": "Eisma et al. 2015, Behav Ther",
+    "url": "https://doi.org/10.1016/j.beth.2015.05.007",
+    "strength": "thin"
+  },
+  {
+    "id": "src-relapse-dobson",
+    "citation": "Dobson et al. 2008, J Consult Clin Psychol",
+    "url": "https://doi.org/10.1037/0022-006X.76.3.468",
+    "strength": "moderate"
+  },
+  {
+    "id": "src-strength-acsm",
+    "citation": "ACSM Position Stand 2009, Med Sci Sports Exerc",
+    "url": "https://doi.org/10.1249/MSS.0b013e3181915670",
+    "strength": "design-judgment"
+  },
+  {
+    "id": "src-habit-lally",
+    "citation": "Lally et al. 2010, Eur J Soc Psychol",
+    "url": "https://doi.org/10.1002/ejsp.674",
+    "strength": "thin"
+  },
+  {
+    "id": "src-freshstart-dai",
+    "citation": "Dai et al. 2014, Manag Sci",
+    "url": "https://doi.org/10.1287/mnsc.2014.1901",
+    "strength": "thin"
+  },
+  {
+    "id": "src-jitai-nahum",
+    "citation": "Nahum-Shani et al. 2018, Ann Behav Med",
+    "url": "https://doi.org/10.1007/s12160-016-9830-8",
+    "strength": "design-judgment"
+  },
+  {
+    "id": "src-heartsteps-klasnja",
+    "citation": "Klasnja et al. 2019, Ann Behav Med",
+    "url": "https://doi.org/10.1093/abm/kay067",
+    "strength": "thin"
+  }
+]

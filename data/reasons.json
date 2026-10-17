@@ -1,0 +1,86 @@
+[
+  {
+    "id": "rsn-cant-get-going",
+    "label": "I can't get myself out of bed or off the couch",
+    "helper": "Starting is the hardest part. We'll begin really small.",
+    "sortOrder": 1,
+    "supportPointer": true
+  },
+  {
+    "id": "rsn-no-shape",
+    "label": "My days have lost their shape",
+    "helper": "No job, sick leave, retired, between semesters — days can blur.",
+    "sortOrder": 2,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-pulled-away",
+    "label": "I've pulled away from people",
+    "helper": "Reaching out can feel big. Small hellos count.",
+    "sortOrder": 3,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-sleep-rhythm",
+    "label": "My sleep is all over the place",
+    "helper": "A steady morning is a good anchor for the whole day.",
+    "sortOrder": 4,
+    "supportPointer": true
+  },
+  {
+    "id": "rsn-only-work",
+    "label": "My days are only work — everything else is on pause",
+    "helper": "Let's make room for what matters outside work.",
+    "sortOrder": 5,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-running-on-empty",
+    "label": "I'm running on empty",
+    "helper": "Low energy is real, not a lack of willpower.",
+    "sortOrder": 6,
+    "supportPointer": true
+  },
+  {
+    "id": "rsn-games",
+    "label": "Hours disappear into games",
+    "helper": "Games can stay. Let's plan them and add a few other things.",
+    "sortOrder": 7,
+    "supportPointer": true
+  },
+  {
+    "id": "rsn-scrolling",
+    "label": "I scroll or binge-watch more than I want",
+    "helper": "No guilt — just a few planned stopping points.",
+    "sortOrder": 8,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-hard-to-start",
+    "label": "Starting things is hard, so I put them off",
+    "helper": "Two-minute versions are made for this.",
+    "sortOrder": 9,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-worry-avoid",
+    "label": "Worry makes me avoid things",
+    "helper": "One small step toward something you've been avoiding.",
+    "sortOrder": 10,
+    "supportPointer": false
+  },
+  {
+    "id": "rsn-loss-change",
+    "label": "I'm going through a loss or a big change",
+    "helper": "Gentle days are fine. Small routines can hold you.",
+    "sortOrder": 11,
+    "supportPointer": true
+  },
+  {
+    "id": "rsn-keep-it-going",
+    "label": "I'm feeling better and want to keep it that way",
+    "helper": "Keep what helped, at a pace that works.",
+    "sortOrder": 12,
+    "supportPointer": false
+  }
+]

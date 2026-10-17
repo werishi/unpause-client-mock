@@ -3,35 +3,69 @@
 /**
  * CheckInPage — first step of the core loop; the user selects their energy level.
  *
- * On selection this page calls suggestTaskForEnergy to pre-select a task and
- * writes the result into flow state via setTaskId before navigating to /mood-before.
- * This means every downstream page (mood-before, task) can guard on
- * `state.taskId !== null` without re-running the suggestion logic.
- *
- * No prerequisite check — this is the first step after Start. If
- * suggestTaskForEnergy throws (empty task list), the error surfaces to the console;
- * this cannot happen with the seed data from part 2.
+ * On selection this page calls planDay to select today's first activity and
+ * writes the result into flow state via setTaskId / setTemplateId before
+ * navigating to /mood-before. If planDay returns no activities (P12 — the
+ * week's plan is complete), the user sees a "plan done" message and cannot
+ * advance. This prevents advancing with a null taskId.
  *
  * Renders inside AppShell's <main> — no additional container or padding needed.
  */
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFlow } from "@/lib/store/flow-store";
-import { getTasks } from "@/lib/repo/activity-repo";
-import { suggestTaskForEnergy } from "@/lib/domain/energy";
+import { useUserData } from "@/lib/store/user-store";
+import { planDay, addDays } from "@/lib/domain/planner";
+import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
+import { getActivities } from "@/lib/repo/activity-repo";
 import type { EnergyLevel } from "@/lib/domain/energy";
 import { CHECK_IN } from "@/lib/copy";
 
 export default function CheckInPage() {
   const router = useRouter();
-  const { setEnergy, setTaskId } = useFlow();
+  const { setEnergy, setTaskId, setTemplateId } = useFlow();
+  const store = useUserData();
+  const [planDone, setPlanDone] = useState(false);
 
   function handleEnergySelect(energy: EnergyLevel) {
     setEnergy(energy);
-    const tasks = getTasks();
-    const task = suggestTaskForEnergy(energy, tasks);
-    setTaskId(task.id);
+
+    const today = new Date().toISOString().slice(0, 10);
+    const input = {
+      templates: getTemplates().filter((t) => store.templateIds.includes(t.id)),
+      items: store.templateIds.flatMap((id) => getTemplateItems(id)),
+      activities: getActivities(),
+      log: store.log.map((e) => typeof e.dayOffset === 'number' ? { ...e, date: addDays(today, e.dayOffset) } : e),
+      energy,
+      today,
+    };
+
+    const result = planDay(input);
+
+    if (result.activities.length === 0) {
+      // P12: this week's plan is complete — do not advance the flow.
+      setPlanDone(true);
+      return;
+    }
+
+    setTaskId(result.activities[0].activityId);
+    setTemplateId(result.activities[0].templateId);
+    store.recordCheckIn(energy);
     router.push("/mood-before");
+  }
+
+  if (planDone) {
+    return (
+      <main className="flex flex-col gap-6 py-10">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          {CHECK_IN.heading}
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Your plan for this week is complete. Check back tomorrow.
+        </p>
+      </main>
+    );
   }
 
   return (

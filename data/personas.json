@@ -1,0 +1,47 @@
+[
+  {
+    "id": "per-new",
+    "displayName": "You (fresh start)",
+    "blurb": "I'm just getting started.",
+    "reasonIds": [],
+    "templateIds": [],
+    "valueIds": [],
+    "wakeTime": "07:30"
+  },
+  {
+    "id": "per-sam",
+    "displayName": "Sam, first week",
+    "blurb": "I keep meaning to do something in the morning but somehow the day gets away from me.",
+    "reasonIds": ["rsn-cant-get-going"],
+    "templateIds": ["tpl-small-steps"],
+    "valueIds": ["val-health", "val-nature", "val-home"],
+    "wakeTime": "07:00"
+  },
+  {
+    "id": "per-jonas",
+    "displayName": "Jonas, two weeks in",
+    "blurb": "I told myself I'd only play for an hour but it's been months since I've seen anyone.",
+    "reasonIds": ["rsn-games", "rsn-pulled-away"],
+    "templateIds": ["tpl-games-in-balance", "tpl-reconnect"],
+    "valueIds": ["val-play", "val-friends", "val-learning"],
+    "wakeTime": "08:00"
+  },
+  {
+    "id": "per-lea",
+    "displayName": "Lea, back after a break",
+    "blurb": "Work is the only thing in my life right now and I've forgotten what else there is.",
+    "reasonIds": ["rsn-only-work"],
+    "templateIds": ["tpl-life-beyond-work"],
+    "valueIds": ["val-home", "val-friends", "val-creativity"],
+    "wakeTime": "06:30"
+  },
+  {
+    "id": "per-ayla",
+    "displayName": "Ayla, feeling better",
+    "blurb": "Things feel more manageable lately and I want to keep that going.",
+    "reasonIds": ["rsn-keep-it-going"],
+    "templateIds": ["tpl-keep-it-going"],
+    "valueIds": ["val-health", "val-nature", "val-friends"],
+    "wakeTime": "07:00"
+  }
+]
