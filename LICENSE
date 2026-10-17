@@ -1,0 +1,132 @@
+Unpause Source-Available License (View Only), Version 1.0
+
+Copyright (c) 2026 Nils Feldeisen. All rights reserved.
+
+Licensor:
+  Nils Feldeisen
+  Hüttenstr. 24
+  45525 Hattingen
+  Germany
+
+-------------------------------------------------------------------------------
+1. Purpose
+-------------------------------------------------------------------------------
+
+The source code of this repository ("the Software") is published so that
+customers, prospective customers and the public can see how Unpause works.
+Publishing it is about transparency. It is not open source in the sense of the
+Open Source Definition, and it does not grant the rights that open-source
+licenses grant.
+
+"The Software" means everything in this repository: source code, designs,
+texts, images, data, documentation and every later version of them.
+
+-------------------------------------------------------------------------------
+2. What you may do
+-------------------------------------------------------------------------------
+
+You may, free of charge:
+
+  a) view and read the Software, including in your browser or on the hosting
+     platform where it is published;
+  b) keep a local copy (for example a git clone) solely to read, inspect and
+     review it, including for security, privacy or quality review;
+  c) quote short excerpts for commentary, criticism, reporting, research or
+     review, as permitted by statutory law, with a reference to the source.
+
+-------------------------------------------------------------------------------
+3. What you may not do
+-------------------------------------------------------------------------------
+
+Unless the Licensor has agreed in writing (email is enough), you may not:
+
+  a) run, deploy, host or otherwise use the Software, in whole or in part, for
+     any purpose other than those listed in section 2;
+  b) modify, translate, adapt or create derivative works of the Software;
+  c) copy, distribute, publish, sublicense or make the Software available to
+     others, except for linking to the official repository;
+  d) sell, rent, lease or use the Software commercially, including offering it
+     or anything based on it as a product or service;
+  e) use the Software, or substantial parts of it, to build a competing
+     product or service;
+  f) remove or change this license or any copyright notice;
+  g) use the names "Unpause" or "Nils Feldeisen", or any logo of the
+     Software, to endorse or promote anything.
+
+The exclusive right to use, exploit, license and sell the Software remains
+solely with the Licensor.
+
+-------------------------------------------------------------------------------
+4. Mandatory law
+-------------------------------------------------------------------------------
+
+Nothing in this license restricts rights that cannot be excluded by contract
+under applicable law, in particular sections 44a et seq. and 69d and 69e of
+the German Copyright Act (UrhG).
+
+-------------------------------------------------------------------------------
+5. Contributions
+-------------------------------------------------------------------------------
+
+If you contribute to this repository (code, text, designs, issues with
+proposed solutions, pull requests or any other material), you grant the
+Licensor, by submitting the contribution, an exclusive, perpetual,
+irrevocable, worldwide, royalty-free right, unlimited in content, space and
+time, to use, modify, reproduce, distribute, make publicly available,
+sublicense and commercially exploit the contribution in all known and future
+types of use, including the right to transfer this right to third parties.
+You confirm that you are entitled to grant this right. You receive no rights
+to the Software through your contribution beyond those in section 2. Where a
+separate written agreement with the Licensor exists, that agreement takes
+precedence.
+
+-------------------------------------------------------------------------------
+6. Termination
+-------------------------------------------------------------------------------
+
+The permissions in section 2 end automatically if you breach this license.
+The Licensor may additionally pursue all claims available under copyright,
+competition and trademark law.
+
+-------------------------------------------------------------------------------
+7. No warranty, liability
+-------------------------------------------------------------------------------
+
+The Software is provided free of charge, "as is", without any warranty. It is
+a prototype using placeholder data and is not a medical product; it does not
+replace therapy or medical advice. The Licensor is liable only for intent and
+gross negligence, for injury to life, body or health, and where liability is
+mandatory under the German Product Liability Act (ProdHaftG). Section 521 of
+the German Civil Code (BGB) applies.
+
+-------------------------------------------------------------------------------
+8. Governing law, jurisdiction
+-------------------------------------------------------------------------------
+
+This license is governed by the laws of the Federal Republic of Germany,
+excluding the UN Convention on Contracts for the International Sale of Goods
+(CISG). If you are a merchant, a legal entity under public law or have no
+general place of jurisdiction in Germany, the exclusive place of jurisdiction
+is the Licensor's place of residence (Hattingen, Germany). If any provision of
+this license is invalid, the remaining provisions remain in effect.
+
+-------------------------------------------------------------------------------
+9. Permissions beyond this license
+-------------------------------------------------------------------------------
+
+For any use not covered by section 2, including commercial licensing, contact
+the Licensor at the address above.
+
+===============================================================================
+Kurzfassung (Deutsch, unverbindlich — maßgeblich ist der englische Text oben)
+===============================================================================
+
+Der Quellcode ist zur Transparenz öffentlich einsehbar, aber nicht Open Source.
+Erlaubt ist nur das Ansehen, Lesen und Prüfen (auch als lokale Kopie) sowie
+das Zitieren im gesetzlichen Rahmen. Ausführen, Verändern, Weitergeben,
+Verkaufen und jede kommerzielle Nutzung sind ohne schriftliche Zustimmung von
+Nils Feldeisen, Hüttenstr. 24, 45525 Hattingen, untersagt. Alle Nutzungs- und
+Verwertungsrechte verbleiben ausschließlich bei ihm. Wer beiträgt, räumt ihm
+an seinem Beitrag ein ausschließliches, unbefristetes und übertragbares
+Nutzungsrecht ein. Es gilt deutsches Recht; zwingende Rechte nach UrhG
+(§§ 44a ff., 69d, 69e) bleiben unberührt.

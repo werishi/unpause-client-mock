@@ -1,0 +1,58 @@
+[
+  {
+    "title": "Warning Signs",
+    "prompt": "I know a crisis may be developing when I notice these signs in myself:",
+    "entries": [
+      "Feeling increasingly hopeless or trapped",
+      "Withdrawing from people and activities I usually enjoy",
+      "Difficulty sleeping or sleeping much more than usual",
+      "Thinking more about death or that others would be better off without me"
+    ]
+  },
+  {
+    "title": "Internal Coping Strategies",
+    "prompt": "Things I can do on my own to take my mind off difficult thoughts:",
+    "entries": [
+      "Take a slow walk, even just around the block",
+      "Listen to a playlist that usually lifts my mood",
+      "Write down what I am feeling without judging it",
+      "Make a warm drink and sit somewhere comfortable for ten minutes"
+    ]
+  },
+  {
+    "title": "People and Settings That Provide Distraction",
+    "prompt": "People I can reach out to and places I can go to take my mind off things:",
+    "entries": [
+      "A trusted friend — add their name here (placeholder)",
+      "A family member I feel comfortable with — add their name here (placeholder)",
+      "A calm public space like a library or park near your home (placeholder)"
+    ]
+  },
+  {
+    "title": "People I Can Ask for Help",
+    "prompt": "People I can contact who know I may be struggling and can offer support:",
+    "entries": [
+      "Trusted person 1 — add a real name and how to reach them (placeholder)",
+      "Trusted person 2 — add a real name and how to reach them (placeholder)",
+      "Trusted person 3 — add a real name and how to reach them (placeholder)"
+    ]
+  },
+  {
+    "title": "Professionals and Crisis Services I Can Contact",
+    "prompt": "Professional support I can reach when I need more than friends can offer:",
+    "entries": [
+      "My therapist or counsellor — add their contact details here (placeholder)",
+      "My GP or family doctor — add their contact details here (placeholder)",
+      "A crisis line in your country — look up the number from a trusted source (placeholder, no number stored here)"
+    ]
+  },
+  {
+    "title": "Making My Environment Safer",
+    "prompt": "Steps I can take to reduce access to means during a crisis:",
+    "entries": [
+      "Ask someone I trust to hold onto medications for me",
+      "Remove or secure any items that feel unsafe when I am in distress",
+      "Stay with someone rather than being alone until the feeling passes"
+    ]
+  }
+]

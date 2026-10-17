@@ -1,0 +1,42 @@
+[
+  {
+    "id": "walk-5min",
+    "title": "Take a 5-minute walk outdoors",
+    "cue": "After you put on your shoes and step outside",
+    "twoMinuteVersion": "Stand at the door and breathe fresh air for two minutes",
+    "energyRequired": "low",
+    "minutes": 5
+  },
+  {
+    "id": "gentle-stretch",
+    "title": "Do a gentle 10-minute stretching sequence",
+    "cue": "After sitting for a while and noticing tension in your body",
+    "twoMinuteVersion": "Roll your shoulders back and stretch your neck side to side",
+    "energyRequired": "low",
+    "minutes": 10
+  },
+  {
+    "id": "yoga-10min",
+    "title": "Follow a 10-minute beginner yoga flow",
+    "cue": "After your morning drink and before checking your phone",
+    "twoMinuteVersion": "Stand tall and take five slow, deep breaths with arms rising overhead",
+    "energyRequired": "medium",
+    "minutes": 10
+  },
+  {
+    "id": "bodyweight-strength",
+    "title": "Complete a 15-minute bodyweight strength session",
+    "cue": "After changing into comfortable clothes",
+    "twoMinuteVersion": "Do five slow squats holding a chair for balance",
+    "energyRequired": "medium",
+    "minutes": 15
+  },
+  {
+    "id": "jog-20min",
+    "title": "Go for a 20-minute jog at a comfortable pace",
+    "cue": "After lacing up your running shoes by the door",
+    "twoMinuteVersion": "Walk briskly to the end of your street and back",
+    "energyRequired": "high",
+    "minutes": 20
+  }
+]

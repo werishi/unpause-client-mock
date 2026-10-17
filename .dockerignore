@@ -1,0 +1,27 @@
+# Dependencies — Windows node_modules carries wrong native binaries (SWC, lightningcss,
+# Tailwind oxide) and breaks a Linux build.
+node_modules
+
+# Build outputs — exclude so the Docker build context stays small and an existing local
+# out/ cannot mask a broken in-image build.
+.next
+out
+
+# Version control and IDE metadata
+.git
+.idea
+.github
+
+# Environment files
+.env*
+
+# Log files
+*.log
+
+# Docker meta-files themselves
+Dockerfile
+.dockerignore
+
+# Spec and goal files — present at repo root but never served by the image.
+documentation
+GOALS.md

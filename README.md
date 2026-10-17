@@ -138,3 +138,42 @@ evidence is still thin.
 
 Unpause is meant to support everyday life. It is not a substitute for professional help.
 If you're struggling, please reach out to a doctor, therapist, or a local crisis line.
+
+## License
+
+Source-available, view only. Copyright (c) 2026 Nils Feldeisen, all rights reserved.
+The code is public for transparency, not open source: see [LICENSE](LICENSE).
+
+## Running the mockup
+
+```sh
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. The dev server hot-reloads on file changes.
+
+```sh
+npm run test   # Vitest domain tests — must pass green
+npm run build  # Static export to out/ — must pass with zero TypeScript errors
+```
+
+## Docker
+
+Build and run the production image locally:
+
+```sh
+docker build . -t unpause-client-mock
+docker run -p 8080:80 unpause-client-mock
+```
+
+Open http://localhost:8080.
+
+## Continuous integration
+
+CI runs two jobs on every push to `main` or `master`, and on `workflow_dispatch`:
+
+- **verify** — installs dependencies, runs ESLint, runs Vitest tests, and builds the static export. Uses a read-only `GITHUB_TOKEN`. Also runs on pull requests, so branch-protection rules on `main` can require it as a passing status check before merge.
+- **publish** — builds the Docker image and pushes it to `ghcr.io/werishi/unpause-client-mock` with two tags: `latest` and the full commit SHA. Requires `packages: write`. Only runs on pushes to `main` or `master` — a pull request's ref never matches `refs/heads/main` or `refs/heads/master`, so opening a PR never pushes an image.
+
+There is no deploy step in CI. The production server pulls the image independently; that side lives outside this repository.

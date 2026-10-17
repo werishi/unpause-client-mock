@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Environment variables (next-env.d.ts and package-lock.json are committed, not ignored)
+.env*
+
+# Test coverage
+coverage/
+
+# IDE state
+.idea/
