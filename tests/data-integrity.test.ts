@@ -5,6 +5,7 @@
  * section or undefined activity. Read-only: no file system API, no mocks.
  */
 import { describe, it, expect } from 'vitest'
+import { BANNED_WORDS } from './banned-words'
 import activities from '../data/activities.json'
 import templates from '../data/templates.json'
 import templateItems from '../data/template-items.json'
@@ -159,13 +160,8 @@ describe('data integrity', () => {
 
   it('no banned words in user-facing text', () => {
     // Machine-checkable half of the tone rule. A human read is still needed for synonyms.
-    const BANNED = [
-      'depression', 'depressed', 'disorder', 'addict', 'addiction',
-      'lazy', 'fail', 'behind', 'streak',
-    ]
-
     function assertNoban(text: string, file: string, rowId: string, field: string) {
-      for (const word of BANNED) {
+      for (const word of BANNED_WORDS) {
         expect(
           text.toLowerCase().includes(word),
           `${file} row ${rowId} field '${field}' contains banned word '${word}'`

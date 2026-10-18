@@ -18,6 +18,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { localDateString } from "@/lib/domain/day";
 import { useFlow } from "@/lib/store/flow-store";
 import { useUserData } from "@/lib/store/user-store";
 import MoodRating from "@/components/MoodRating";
@@ -32,7 +33,7 @@ export default function MoodAfterPage() {
   // Replace so the back button cannot return the user here out of order.
   useEffect(() => {
     if (state.moodBefore === null) {
-      router.replace("/check-in");
+      router.replace("/today");
     }
   }, [state.moodBefore, router]);
 
@@ -55,7 +56,7 @@ export default function MoodAfterPage() {
           store.recordActivity({
             id: crypto.randomUUID(),
             personaId: store.personaId,
-            date: new Date().toISOString().slice(0, 10),
+            date: localDateString(new Date()),
             dayOffset: 0,
             activityId: state.taskId ?? "",
             templateId: state.templateId ?? "",

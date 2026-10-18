@@ -10,7 +10,7 @@
  * Structure: <html><body><FlowProvider><AppShell>{children}</AppShell></FlowProvider></body></html>
  */
 
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { FlowProvider } from "@/lib/store/flow-store";
 import { UserDataProvider } from "@/lib/store/user-store";
@@ -20,6 +20,12 @@ export const metadata: Metadata = {
   title: "Unpause",
   description:
     "A behavioral-activation mockup to help you take one small step when motivation is low.",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: "#111827",
 };
 
 export default function RootLayout({

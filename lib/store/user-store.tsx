@@ -18,14 +18,24 @@
  * PER_NEW_SEED.
  */
 
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import type { LogEntry, CheckIn, EnergyLevel } from "@/lib/domain/types";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import type { LogEntry, CheckIn, EnergyLevel, DayPlan, PlanInput } from "@/lib/domain/types";
 import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
 import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
+import { localDateString, isWelcomeBackDue, latestDate } from "@/lib/domain/day";
+import { planDay, addDays } from "@/lib/domain/planner";
+import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
+import { getActivities } from "@/lib/repo/activity-repo";
 
 // ─── Storage key ─────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = "unpause.demo.v1";
+const STORAGE_KEY = "unpause.demo.v2";
+
+/**
+ * Minimum whole-day absence before the "Welcome back" screen is shown.
+ * Checked in the mount effect and in loadPersona.
+ */
+const WELCOME_BACK_GAP_DAYS = 4;
 
 // ─── Internal state type ──────────────────────────────────────────────────────
 
@@ -36,6 +46,13 @@ type UserDataState = {
   valueIds: string[];
   log: LogEntry[];
   checkIns: CheckIn[];
+  startedAt: string | null;
+  personalisedAt: string | null;
+  personaliseDismissed: boolean;
+  wakeTime: string;
+  lastOpenedDate: string | null;
+  welcomeBackDue: boolean;
+  todayPlan: { date: string; energy: EnergyLevel; plan: DayPlan } | null;
 };
 
 // ─── Per-new seed ─────────────────────────────────────────────────────────────
@@ -53,7 +70,27 @@ const PER_NEW_SEED: UserDataState = {
   valueIds: [],
   log: [],
   checkIns: [],
+  startedAt: null,
+  personalisedAt: null,
+  personaliseDismissed: false,
+  wakeTime: "08:00",
+  lastOpenedDate: null,
+  welcomeBackDue: false,
+  todayPlan: null,
 };
+
+// ─── Initial state factory ───────────────────────────────────────────────────
+
+/**
+ * Returns a fresh copy of the mount-default state — the same defaults used
+ * when no stored blob exists on mount. Both the mount no-blob branch and
+ * `resetDemoData` call this so the two paths stay in sync when a new field is
+ * added: add the field once to `PER_NEW_SEED`, and both paths inherit the
+ * correct default automatically.
+ */
+function buildInitialState(): UserDataState {
+  return { ...PER_NEW_SEED };
+}
 
 // ─── Persist helper ───────────────────────────────────────────────────────────
 
@@ -73,15 +110,36 @@ function persist(s: UserDataState): void {
 // ─── Context type ─────────────────────────────────────────────────────────────
 
 export type UserDataContext = {
+  // Non-persisted derived state
+  hydrated: boolean;
+  today: string;
+  // Persisted state
   personaId: string;
   reasonIds: string[];
   templateIds: string[];
   valueIds: string[];
   log: LogEntry[];
   checkIns: CheckIn[];
+  startedAt: string | null;
+  personalisedAt: string | null;
+  personaliseDismissed: boolean;
+  wakeTime: string;
+  lastOpenedDate: string | null;
+  welcomeBackDue: boolean;
+  todayPlan: { date: string; energy: EnergyLevel; plan: DayPlan } | null;
+  // Actions
   recordActivity: (entry: LogEntry) => void;
   recordCheckIn: (energy: EnergyLevel) => void;
+  startDay: (energy: EnergyLevel) => void;
+  clearTodayPlan: () => void;
   setReasons: (ids: string[]) => void;
+  setValues: (ids: string[]) => void;
+  setTemplates: (ids: string[]) => void;
+  setWakeTime: (hhmm: string) => void;
+  markStarted: () => void;
+  markPersonalised: () => void;
+  dismissPersonalise: () => void;
+  acknowledgeWelcomeBack: () => void;
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
 };
@@ -117,30 +175,59 @@ export function useUserData(): UserDataContext {
  */
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<UserDataState>(PER_NEW_SEED);
-
   /**
-   * Populated once in the mount useEffect with today's UTC date in YYYY-MM-DD
-   * format. Passed to getPersonaSeed so it can resolve dayOffset values without
-   * calling new Date() internally — keeping getPersonaSeed deterministic and
-   * testable. The ref avoids adding `today` as a useEffect dependency, which
-   * would rerun the effect on every render.
+   * today is set once in the mount effect via localDateString(new Date()) so
+   * all actions share the same local calendar date for the session. Not in
+   * UserDataState because it must never be stale from a previous session.
    */
-  const todayRef = useRef<string>("");
+  const [today, setToday] = useState<string>("");
+  /**
+   * Becomes true after the mount effect rehydrates from localStorage. Components
+   * that depend on the final hydrated state (e.g. Today) wait for this before
+   * making routing decisions.
+   */
+  const [hydrated, setHydrated] = useState<boolean>(false);
 
-  // Mount effect: set todayRef and rehydrate from localStorage.
+  // Mount effect: derive today, rehydrate from localStorage, then set hydrated.
   // localStorage must never be read at render time (hydration mismatch rule).
   useEffect(() => {
-    todayRef.current = new Date().toISOString().slice(0, 10);
+    const todayVal = localDateString(new Date());
+    setToday(todayVal);
 
+    let parsedOrDefault: UserDataState = buildInitialState();
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw) as UserDataState;
-        setState(parsed);
+        parsedOrDefault = JSON.parse(raw) as UserDataState;
       }
     } catch {
       // Corrupt or unavailable storage — keep PER_NEW_SEED.
     }
+
+    // Remove stale v1 blob; failure here must not abort the rest of the mount.
+    try {
+      localStorage.removeItem("unpause.demo.v1");
+    } catch {
+      // Storage unavailable — ignore.
+    }
+
+    // Compute welcomeBackDue BEFORE writing lastOpenedDate; writing first would
+    // always produce a gap of zero and suppress the welcome-back screen.
+    const welcomeBackDue = isWelcomeBackDue(
+      parsedOrDefault.lastOpenedDate,
+      todayVal,
+      WELCOME_BACK_GAP_DAYS
+    );
+    setState({ ...parsedOrDefault, welcomeBackDue });
+
+    setHydrated(true);
+
+    // Record today as the last opened date (after the gap check above).
+    setState((prev) => {
+      const next = { ...prev, lastOpenedDate: todayVal };
+      persist(next);
+      return next;
+    });
   }, []);
 
   // ── Actions ────────────────────────────────────────────────────────────────
@@ -158,12 +245,10 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * Appends a check-in for today. CheckIn shape is `{ date, energy }` (Part 1
-   * types.ts) — the date is today's UTC ISO date, matching the planner's
-   * Date.UTC arithmetic for consistency.
+   * Appends a check-in for today. Uses the `today` state variable (set in the
+   * mount effect via localDateString) so the date is always local, not UTC.
    */
   function recordCheckIn(energy: EnergyLevel): void {
-    const today = new Date().toISOString().slice(0, 10);
     setState((prev) => {
       const entry: CheckIn = { date: today, energy };
       const next = { ...prev, checkIns: [...prev.checkIns, entry] };
@@ -199,19 +284,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   /**
    * Loads a demo persona's configuration and seed history into state.
    *
-   * Reads persona fields from getPersonas(), resolves seed history via
-   * getPersonaSeed(), and merges them. For "per-new" the seed is empty; the
-   * persona's own field values (empty arrays) are used. The `todayRef` is used
-   * as the reference date for resolving dayOffset values — it is populated by
-   * the mount useEffect, so loadPersona must not be called before the provider
-   * has mounted. Calling it on the server (e.g. in a Server Component) would
-   * produce an empty string for todayRef.current, but the "use client" directive
-   * prevents that path.
+   * For non-new personas: derives startedAt and personalisedAt from the earliest
+   * history date, lastOpenedDate from the latest history date, and recomputes
+   * welcomeBackDue before writing state. For "per-new" all new fields are reset
+   * to their PER_NEW_SEED defaults.
    *
-   * `valueIds` is read from the raw persona data (present in personas.json)
-   * rather than from the Persona TypeScript interface, which omits the field
-   * because the planner does not yet consume it. Cast via `unknown` to avoid a
-   * type error without widening the Persona interface prematurely.
+   * `wakeTime` and `valueIds` are cast via `unknown` because the Persona
+   * interface omits them (planner does not yet consume them); the cast avoids
+   * widening the interface prematurely.
+   *
+   * Must be called after mount (today state must be set); "use client" prevents
+   * the server path.
    */
   function loadPersona(id: string): void {
     const personas = getPersonas();
@@ -220,14 +303,36 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
     const rawValueIds =
       (persona as unknown as { valueIds?: string[] }).valueIds ?? [];
+    const rawWakeTime =
+      (persona as unknown as { wakeTime?: string }).wakeTime ?? "08:00";
 
     let log: LogEntry[] = [];
     let checkIns: CheckIn[] = [];
 
     if (id !== "per-new") {
-      const seed = getPersonaSeed(id, todayRef.current);
+      const seed = getPersonaSeed(id, today);
       log = seed.log as LogEntry[];
       checkIns = seed.checkIns as CheckIn[];
+    }
+
+    let startedAt: string | null = null;
+    let personalisedAt: string | null = null;
+    let lastOpenedDate: string | null = null;
+    let welcomeBackDue = false;
+    let personaliseDismissed = false;
+    let wakeTime = "08:00";
+
+    if (id !== "per-new") {
+      const allDates = checkIns.map((c) => c.date);
+      const earliest = allDates.length > 0
+        ? [...allDates].sort()[0]
+        : today;
+      startedAt = earliest;
+      personalisedAt = earliest;
+      lastOpenedDate = latestDate([...checkIns.map((c) => c.date), ...log.map((e) => e.date)]);
+      welcomeBackDue = isWelcomeBackDue(lastOpenedDate, today, WELCOME_BACK_GAP_DAYS);
+      personaliseDismissed = true;
+      wakeTime = rawWakeTime;
     }
 
     setState(() => {
@@ -238,6 +343,13 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         valueIds: rawValueIds,
         log,
         checkIns,
+        startedAt,
+        personalisedAt,
+        personaliseDismissed,
+        wakeTime,
+        lastOpenedDate,
+        welcomeBackDue,
+        todayPlan: null,
       };
       persist(next);
       return next;
@@ -245,8 +357,119 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * Clears localStorage and resets state to PER_NEW_SEED.
-   * Useful for the demo-reset button on the settings screen.
+   * Builds today's day plan from the user's active templates and appends a
+   * check-in. The check-in is recorded first so Today does not re-ask the
+   * energy question on days where planDay returns no activities (empty plan).
+   */
+  function startDay(energy: EnergyLevel): void {
+    // Record the check-in before the plan so an empty-plan day is still marked.
+    recordCheckIn(energy);
+
+    const templates = getTemplates().filter((t) => state.templateIds.includes(t.id));
+    const items = state.templateIds.flatMap((id) => getTemplateItems(id));
+    const activities = getActivities();
+    const log = state.log.map((e) =>
+      typeof e.dayOffset === "number" ? { ...e, date: addDays(today, e.dayOffset) } : e
+    );
+    const input: PlanInput = { today, energy, templates, items, activities, log };
+    const plan = planDay(input);
+    const todayPlan = { date: today, energy, plan };
+    setState((prev) => {
+      const next = { ...prev, todayPlan };
+      persist(next);
+      return next;
+    });
+  }
+
+  /**
+   * Clears today's plan so the Today screen returns to State A (energy selection).
+   * Callable only before any activity for today has been logged — Today enforces
+   * this via the `anyLogged` guard, which hides the "Change energy" button once any
+   * card has been completed or skipped.
+   */
+  function clearTodayPlan(): void {
+    setState((prev) => {
+      const next = { ...prev, todayPlan: null };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Records the date the user first tapped "Start" (onboarding step 1). */
+  function markStarted(): void {
+    setState((prev) => {
+      const next = { ...prev, startedAt: today };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Stores up to three value ids selected during onboarding. */
+  function setValues(ids: string[]): void {
+    setState((prev) => {
+      const next = { ...prev, valueIds: ids.slice(0, 3) };
+      persist(next);
+      return next;
+    });
+  }
+
+  /**
+   * Stores up to three template ids. The caller must ensure at least one id is
+   * passed — the store does not enforce the minimum (that is a UI concern).
+   */
+  function setTemplates(ids: string[]): void {
+    setState((prev) => {
+      const next = { ...prev, templateIds: ids.slice(0, 3) };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Stores the user's preferred wake time as "HH:MM". */
+  function setWakeTime(hhmm: string): void {
+    setState((prev) => {
+      const next = { ...prev, wakeTime: hhmm };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Records today as the date personalisation was completed. */
+  function markPersonalised(): void {
+    setState((prev) => {
+      const next = { ...prev, personalisedAt: today };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Permanently hides the personalise prompt without completing it. */
+  function dismissPersonalise(): void {
+    setState((prev) => {
+      const next = { ...prev, personaliseDismissed: true };
+      persist(next);
+      return next;
+    });
+  }
+
+  /** Clears the welcome-back flag after the user has seen the screen. */
+  function acknowledgeWelcomeBack(): void {
+    setState((prev) => {
+      const next = { ...prev, welcomeBackDue: false };
+      persist(next);
+      return next;
+    });
+  }
+
+  /**
+   * Clears localStorage and resets all user state to mount-default values.
+   *
+   * Does not reset `today` or `hydrated` — both are re-derived from the system
+   * clock on mount and must not be cleared mid-session. The entry redirect at
+   * `/` guards on `hydrated`; resetting it here would leave the redirect stuck
+   * because the provider does not unmount on navigation, so the mount effect
+   * would not re-fire. After this call, the store's `startedAt` is null, which
+   * causes the entry redirect to send the user to `/welcome`.
    */
   function resetDemoData(): void {
     try {
@@ -254,21 +477,39 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Storage unavailable — continue in-memory.
     }
-    setState(PER_NEW_SEED);
+    setState(buildInitialState());
   }
 
   // ── Context value ──────────────────────────────────────────────────────────
 
   const value: UserDataContext = {
+    hydrated,
+    today,
     personaId: state.personaId,
     reasonIds: state.reasonIds,
     templateIds: state.templateIds,
     valueIds: state.valueIds,
     log: state.log,
     checkIns: state.checkIns,
+    startedAt: state.startedAt,
+    personalisedAt: state.personalisedAt,
+    personaliseDismissed: state.personaliseDismissed,
+    wakeTime: state.wakeTime,
+    lastOpenedDate: state.lastOpenedDate,
+    welcomeBackDue: state.welcomeBackDue,
+    todayPlan: state.todayPlan,
     recordActivity,
     recordCheckIn,
+    startDay,
+    clearTodayPlan,
     setReasons,
+    setValues,
+    setTemplates,
+    setWakeTime,
+    markStarted,
+    markPersonalised,
+    dismissPersonalise,
+    acknowledgeWelcomeBack,
     loadPersona,
     resetDemoData,
   };

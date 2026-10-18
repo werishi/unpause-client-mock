@@ -13,6 +13,7 @@ function makeActivity(overrides: Partial<Activity> = {}): Activity {
     energyRequired: 'low',
     category: 'pleasant',
     strenuous: false,
+    minutes: 10,
     valueIds: [],
     sourceIds: [],
     ...overrides,

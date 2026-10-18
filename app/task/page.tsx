@@ -4,7 +4,7 @@
  * TaskPage — shows the suggested task and collects the user's outcome.
  *
  * Prerequisites: state.energy !== null AND state.taskId !== null. Either null
- * redirects to /check-in with router.replace so the back button cannot return
+ * redirects to /today with router.replace so the back button cannot return
  * here out of order. If getTaskById cannot resolve the id (data mismatch), the
  * same replace fires.
  *
@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { useFlow } from "@/lib/store/flow-store";
 import { useUserData } from "@/lib/store/user-store";
 import { getTaskById } from "@/lib/repo/activity-repo";
+import { localDateString } from "@/lib/domain/day";
 import { TASK_SCREEN } from "@/lib/copy";
 
 export default function TaskPage() {
@@ -36,7 +37,7 @@ export default function TaskPage() {
   // Prerequisite guard: replace so the back button cannot return here out of order.
   useEffect(() => {
     if (state.energy === null || state.taskId === null) {
-      router.replace("/check-in");
+      router.replace("/today");
     }
   }, [state.energy, state.taskId, router]);
 
@@ -50,7 +51,7 @@ export default function TaskPage() {
   // Guard for a task id that no longer resolves — should not happen with seed data,
   // but the type contract allows undefined and a silent undefined-dereference would crash.
   if (task === undefined) {
-    router.replace("/check-in");
+    router.replace("/today");
     return null;
   }
 
@@ -117,7 +118,7 @@ export default function TaskPage() {
             store.recordActivity({
               id: crypto.randomUUID(),
               personaId: store.personaId,
-              date: new Date().toISOString().slice(0, 10),
+              date: localDateString(new Date()),
               dayOffset: 0,
               activityId: state.taskId ?? "",
               templateId: state.templateId ?? "",

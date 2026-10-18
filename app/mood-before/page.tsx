@@ -4,7 +4,7 @@
  * MoodBeforePage — mood rating before the user starts the suggested task.
  *
  * Prerequisite: state.energy must be set. If it is null the user navigated here
- * out of order; router.replace (not push) redirects to /check-in so the back
+ * out of order; router.replace (not push) redirects to /today so the back
  * button does not return to this page (static export has no server redirect;
  * replace is the only way to remove this page from browser history).
  *
@@ -26,7 +26,7 @@ export default function MoodBeforePage() {
   // Prerequisite guard: replace so the back button cannot return here out of order.
   useEffect(() => {
     if (state.energy === null) {
-      router.replace("/check-in");
+      router.replace("/today");
     }
   }, [state.energy, router]);
 
