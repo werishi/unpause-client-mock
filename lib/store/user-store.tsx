@@ -12,85 +12,29 @@
  *
  * Hydration rule (from ScaffoldAndCiMap.md): the first render — server
  * prerender and first client render — must produce identical output. Therefore
- * localStorage is never read at render time. `useState(PER_NEW_SEED)` sets the
- * initial value; the mount `useEffect` reads localStorage and, if a saved blob
- * exists, updates state. A missing or corrupt blob silently falls back to
- * PER_NEW_SEED.
+ * localStorage is never read at render time. `useState(buildInitialState())`
+ * sets the initial value; the mount `useEffect` reads localStorage and, if a
+ * saved blob exists, updates state. A missing or corrupt blob silently falls
+ * back to the initial defaults.
  */
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import type { LogEntry, CheckIn, EnergyLevel, DayPlan, PlanInput } from "@/lib/domain/types";
+import type { LogEntry, CheckIn, EnergyLevel, DayPlan } from "@/lib/domain/types";
 import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
-import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
 import { localDateString, isWelcomeBackDue, latestDate } from "@/lib/domain/day";
-import { planDay, addDays } from "@/lib/domain/planner";
-import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
-import { getActivities } from "@/lib/repo/activity-repo";
+import { WELCOME_BACK_GAP_DAYS, coreReducers } from "./core-slice";
+import { planReducers } from "./plan-slice";
+import type { ActivityOverridePatch } from "./plan-slice";
+import { buildInitialState, hydrate } from "./store-state";
+import type { UserDataState } from "./store-state";
+
+// Re-exported so page importers reach it from the same path as the store hooks.
+// No runtime code added; no circular import — plan-slice does not import from here.
+export type { ActivityOverridePatch } from "./plan-slice";
 
 // ─── Storage key ─────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "unpause.demo.v2";
-
-/**
- * Minimum whole-day absence before the "Welcome back" screen is shown.
- * Checked in the mount effect and in loadPersona.
- */
-const WELCOME_BACK_GAP_DAYS = 4;
-
-// ─── Internal state type ──────────────────────────────────────────────────────
-
-type UserDataState = {
-  personaId: string;
-  reasonIds: string[];
-  templateIds: string[];
-  valueIds: string[];
-  log: LogEntry[];
-  checkIns: CheckIn[];
-  startedAt: string | null;
-  personalisedAt: string | null;
-  personaliseDismissed: boolean;
-  wakeTime: string;
-  lastOpenedDate: string | null;
-  welcomeBackDue: boolean;
-  todayPlan: { date: string; energy: EnergyLevel; plan: DayPlan } | null;
-};
-
-// ─── Per-new seed ─────────────────────────────────────────────────────────────
-
-/**
- * The empty starting state — used on first render and after resetDemoData.
- * "per-new" signals that intake has not been configured yet; callers that
- * receive empty arrays should interpret them as "not configured", not as
- * "data missing" (consistent with persona-repo.ts comment).
- */
-const PER_NEW_SEED: UserDataState = {
-  personaId: "per-new",
-  reasonIds: [],
-  templateIds: [],
-  valueIds: [],
-  log: [],
-  checkIns: [],
-  startedAt: null,
-  personalisedAt: null,
-  personaliseDismissed: false,
-  wakeTime: "08:00",
-  lastOpenedDate: null,
-  welcomeBackDue: false,
-  todayPlan: null,
-};
-
-// ─── Initial state factory ───────────────────────────────────────────────────
-
-/**
- * Returns a fresh copy of the mount-default state — the same defaults used
- * when no stored blob exists on mount. Both the mount no-blob branch and
- * `resetDemoData` call this so the two paths stay in sync when a new field is
- * added: add the field once to `PER_NEW_SEED`, and both paths inherit the
- * correct default automatically.
- */
-function buildInitialState(): UserDataState {
-  return { ...PER_NEW_SEED };
-}
 
 // ─── Persist helper ───────────────────────────────────────────────────────────
 
@@ -107,13 +51,33 @@ function persist(s: UserDataState): void {
   }
 }
 
+// ─── Bound<R> mapped type ────────────────────────────────────────────────────
+
+/**
+ * Strips the first two parameters (`prev` and `ctx`) from each reducer and
+ * wraps the remaining args in a void-returning function. Reducers that only
+ * declare `prev` (no `ctx`) fall into the `() => void` branch.
+ *
+ * Module-scope because TypeScript does not allow generic type aliases inside
+ * function bodies.
+ */
+type Bound<R extends Record<string, (prev: any, ...a: any[]) => any>> = {
+  [K in keyof R]: R[K] extends (
+    prev: any,
+    ctx: { today: string },
+    ...args: infer A
+  ) => any
+    ? (...args: A) => void
+    : () => void;
+};
+
 // ─── Context type ─────────────────────────────────────────────────────────────
 
 export type UserDataContext = {
   // Non-persisted derived state
   hydrated: boolean;
   today: string;
-  // Persisted state
+  // Persisted core state
   personaId: string;
   reasonIds: string[];
   templateIds: string[];
@@ -127,7 +91,10 @@ export type UserDataContext = {
   lastOpenedDate: string | null;
   welcomeBackDue: boolean;
   todayPlan: { date: string; energy: EnergyLevel; plan: DayPlan } | null;
-  // Actions
+  // Persisted plan state
+  activityOverrides: Record<string, ActivityOverridePatch>;
+  moveUpPutOff: string | null;
+  // Core actions (bound reducers)
   recordActivity: (entry: LogEntry) => void;
   recordCheckIn: (energy: EnergyLevel) => void;
   startDay: (energy: EnergyLevel) => void;
@@ -140,6 +107,11 @@ export type UserDataContext = {
   markPersonalised: () => void;
   dismissPersonalise: () => void;
   acknowledgeWelcomeBack: () => void;
+  // Plan actions (bound reducers)
+  setActivityOverride: (activityId: string, patch: ActivityOverridePatch) => void;
+  clearActivityOverride: (activityId: string) => void;
+  putOffMoveUp: (templateId: string) => void;
+  // Provider functions (not reducers — see module doc)
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
 };
@@ -169,12 +141,12 @@ export function useUserData(): UserDataContext {
  *
  * Must be placed above any component that calls `useUserData`. The parent is
  * responsible for ensuring the provider is rendered only once in the tree
- * (typically in a root layout). State is initialised to `PER_NEW_SEED` so
- * the server prerender and first client render produce identical HTML; the
+ * (typically in a root layout). State is initialised to `buildInitialState()`
+ * so the server prerender and first client render produce identical HTML; the
  * mount effect then rehydrates from localStorage if a saved blob exists.
  */
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<UserDataState>(PER_NEW_SEED);
+  const [state, setState] = useState<UserDataState>(buildInitialState);
   /**
    * today is set once in the mount effect via localDateString(new Date()) so
    * all actions share the same local calendar date for the session. Not in
@@ -188,20 +160,51 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
    */
   const [hydrated, setHydrated] = useState<boolean>(false);
 
+  // ── Update and bind helpers ────────────────────────────────────────────────
+
+  /**
+   * Single write point for all bound reducers. Runs `fn` over the previous
+   * state, persists the result, and schedules a re-render.
+   */
+  function update(fn: (prev: UserDataState) => UserDataState): void {
+    setState((prev) => {
+      const next = fn(prev);
+      persist(next);
+      return next;
+    });
+  }
+
+  /**
+   * Turns each reducer in `reducers` into a void function that calls `update`.
+   * `today` from the outer closure is forwarded as `ctx.today` so reducers
+   * always receive the session date without a separate prop.
+   *
+   * The `Bound<R>` return type strips `prev` and `ctx` and exposes only the
+   * caller-facing extra arguments.
+   */
+  function bind<R extends Record<string, (prev: any, ...a: any[]) => any>>(
+    reducers: R
+  ): Bound<R> {
+    const result = {} as Bound<R>;
+    for (const key in reducers) {
+      const r = reducers[key] as any;
+      (result as any)[key] = (...args: any[]) =>
+        update((prev) => r(prev, { today }, ...args));
+    }
+    return result;
+  }
+
   // Mount effect: derive today, rehydrate from localStorage, then set hydrated.
   // localStorage must never be read at render time (hydration mismatch rule).
   useEffect(() => {
     const todayVal = localDateString(new Date());
     setToday(todayVal);
 
-    let parsedOrDefault: UserDataState = buildInitialState();
+    let raw: string | null = null;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        parsedOrDefault = JSON.parse(raw) as UserDataState;
-      }
+      raw = localStorage.getItem(STORAGE_KEY);
     } catch {
-      // Corrupt or unavailable storage — keep PER_NEW_SEED.
+      // Storage unavailable — keep initial state.
     }
 
     // Remove stale v1 blob; failure here must not abort the rest of the mount.
@@ -211,75 +214,25 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       // Storage unavailable — ignore.
     }
 
-    // Compute welcomeBackDue BEFORE writing lastOpenedDate; writing first would
-    // always produce a gap of zero and suppress the welcome-back screen.
-    const welcomeBackDue = isWelcomeBackDue(
-      parsedOrDefault.lastOpenedDate,
-      todayVal,
-      WELCOME_BACK_GAP_DAYS
-    );
-    setState({ ...parsedOrDefault, welcomeBackDue });
-
+    // hydrate() computes welcomeBackDue from the STORED lastOpenedDate before
+    // overwriting it with today — reversing the order suppresses the welcome-back
+    // screen (see store-state.ts hydrate doc comment and original line 214–215).
+    const result = hydrate(raw, todayVal);
+    const hydratedState: UserDataState = {
+      ...result.state,
+      welcomeBackDue: result.welcomeBackDue,
+    };
+    setState(hydratedState);
     setHydrated(true);
-
-    // Record today as the last opened date (after the gap check above).
-    setState((prev) => {
-      const next = { ...prev, lastOpenedDate: todayVal };
-      persist(next);
-      return next;
-    });
+    persist(hydratedState);
   }, []);
 
-  // ── Actions ────────────────────────────────────────────────────────────────
-
-  /**
-   * Appends a log entry. The caller sets `id` and `dayOffset: 0` for today.
-   * Uses the functional update form so concurrent renders compose correctly.
-   */
-  function recordActivity(entry: LogEntry): void {
-    setState((prev) => {
-      const next = { ...prev, log: [...prev.log, entry] };
-      persist(next);
-      return next;
-    });
-  }
-
-  /**
-   * Appends a check-in for today. Uses the `today` state variable (set in the
-   * mount effect via localDateString) so the date is always local, not UTC.
-   */
-  function recordCheckIn(energy: EnergyLevel): void {
-    setState((prev) => {
-      const entry: CheckIn = { date: today, energy };
-      const next = { ...prev, checkIns: [...prev.checkIns, entry] };
-      persist(next);
-      return next;
-    });
-  }
-
-  /**
-   * Sets active reasons and derives the rank-1 template per reason.
-   *
-   * For each `reasonId` in `ids`, calls `getTemplatesForReasons([reasonId])`
-   * and takes the first result's id. The collected ids are deduplicated
-   * (preserving first-seen order via a Set) and capped at 3. The at-most-3 cap
-   * matches the concept's template-count limit and prevents an over-full plan.
-   */
-  function setReasons(ids: string[]): void {
-    const seen = new Set<string>();
-    for (const rid of ids) {
-      const templates = getTemplatesForReasons([rid]);
-      const first = templates[0]?.id;
-      if (first && !seen.has(first)) seen.add(first);
-    }
-    const templateIds = [...seen].slice(0, 3);
-
-    setState((prev) => {
-      const next = { ...prev, reasonIds: ids, templateIds };
-      persist(next);
-      return next;
-    });
-  }
+  // ── Provider functions ─────────────────────────────────────────────────────
+  // loadPersona and resetDemoData stay here rather than becoming reducers
+  // because their control flow cannot be expressed as a pure reducer:
+  // loadPersona early-returns on an unknown id and must not persist in that
+  // case; resetDemoData removes the localStorage key rather than persisting a
+  // new blob (concept §2.0). Neither returns "new prev" — they set from scratch.
 
   /**
    * Loads a demo persona's configuration and seed history into state.
@@ -287,7 +240,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
    * For non-new personas: derives startedAt and personalisedAt from the earliest
    * history date, lastOpenedDate from the latest history date, and recomputes
    * welcomeBackDue before writing state. For "per-new" all new fields are reset
-   * to their PER_NEW_SEED defaults.
+   * to their initial defaults.
    *
    * `wakeTime` and `valueIds` are cast via `unknown` because the Persona
    * interface omits them (planner does not yet consume them); the cast avoids
@@ -337,6 +290,9 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
     setState(() => {
       const next: UserDataState = {
+        // Spreads plan-slice defaults (activityOverrides, moveUpPutOff) so new
+        // slice fields are never undefined when a persona is loaded.
+        ...buildInitialState(),
         personaId: id,
         reasonIds: persona.reasonIds,
         templateIds: persona.templateIds,
@@ -351,111 +307,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         welcomeBackDue,
         todayPlan: null,
       };
-      persist(next);
-      return next;
-    });
-  }
-
-  /**
-   * Builds today's day plan from the user's active templates and appends a
-   * check-in. The check-in is recorded first so Today does not re-ask the
-   * energy question on days where planDay returns no activities (empty plan).
-   */
-  function startDay(energy: EnergyLevel): void {
-    // Record the check-in before the plan so an empty-plan day is still marked.
-    recordCheckIn(energy);
-
-    const templates = getTemplates().filter((t) => state.templateIds.includes(t.id));
-    const items = state.templateIds.flatMap((id) => getTemplateItems(id));
-    const activities = getActivities();
-    const log = state.log.map((e) =>
-      typeof e.dayOffset === "number" ? { ...e, date: addDays(today, e.dayOffset) } : e
-    );
-    const input: PlanInput = { today, energy, templates, items, activities, log };
-    const plan = planDay(input);
-    const todayPlan = { date: today, energy, plan };
-    setState((prev) => {
-      const next = { ...prev, todayPlan };
-      persist(next);
-      return next;
-    });
-  }
-
-  /**
-   * Clears today's plan so the Today screen returns to State A (energy selection).
-   * Callable only before any activity for today has been logged — Today enforces
-   * this via the `anyLogged` guard, which hides the "Change energy" button once any
-   * card has been completed or skipped.
-   */
-  function clearTodayPlan(): void {
-    setState((prev) => {
-      const next = { ...prev, todayPlan: null };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Records the date the user first tapped "Start" (onboarding step 1). */
-  function markStarted(): void {
-    setState((prev) => {
-      const next = { ...prev, startedAt: today };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Stores up to three value ids selected during onboarding. */
-  function setValues(ids: string[]): void {
-    setState((prev) => {
-      const next = { ...prev, valueIds: ids.slice(0, 3) };
-      persist(next);
-      return next;
-    });
-  }
-
-  /**
-   * Stores up to three template ids. The caller must ensure at least one id is
-   * passed — the store does not enforce the minimum (that is a UI concern).
-   */
-  function setTemplates(ids: string[]): void {
-    setState((prev) => {
-      const next = { ...prev, templateIds: ids.slice(0, 3) };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Stores the user's preferred wake time as "HH:MM". */
-  function setWakeTime(hhmm: string): void {
-    setState((prev) => {
-      const next = { ...prev, wakeTime: hhmm };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Records today as the date personalisation was completed. */
-  function markPersonalised(): void {
-    setState((prev) => {
-      const next = { ...prev, personalisedAt: today };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Permanently hides the personalise prompt without completing it. */
-  function dismissPersonalise(): void {
-    setState((prev) => {
-      const next = { ...prev, personaliseDismissed: true };
-      persist(next);
-      return next;
-    });
-  }
-
-  /** Clears the welcome-back flag after the user has seen the screen. */
-  function acknowledgeWelcomeBack(): void {
-    setState((prev) => {
-      const next = { ...prev, welcomeBackDue: false };
       persist(next);
       return next;
     });
@@ -485,31 +336,9 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const value: UserDataContext = {
     hydrated,
     today,
-    personaId: state.personaId,
-    reasonIds: state.reasonIds,
-    templateIds: state.templateIds,
-    valueIds: state.valueIds,
-    log: state.log,
-    checkIns: state.checkIns,
-    startedAt: state.startedAt,
-    personalisedAt: state.personalisedAt,
-    personaliseDismissed: state.personaliseDismissed,
-    wakeTime: state.wakeTime,
-    lastOpenedDate: state.lastOpenedDate,
-    welcomeBackDue: state.welcomeBackDue,
-    todayPlan: state.todayPlan,
-    recordActivity,
-    recordCheckIn,
-    startDay,
-    clearTodayPlan,
-    setReasons,
-    setValues,
-    setTemplates,
-    setWakeTime,
-    markStarted,
-    markPersonalised,
-    dismissPersonalise,
-    acknowledgeWelcomeBack,
+    ...state,
+    ...bind(coreReducers),
+    ...bind(planReducers),
     loadPersona,
     resetDemoData,
   };

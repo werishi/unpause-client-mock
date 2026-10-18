@@ -1,0 +1,86 @@
+"use client";
+
+/**
+ * Renders a horizontal seven-cell week strip for the Plan tab.
+ *
+ * The parent computes the `dates` array (via `weekDates(today)`) and passes
+ * it in — this component does no date arithmetic of its own. Each cell is a
+ * plain structural button: no dot, tick, fill colour based on log data, or
+ * any per-day count. The only state expressed here is whether a cell matches
+ * `today` (highlight ring) or `selected` (outline ring). These two classes
+ * are deliberately distinct so the states are visually separate when a day
+ * that is both today and selected is rendered.
+ *
+ * Belongs to: Plan feature.
+ * Parent responsibility: resolve `today` (local date string) and call
+ * `weekDates(today)` before rendering this component.
+ */
+
+export interface WeekStripProps {
+  /** Seven ISO date strings (YYYY-MM-DD) representing the week to display. */
+  dates: string[];
+  /** Today's local date string (YYYY-MM-DD). Used only for the today highlight. */
+  today: string;
+  /** The currently selected date string (YYYY-MM-DD). */
+  selected: string;
+  /** Called with the date string when the user taps a cell. */
+  onSelect: (date: string) => void;
+}
+
+const WEEKDAY_INITIALS = ["S", "M", "T", "W", "T", "F", "S"] as const;
+
+/**
+ * Returns the weekday initial and day-of-month number for a YYYY-MM-DD date
+ * string. Uses `T00:00` local-time suffix to avoid UTC-shift on midnight
+ * boundaries (without it, `new Date("2026-10-18")` parses as UTC midnight and
+ * renders as Oct 17 in UTC-offset timezones).
+ */
+function parseDayCell(date: string): { initial: string; day: number } {
+  const d = new Date(date + "T00:00");
+  return {
+    initial: WEEKDAY_INITIALS[d.getDay()],
+    day: d.getDate(),
+  };
+}
+
+export default function WeekStrip({
+  dates,
+  today,
+  selected,
+  onSelect,
+}: WeekStripProps) {
+  return (
+    <div className="flex w-full" role="group" aria-label="Week">
+      {dates.map((date) => {
+        const { initial, day } = parseDayCell(date);
+        const isToday = date === today;
+        const isSelected = date === selected;
+
+        return (
+          <button
+            key={date}
+            type="button"
+            onClick={() => onSelect(date)}
+            aria-label={`${initial} ${day}${isToday ? " (today)" : ""}${isSelected ? " (selected)" : ""}`}
+            aria-pressed={isSelected}
+            className={[
+              "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-sm font-medium",
+              "rounded-lg transition-colors",
+              // Today: filled background highlight — purely structural, not data-driven
+              isToday
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground hover:bg-muted",
+              // Selected: distinct outline ring so today+selected is visually separate
+              isSelected ? "ring-2 ring-primary ring-offset-1" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            <span className="text-xs leading-none">{initial}</span>
+            <span className="text-base leading-none">{day}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}

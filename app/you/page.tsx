@@ -10,15 +10,16 @@
  */
 
 import Link from "next/link";
-import { SHELL } from "@/lib/copy";
+import { SHELL, YOU } from "@/lib/copy";
 
 export default function YouPage() {
   return (
     <div className="flex flex-col gap-4 py-6">
       <nav className="flex flex-col gap-3">
-        <Link href="/you/about">About Unpause</Link>
-        <Link href="/safety">Safety plan</Link>
-        <Link href="/you/demo">Demo</Link>
+        <Link href="/you/about">{YOU.youPageAboutLabel}</Link>
+        <Link href="/you/values">{YOU.valuesEntry}</Link>
+        <Link href="/safety">{YOU.youPageSafetyLabel}</Link>
+        <Link href="/you/demo">{YOU.youPageDemoLabel}</Link>
       </nav>
       <p className="text-sm text-gray-500 dark:text-gray-400 mt-auto">
         {SHELL.footer}

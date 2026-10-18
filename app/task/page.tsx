@@ -119,7 +119,6 @@ export default function TaskPage() {
               id: crypto.randomUUID(),
               personaId: store.personaId,
               date: localDateString(new Date()),
-              dayOffset: 0,
               activityId: state.taskId ?? "",
               templateId: state.templateId ?? "",
               outcome: "skip",

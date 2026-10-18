@@ -29,6 +29,8 @@ import {
   ABOUT,
   DEMO,
   WELCOME_BACK,
+  PLAN,
+  YOU,
 } from '../lib/copy'
 
 /**
@@ -50,7 +52,7 @@ describe('copy tone', () => {
       SHELL, SAFETY_PLAN_LINK, MOOD_RATING, SAFETY_PAGE, DONE_SCREEN,
       START_SCREEN, MOOD_BEFORE_PAGE, MOOD_AFTER_PAGE, NOT_FOUND_PAGE,
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
-      ABOUT, DEMO, WELCOME_BACK,
+      ABOUT, DEMO, WELCOME_BACK, PLAN, YOU,
     ]
     const strings = allExports.flatMap(collectStrings)
 
@@ -64,3 +66,15 @@ describe('copy tone', () => {
     }
   })
 })
+
+describe("PLAN copy — no deficit language", () => {
+  const planStrings = Object.values(PLAN).filter(v => typeof v === "string");
+  const badSubstrings = ["missed", "skipped", " left"];
+  const badPattern = /\d+\s*(of|\/)\s*\d+/;
+  it.each(planStrings)("'%s' contains no deficit substring", (s) => {
+    for (const bad of badSubstrings) {
+      expect(s).not.toContain(bad);
+    }
+    expect(s).not.toMatch(badPattern);
+  });
+});

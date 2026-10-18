@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { planDay, suggestNextTemplate, addDays } from '../lib/domain/planner'
+import { planDay, suggestNextTemplate, addDays, weekDates, weekOffers } from '../lib/domain/planner'
 import type { PlanInput, Activity, TemplateItem, LogEntry, Template } from '../lib/domain/types'
 
 // ─── Fixture helpers (file-local) ────────────────────────────────────────────
@@ -55,7 +55,7 @@ function basePlanInput(overrides: Partial<PlanInput> = {}): PlanInput {
   return {
     today: '2024-01-08',
     energy: 'medium',
-    templates: [{ id: 'tpl-test', title: 'Test Template', sourceIds: [] }],
+    templates: [{ id: 'tpl-test', title: 'Test Template', summary: '', level: 1, sourceIds: [] }],
     activities: [],
     items: [],
     log: [],
@@ -239,8 +239,62 @@ describe('planner', () => {
     expect(result.anchors).toEqual([])
   })
 
+  describe('weekDates', () => {
+    it('given a Monday, returns that date at index 0', () => {
+      const dates = weekDates('2024-01-08') // Monday
+      expect(dates[0]).toBe('2024-01-08')
+    })
+
+    it('given a Sunday, returns that date at index 6', () => {
+      const dates = weekDates('2024-01-14') // Sunday
+      expect(dates[6]).toBe('2024-01-14')
+    })
+
+    it('always returns seven entries', () => {
+      expect(weekDates('2024-01-10').length).toBe(7)
+    })
+
+    it('given a Wednesday, index 0 is the Monday of that week', () => {
+      // Jan 10 is a Wednesday; its ISO week starts Jan 8 (Monday)
+      expect(weekDates('2024-01-10')[0]).toBe('2024-01-08')
+    })
+  })
+
+  describe('weekOffers', () => {
+    it('no templateIds → empty byTemplate, empty anchors', () => {
+      const result = weekOffers([], [], [])
+      expect(result.anchors).toEqual([])
+      expect(result.byTemplate).toEqual([])
+    })
+
+    it('anchor activity is in anchors, not in byTemplate activities', () => {
+      const anchor = makeActivity({ id: 'act-anchor', category: 'anchor' })
+      const item = makeItem({ templateId: 'tpl-test', activityId: 'act-anchor' })
+      const result = weekOffers(['tpl-test'], [item], [anchor])
+      expect(result.anchors.map((a) => a.id)).toContain('act-anchor')
+      expect(result.byTemplate[0].activities.map((a) => a.id)).not.toContain('act-anchor')
+    })
+
+    it('duplicate activityIds in a template appear once in catalogue order', () => {
+      const act = makeActivity({ id: 'act-dup', category: 'pleasant' })
+      const items = [
+        makeItem({ templateId: 'tpl-test', activityId: 'act-dup' }),
+        makeItem({ templateId: 'tpl-test', activityId: 'act-dup' }),
+      ]
+      const result = weekOffers(['tpl-test'], items, [act])
+      expect(result.byTemplate[0].activities.filter((a) => a.id === 'act-dup').length).toBe(1)
+    })
+
+    it('activity absent from activities array is silently skipped', () => {
+      const item = makeItem({ templateId: 'tpl-test', activityId: 'act-missing' })
+      const result = weekOffers(['tpl-test'], [item], [])
+      expect(result.byTemplate[0].activities).toEqual([])
+      expect(result.anchors).toEqual([])
+    })
+  })
+
   it('suggestNextTemplate — returns null below threshold, nextTemplateId above, null when no nextTemplateId', () => {
-    const template: Template = { id: 'tpl-test', title: 'Test', nextTemplateId: 'tpl-next', sourceIds: [] }
+    const template: Template = { id: 'tpl-test', title: 'Test', summary: '', level: 1, nextTemplateId: 'tpl-next', sourceIds: [] }
     const items: TemplateItem[] = [makeItem({ templateId: 'tpl-test', timesPerWeek: 3 })]
     // threshold = ceil(3/2) = 2 entries per week required for 3 consecutive prior weeks
 
@@ -267,7 +321,7 @@ describe('planner', () => {
     expect(suggestNextTemplate(template, items, aboveLog, '2024-01-08')).toBe('tpl-next')
 
     // nextTemplateId absent → null even above threshold
-    const noNext: Template = { id: 'tpl-test', title: 'Test', sourceIds: [] }
+    const noNext: Template = { id: 'tpl-test', title: 'Test', summary: '', level: 1, sourceIds: [] }
     expect(suggestNextTemplate(noNext, items, aboveLog, '2024-01-08')).toBeNull()
   })
 })

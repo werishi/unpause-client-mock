@@ -22,6 +22,7 @@ import { useUserData } from "@/lib/store/user-store";
 import { ONBOARDING } from "@/lib/copy";
 import { getValues } from "@/lib/repo/value-repo";
 import FlowCloseButton from "@/components/FlowCloseButton";
+import ValueChips from "@/components/ValueChips";
 
 // ─── Progress dots ────────────────────────────────────────────────────────────
 
@@ -89,27 +90,13 @@ export default function OnboardingValuesPage() {
         {ONBOARDING.valuesHeading}
       </h1>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {allValues.map((v) => {
-          const isSelected = selected.includes(v.id);
-          return (
-            <button
-              key={v.id}
-              type="button"
-              role="checkbox"
-              aria-checked={isSelected}
-              onClick={() => toggle(v.id)}
-              className={[
-                "cursor-pointer rounded-full border-2 px-4 py-2 text-sm font-medium transition-colors",
-                isSelected
-                  ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-950 dark:text-indigo-300"
-                  : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-gray-500",
-              ].join(" ")}
-            >
-              {v.emoji} {v.label}
-            </button>
-          );
-        })}
+      <div className="mt-6">
+        <ValueChips
+          values={allValues}
+          selectedIds={selected}
+          max={3}
+          onToggle={toggle}
+        />
       </div>
 
       {selected.length >= 3 && (

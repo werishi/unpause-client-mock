@@ -25,7 +25,12 @@ export default function TabBar({ tabs }: TabBarProps) {
   // before matching, but keep the root "/" intact.
   const pathname = raw !== "/" && raw.endsWith("/") ? raw.slice(0, -1) : raw;
 
-  const isTabbed = pathname === "/today" || pathname.startsWith("/you");
+  const isTabbed =
+    pathname === "/today" ||
+    pathname === "/plan" ||
+    // /you itself and its sub-pages (/you/demo, /you/about) show the tab bar;
+    // focused flows under /you/values are excluded, mirroring the /plan exact guard.
+    (pathname.startsWith("/you") && !pathname.startsWith("/you/values"));
 
   if (!isTabbed) return null;
 

@@ -47,6 +47,7 @@ export default function AppShell({ children }: AppShellProps) {
       <TabBar
         tabs={[
           { href: "/today", label: TABS.todayLabel },
+          { href: "/plan", label: TABS.planLabel },
           { href: "/you", label: TABS.youLabel },
         ]}
       />

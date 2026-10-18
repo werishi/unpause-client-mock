@@ -17,6 +17,7 @@ import personasJson from "@/data/personas.json";
 import checkInsJson from "@/data/persona-checkins.json";
 import personaLogJson from "@/data/persona-log.json";
 import type { Persona, LogEntry, CheckIn, EnergyLevel } from "../domain/types";
+import { addDays } from "../domain/planner";
 
 /** Raw shape of a row in `data/persona-checkins.json`. */
 type RawCheckIn = {
@@ -80,23 +81,16 @@ export function getPersonaSeed(
     (e) => e.personaId === personaId,
   );
 
-  function resolveDate(dayOffset: number): string {
-    const d = new Date(today);
-    d.setDate(d.getDate() + dayOffset);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
+  // addDays uses consistent UTC arithmetic and avoids the UTC-parse / local-setDate
+  // mismatch that caused near-midnight off-by-one errors with new Date(today).setDate().
   return {
-    checkIns: filteredCheckIns.map((c) => ({
-      ...c,
-      date: resolveDate(c.dayOffset),
+    checkIns: filteredCheckIns.map(({ dayOffset, ...rest }) => ({
+      ...rest,
+      date: addDays(today, dayOffset),
     })) as (CheckIn & { date: string })[],
-    log: filteredLog.map((e) => ({
-      ...e,
-      date: resolveDate(e.dayOffset),
+    log: filteredLog.map(({ dayOffset, ...rest }) => ({
+      ...rest,
+      date: addDays(today, dayOffset),
     })) as (LogEntry & { date: string })[],
   };
 }

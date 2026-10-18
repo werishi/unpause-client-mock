@@ -43,5 +43,14 @@
     "templateIds": ["tpl-keep-it-going"],
     "valueIds": ["val-health", "val-nature", "val-friends"],
     "wakeTime": "07:00"
+  },
+  {
+    "id": "per-mira",
+    "displayName": "Mira, ready for more",
+    "blurb": "Ready for a bit more.",
+    "reasonIds": ["rsn-cant-get-going"],
+    "templateIds": ["tpl-small-steps"],
+    "valueIds": ["val-health", "val-home"],
+    "wakeTime": "07:30"
   }
 ]

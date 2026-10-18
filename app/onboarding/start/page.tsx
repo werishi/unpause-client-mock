@@ -29,6 +29,7 @@ import { ONBOARDING } from "@/lib/copy";
 import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
 import { getTemplates } from "@/lib/repo/template-repo";
 import FlowCloseButton from "@/components/FlowCloseButton";
+import TemplatePicker from "@/components/TemplatePicker";
 
 // ─── Wake-time options ────────────────────────────────────────────────────────
 
@@ -112,12 +113,11 @@ export default function OnboardingStartPage() {
   const [wake, setWake] = useState<string>(wakeTime);
 
   function toggle(id: string): void {
-    setSelectedIds((s) => {
-      if (!s.includes(id)) return [...s, id];
-      // Silent no-op: at least one template must remain selected (G10).
-      if (s.length <= 1) return s;
-      return s.filter((x) => x !== id);
-    });
+    // Limit guard is enforced by TemplatePicker; do not re-add it here.
+    // A double guard makes onToggle unreachable at the 1/3 boundary.
+    setSelectedIds((s) =>
+      s.includes(id) ? s.filter((x) => x !== id) : [...s, id]
+    );
   }
 
   function commit(): void {
@@ -150,29 +150,13 @@ export default function OnboardingStartPage() {
         {ONBOARDING.startHeading}
       </h1>
 
-      <ul role="list" className="mt-6 flex flex-col gap-3">
-        {candidateTemplates.map((t) => {
-          const isSelected = selectedIds.includes(t.id);
-          return (
-            <li
-              key={t.id}
-              role="checkbox"
-              aria-checked={isSelected}
-              onClick={() => toggle(t.id)}
-              className={[
-                "cursor-pointer rounded-xl border-2 px-4 py-3 transition-colors",
-                isSelected
-                  ? "border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950"
-                  : "border-gray-200 bg-white hover:border-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-500",
-              ].join(" ")}
-            >
-              <span className="block font-semibold text-gray-900 dark:text-gray-100">
-                {t.title}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="mt-6">
+        <TemplatePicker
+          templates={candidateTemplates}
+          selectedIds={selectedIds}
+          onToggle={toggle}
+        />
+      </div>
 
       <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
         {ONBOARDING.moveUpNote}

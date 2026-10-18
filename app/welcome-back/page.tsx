@@ -14,17 +14,16 @@
  * the mount effect has rehydrated from localStorage would overwrite the
  * just-loaded state with a stale write (see Domain Notes Part 1).
  *
- * "use client" is required: this component reads from the store via useContext
+ * "use client" is required: this component reads from the store via useUserData
  * and calls useRouter — neither is available in a server component.
  */
 
-import { useContext } from "react";
 import { useRouter } from "next/navigation";
-import { UserDataContext } from "@/lib/store/user-store";
+import { useUserData } from "@/lib/store/user-store";
 import { WELCOME_BACK } from "@/lib/copy";
 
 export default function WelcomeBackPage() {
-  const { hydrated, acknowledgeWelcomeBack } = useContext(UserDataContext);
+  const { hydrated, acknowledgeWelcomeBack } = useUserData();
   const router = useRouter();
 
   const handleCta = () => {

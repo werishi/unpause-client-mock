@@ -77,6 +77,10 @@ export interface Reason {
 export interface Template {
   id: string;
   title: string;
+  /** One-sentence description of the template shown in picker cards. */
+  summary: string;
+  /** Difficulty level (1 = gentlest). Rendered as "Level N" in picker cards. */
+  level: number;
   /** ID of the next template to offer when the user is ready to step up (P9). */
   nextTemplateId?: string;
   /** IDs from data/sources.json that back this template's activity mix. */

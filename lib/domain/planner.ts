@@ -32,7 +32,7 @@ import type {
  * resolved ISO dates. suggestNextTemplate resolves them inline; planDay's caller
  * must resolve dayOffset to `date` using addDays before calling planDay.
  */
-type RawLogEntry = { templateId: string; dayOffset: number };
+type RawLogEntry = { templateId: string; dayOffset: number; date?: string };
 
 // ─── Module-private helpers ───────────────────────────────────────────────────
 
@@ -80,6 +80,85 @@ export function addDays(iso: string, n: number): string {
   const mo = String(dt.getUTCMonth() + 1).padStart(2, '0');
   const dy = String(dt.getUTCDate()).padStart(2, '0');
   return `${y}-${mo}-${dy}`;
+}
+
+/**
+ * Returns the seven ISO date strings (Monday–Sunday) of the calendar week
+ * containing `today`. Index 0 is always Monday; index 6 is always Sunday.
+ * Delegates week-start resolution to the module-private `weekStart` so the
+ * ISO week boundary cannot drift between callers.
+ */
+export function weekDates(today: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => addDays(weekStart(today), i));
+}
+
+/**
+ * Return shape for weekOffers — the offer set displayed on the plan page.
+ *
+ * `anchors` collects every Activity with category "anchor" found across all
+ * templateIds, de-duplicated across templates; `byTemplate` lists each template's
+ * non-anchor activities in TemplateItem array order, de-duplicated by activityId
+ * (first occurrence wins).
+ *
+ * weekOffers deliberately receives no log and no timesPerWeek reading: showing
+ * "offered N× per week" or "X left this week" is the offer-rate-as-quota reading
+ * the intake concept's round-1 repair refused. This function must not receive that
+ * information — the prohibition is structural, not conventional.
+ */
+export interface WeekOffers {
+  anchors: Activity[];
+  byTemplate: { templateId: string; activities: Activity[] }[];
+}
+
+/**
+ * Builds the set of activities the plan page should display for a given week.
+ * Takes no log input and never reads `timesPerWeek` — see `WeekOffers` above for
+ * the reasoning.
+ *
+ * @param templateIds  Ordered list of template ids to include (typically one active
+ *                     template, but the plan page may include several).
+ * @param items        All TemplateItem rows — filtered to each templateId inline.
+ * @param activities   Full Activity catalogue; missing activityIds are silently skipped.
+ */
+export function weekOffers(
+  templateIds: string[],
+  items: TemplateItem[],
+  activities: Activity[]
+): WeekOffers {
+  // Build O(1) lookup; missing ids are skipped at the call site below (seed-data gap)
+  const activityMap = new Map<string, Activity>(activities.map((a) => [a.id, a]));
+  const seenAnchorIds = new Set<string>();
+  const anchors: Activity[] = [];
+  const byTemplate: WeekOffers['byTemplate'] = [];
+
+  for (const templateId of templateIds) {
+    const seenIds = new Set<string>();
+    const nonAnchors: Activity[] = [];
+
+    for (const item of items) {
+      if (item.templateId !== templateId) continue;
+      // activityId not in catalogue — seed-data gap, not a logic error; skip silently
+      const activity = activityMap.get(item.activityId);
+      if (!activity) continue;
+      // De-duplicate by activityId, preserving first-occurrence order
+      if (seenIds.has(activity.id)) continue;
+      seenIds.add(activity.id);
+
+      if (activity.category === 'anchor') {
+        // Anchors collected globally; de-dup across templates by id
+        if (!seenAnchorIds.has(activity.id)) {
+          seenAnchorIds.add(activity.id);
+          anchors.push(activity);
+        }
+      } else {
+        nonAnchors.push(activity);
+      }
+    }
+
+    byTemplate.push({ templateId, activities: nonAnchors });
+  }
+
+  return { anchors, byTemplate };
 }
 
 // ─── planDay internal types ───────────────────────────────────────────────────
@@ -352,8 +431,10 @@ export function suggestNextTemplate(
     const ws = addDays(currentWeekStart, -7 * k);
     const we = addDays(ws, 6);
     const engagedCount = log.filter((e) => {
-      const date = addDays(today, e.dayOffset);
-      return e.templateId === template.id && date >= ws && date <= we;
+      // Date-wins rule: use e.date when present (user-recorded rows); fall back
+      // to addDays for persona-seed rows that carry only dayOffset.
+      const rowDate = e.date ?? addDays(today, e.dayOffset ?? 0);
+      return e.templateId === template.id && rowDate >= ws && rowDate <= we;
     }).length;
     if (engagedCount < threshold) return null;
   }

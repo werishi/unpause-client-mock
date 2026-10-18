@@ -150,6 +150,7 @@ export const TASK_SCREEN = {
 /** Tab-bar display labels. */
 export const TABS = {
   todayLabel: "Today",
+  planLabel: "Plan",
   youLabel: "You",
 } as const;
 
@@ -255,6 +256,8 @@ export const ONBOARDING = {
    * but both in fact call dismissPersonalise() — the distinction is tonal for the context.
    */
   notNowLabel: "Not now",
+  /** Heading above the week preview strip on /onboarding/done. */
+  firstWeekHeading: "Your first week",
 } as const;
 
 /** Strings for the About Unpause page (/you/about). */
@@ -286,4 +289,97 @@ export const WELCOME_BACK = {
   headline: "Welcome back.",
   body: "Today is a fresh start. Everything you did before is still here.",
   ctaLabel: "See today",
+} as const;
+
+/** Strings for the Plan tab and its sub-routes (/plan, /plan/templates, /plan/activity). */
+export const PLAN = {
+  /** Shown for a past day when the log has no done entries for that date. */
+  quietDay: "A quiet day.",
+  /** Shown for today when the user has not yet done a check-in. */
+  beforeCheckIn: "Today starts with a check-in.",
+  /** Link label that navigates to /today from the before-check-in state. */
+  goToToday: "Go to Today",
+  /** Shown for a future day that has no plan yet. */
+  futureDay: "This day starts with a check-in.",
+  /** Prefix before the comma-joined list of anchor activity titles. */
+  anchorPrefix: "Your anchors:",
+  /** Heading for the week-offers section below the day detail. */
+  weekOffersHeading: "What may come up this week",
+  /** Edit link label on a PlanActivityRow in the week-offers section. */
+  editActivity: "Edit",
+  /**
+   * Fallback title when an activityId from the log or plan cannot be resolved
+   * in the catalogue — guards against stale localStorage data.
+   */
+  noActivity: "This activity isn't available.",
+  /** Section heading for the active templates list on /plan. */
+  templatesSectionHeading: "Templates",
+  /** Text link below template cards on /plan navigating to /plan/templates. */
+  changeTemplates: "Change templates",
+  /** Label prefix rendered as `${PLAN.templateLevel} ${template.level}` in picker cards. */
+  templateLevel: "Level",
+  /**
+   * Offer card body on /plan when suggestNextTemplate returns a result.
+   * Substitute {current} and {next} at the call site via .replace().
+   */
+  moveUpOfferText: "You've been keeping up with {current}. Want to try {next}?",
+  /** Primary action button on the move-up offer card. */
+  moveUpButton: "Move up",
+  /** Secondary action button on the move-up offer card. */
+  moveUpDismiss: "Not now",
+  /** <h1> on /plan/templates. */
+  templatesPageHeading: "Choose your templates",
+  /** Save button on /plan/templates. */
+  saveTemplates: "Save",
+  /** Always-visible hint in TemplatePicker — never conditional. */
+  templatePickerHint: "Choose one to three.",
+  /**
+   * Notice shown on /plan when todayPlan is non-null and the user has changed
+   * their active templates since check-in (concept §3.3: plan is fixed at
+   * check-in; changes apply at the next one).
+   */
+  changesNextCheckIn: "Changes start with your next check-in.",
+  /**
+   * Text button on /plan/activity that clears the user's override and restores
+   * the activity to the planner's original suggestion (concept §2.5).
+   */
+  activityEditUseOriginal: "Use the original",
+  /**
+   * Label for the "None" chip on /plan/activity. Tapping it signals a cleared
+   * selection; the page calls onToggle("") and interprets the empty id.
+   */
+  activityEditNone: "None",
+} as const;
+
+/**
+ * Strings for the You section (/you and sub-routes including /you/values).
+ *
+ * youPageAboutLabel, youPageSafetyLabel, youPageDemoLabel were hard-coded
+ * in app/you/page.tsx; they are centralised here so /you/values and future
+ * You sub-pages share a single copy location.
+ */
+export const YOU = {
+  /** Navigation link to /you/about in the You hub. */
+  youPageAboutLabel: "About Unpause",
+  /** Navigation link to /safety in the You hub. */
+  youPageSafetyLabel: "Safety plan",
+  /** Navigation link to /you/demo in the You hub. */
+  youPageDemoLabel: "Demo",
+  /**
+   * Entry label in the You hub nav that leads to /you/values.
+   * Rendered beside the other three entries when the You sub-page is built.
+   */
+  valuesEntry: "Your values",
+  /**
+   * Caption below the chip grid on /you/values explaining why values matter.
+   * Exact string from concept §2.6; do not paraphrase.
+   */
+  valuesCaption: "These help you see why an activity matters to you.",
+  /** Save button on /you/values. */
+  valuesSave: "Save",
+  /**
+   * Back/close button on /you/values.
+   * Matches the pattern used by SAFETY_PAGE.backLabel and other pages — "Back".
+   */
+  valuesBack: "Back",
 } as const;
