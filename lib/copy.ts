@@ -226,6 +226,19 @@ export const TODAY = {
    * Matches the tab label so users recognise the destination.
    */
   lookBackCtaLabel: "Look back",
+  /**
+   * Heading for the digest card shown on Today when a new digest slot is ready.
+   * The card is hidden after the user taps "Not now" or opens /digest (concept §2.3).
+   * Placed above the end sentence so it is never shown after "you can put the phone down".
+   */
+  digestCardTitle: "Something to read",
+  /**
+   * Prompt line shown on Today between the plan and the end sentence when the user
+   * has a plan for today (State B, todayPlan !== null). Tapping leads to /swap.
+   * Hidden once allLogged is true — consistent with the rule that nothing new is
+   * offered after the end sentence (concept §3.3).
+   */
+  swapLine: "Feel like scrolling? Try this instead.",
 } as const;
 
 /** Strings for the welcome screen (/welcome — first open). */
@@ -413,6 +426,16 @@ export const YOU = {
    * Matches the pattern used by SAFETY_PAGE.backLabel and other pages — "Back".
    */
   valuesBack: "Back",
+  /**
+   * Navigation link in the You hub that leads to /you/digest (interest and digest
+   * setup). Shown alongside the existing About, Values, Safety, and Demo entries.
+   */
+  interestsAndDigest: "Interests and digest",
+  /**
+   * Navigation link in the You hub that leads to /you/media (media budget setup).
+   * Shown alongside the other You hub entries once the budget feature is built.
+   */
+  mediaBudget: "Media budget",
 } as const;
 
 /**
@@ -576,4 +599,142 @@ export const LOOK_BACK = {
     "A favourite meal",
     "Time for yourself",
   ],
+} as const;
+
+/**
+ * Strings for the interest digest flow (/digest and /digest/setup).
+ *
+ * No deficit language, no N-of-M patterns. The digest is shown as a gentle
+ * offer, not a count of unread items (concept §2.3). `cardTitle` mirrors
+ * `TODAY.digestCardTitle` — both refer to the same card, so they must read
+ * consistently. Tests extend the deficit-pattern check to cover this export.
+ */
+export const DIGEST = {
+  /**
+   * Heading on the /digest page. Brief — the page itself carries the content.
+   */
+  cardTitle: "Something to read",
+  /** Shown when no digest items match the user's interests for this slot. */
+  emptyState: "Nothing matching your interests right now. Check back later.",
+  /**
+   * Shown after the last item in the current digest slot — signals the visit is
+   * complete without framing it as a task or a count (G6, G10).
+   */
+  allCaughtUp: "That's everything for now.",
+  /** Link from /digest back to Today after reading (or when skipping). */
+  nextDigestLabel: "Done reading",
+  /**
+   * CTA at the bottom of the digest page pointing to /digest/setup.
+   * Kept as a quiet text link so it does not compete with the content.
+   */
+  endCta: "Change what you see",
+  /** Heading on the /digest/setup (interests) page. */
+  setupTitle: "What interests you?",
+  /**
+   * One-sentence prompt below the heading on /digest/setup.
+   * No promise of quality or relevance (copy.ts line 11 constraint).
+   */
+  setupPrompt: "Topics you enjoy — a mix is fine.",
+  /** Label above the digest-time chip grid on /digest/setup. */
+  timesTitle: "When do you like to read?",
+  /** Save / confirm button on /digest/setup. */
+  saveButton: "Save",
+} as const;
+
+/**
+ * Strings for the swap flow (/swap).
+ *
+ * The swap is a one-activity offer shown when the user feels like scrolling.
+ * No browsing, no list, no reroll — one activity chosen for the time of day
+ * (concept §2.4, Rejected Alternatives). `setupLink` points to /you/media so
+ * users who want to adjust their budget have a direct path without leaving mid-flow.
+ */
+export const SWAP = {
+  /** Page heading on /swap. */
+  title: "Feel like scrolling?",
+  /**
+   * Short sentence above the offered activity that frames the swap.
+   * Not prescriptive — "here's one idea" rather than "you should do this".
+   */
+  leadIn: "Here's something you could do instead.",
+  /** Primary button that starts the activity loop (sets energy, navigates to /mood-before). */
+  startButton: "Start this",
+  /**
+   * Quiet text link to dismiss the swap and return to Today.
+   * Neutral — no judgement on choosing not to swap (G10).
+   */
+  skipLink: "Maybe another time",
+  /**
+   * Quiet text link to /you/media for users who want to adjust their media budget.
+   * Shown only when `todayPlan !== null` (same gate as the swap card on Today).
+   */
+  setupLink: "Adjust media budget",
+} as const;
+
+/**
+ * Strings for the media budget pages (/you/media) and the budget display on /look-back.
+ *
+ * No deficit language, no N-of-M patterns (concept §2.7, G10 non-shaming).
+ * `overBudget` acknowledges the over-budget state warmly without a judgement —
+ * framing going over as a failure is explicitly refused (DigestAndMediaMap Rejected
+ * Alternatives: "daily pass/fail is what 03-media-consumption.md Implication 2 warns against").
+ * `withinBudget` is equally quiet so the app communicates no pass/fail at all.
+ * Tests extend the deficit-pattern check to cover this export.
+ */
+export const MEDIA_BUDGET = {
+  /** Page heading on /you/media. */
+  title: "Media budget",
+  /**
+   * Label above the estimate chip grid. The estimate is how much time the user
+   * thinks they spend on media daily; it seeds the suggested budget.
+   */
+  estimateLabel: "How much media time feels typical for you?",
+  /**
+   * One-sentence context below the estimate chips.
+   * No "too much" framing — the estimate is neutral input, not a confession.
+   */
+  estimatePrompt: "A rough number is fine.",
+  /** Label above the suggested/adjustable budget on the second step. */
+  budgetLabel: "Your media budget",
+  /**
+   * One sentence below the budget explaining what it is.
+   * The budget is the user's own intention, not a limit the app enforces.
+   */
+  budgetPrompt: "This is your own intention — adjust it anytime.",
+  /**
+   * Note shown when the user tries to go below the minimum (15 min).
+   * Tone: informative, not a warning. The floor exists because a budget of zero
+   * or very low would frame any media use as a failure (G10).
+   */
+  budgetFloorNote: "The minimum is 15 minutes.",
+  /** Heading of the weekly budget bar chart on /you/media. */
+  weekTitle: "This week",
+  /**
+   * Shown under the week chart for days within budget.
+   * No celebratory framing — neutral acknowledgement (G10 equally applies to
+   * positive framing that sets up a comparison; bars carry the weight instead).
+   */
+  withinBudget: "Within your intention today.",
+  /**
+   * Shown under the week chart for days over budget.
+   * Warm acknowledgement; no judgement. The over-budget state is explicitly not
+   * framed as a failure (concept §2.5, DigestAndMediaMap Domain Notes Part 3).
+   */
+  overBudget: "A bit over today — that happens.",
+  /**
+   * Shown on Today's media-budget row when no estimate has been set yet.
+   * Points to /you/media without pressure.
+   */
+  noEstimate: "Set a rough media estimate in You.",
+  /**
+   * Shown when an estimate exists but no confirmed budget is set.
+   * The suggestion is displayed alongside this line; this copy prompts the user
+   * to confirm it if they like (concept §2.5: suggestion is never auto-stored).
+   */
+  noBudget: "Here's a suggested budget — confirm it to use it.",
+  /**
+   * Link from /swap to /you/media.
+   * Quiet text; only shown when `todayPlan !== null` (concept §2.5 gate).
+   */
+  linkToSwap: "Adjust budget",
 } as const;

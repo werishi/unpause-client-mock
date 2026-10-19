@@ -15,6 +15,7 @@
 import { CoreState, CORE_DEFAULTS, WELCOME_BACK_GAP_DAYS } from './core-slice';
 import { PlanState, PLAN_DEFAULTS } from './plan-slice';
 import { LookBackState, LOOK_BACK_DEFAULTS } from './look-back-slice';
+import { DigestState, DIGEST_DEFAULTS } from './digest-slice';
 import { daysBetween } from '@/lib/domain/day';
 
 // ---------------------------------------------------------------------------
@@ -29,7 +30,7 @@ import { daysBetween } from '@/lib/domain/day';
  * **Do not import this type into any `*-slice.ts` file.** Each slice knows only its own state
  * type; slices are composed here, not inside each other.
  */
-export type UserDataState = CoreState & PlanState & LookBackState;
+export type UserDataState = CoreState & PlanState & LookBackState & DigestState;
 
 // ---------------------------------------------------------------------------
 // buildInitialState
@@ -55,6 +56,7 @@ export function buildInitialState(): UserDataState {
     ...CORE_DEFAULTS,
     ...PLAN_DEFAULTS,
     ...LOOK_BACK_DEFAULTS,
+    ...DIGEST_DEFAULTS,
     // Freshly allocated arrays — do not remove; see doc comment above.
     log: [],
     checkIns: [],
@@ -67,6 +69,11 @@ export function buildInitialState(): UserDataState {
     comebackGrants: [],
     rewardsReached: [],
     reviewSeen: { week: null, month: null },
+    // DigestState array and object fields re-allocated to avoid sharing DIGEST_DEFAULTS references.
+    interests: [],
+    digestTimes: [],
+    mediaMinutesByDate: {},
+    media: { estimateMinutes: null, budgetMinutes: null },
   };
 }
 

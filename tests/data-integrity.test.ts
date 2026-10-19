@@ -16,6 +16,7 @@ import sources from '../data/sources.json'
 import personas from '../data/personas.json'
 import personaCheckins from '../data/persona-checkins.json'
 import personaLog from '../data/persona-log.json'
+import digestItems from '../data/digest-items.json'
 
 // ─── ID sets (derived once at module level) ───────────────────────────────────
 
@@ -184,6 +185,11 @@ describe('data integrity', () => {
       if (typeof row.summary === 'string') {
         assertNoban(row.summary, 'templates', row.id, 'summary')
       }
+    }
+    // Digest item titles are user-facing (shown on /digest); a banned word in a
+    // placeholder title would slip past a tone review that only reads copy.ts.
+    for (const row of digestItems as any[]) {
+      assertNoban(row.title ?? '', 'digest-items', row.id, 'title')
     }
   })
 })

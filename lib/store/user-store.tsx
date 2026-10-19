@@ -20,7 +20,8 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import type { LogEntry, CheckIn, EnergyLevel, DayPlan } from "@/lib/domain/types";
-import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
+import { getPersonas, getPersonaSeed, getPersonaMediaSeed } from "@/lib/repo/persona-repo";
+import { addDays } from "@/lib/domain/planner";
 import { localDateString, isWelcomeBackDue, latestDate } from "@/lib/domain/day";
 import { WELCOME_BACK_GAP_DAYS, coreReducers } from "./core-slice";
 import { planReducers } from "./plan-slice";
@@ -29,6 +30,11 @@ import {
   grantComebackBonus, setReward, removeReward, markRewardReached,
   dismissRewardOffer, markReviewSeen, setReviewPreview, setPlainVersion,
 } from "./look-back-slice";
+import {
+  reduceSetInterests, reduceSetDigestTimes, reduceMarkDigestSeen,
+  reduceSetMediaEstimate, reduceSetMediaBudget, reduceSetMediaMinutesToday,
+} from "./digest-slice";
+import type { MediaState } from "./digest-slice";
 import { buildInitialState, hydrate } from "./store-state";
 import type { UserDataState } from "./store-state";
 
@@ -132,6 +138,19 @@ export type UserDataContext = {
   markReviewSeen: (kind: "week" | "month", key: string) => void;
   setReviewPreview: (value: boolean) => void;
   setPlainVersion: (value: boolean) => void;
+  // Persisted digest state
+  interests: string[];
+  digestTimes: string[];
+  digestSeenSlot: string | null;
+  media: MediaState;
+  mediaMinutesByDate: Record<string, number>;
+  // Digest and media actions
+  setInterests: (interests: string[]) => void;
+  setDigestTimes: (times: string[]) => void;
+  markDigestSeen: (slotKey: string) => void;
+  setMediaEstimate: (minutes: number) => void;
+  setMediaBudget: (minutes: number) => void;
+  setMediaMinutesToday: (minutes: number) => void;
   // Provider functions (not reducers — see module doc)
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
@@ -278,6 +297,34 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, ...setPlainVersion(prev, value) }));
   }
 
+  // ── Digest action bindings ────────────────────────────────────────────────
+  // These reducers take DigestState directly (not via the bind helper's ctx
+  // pattern), so they are wired individually and call update() for immediate
+  // persistence — the digest fields (interests, budget) need to survive a page
+  // refresh without a subsequent core or plan action to trigger persist.
+
+  function setInterestsAction(interests: string[]): void {
+    update((prev) => ({ ...prev, ...reduceSetInterests(prev, interests) }));
+  }
+  function setDigestTimesAction(times: string[]): void {
+    update((prev) => ({ ...prev, ...reduceSetDigestTimes(prev, times) }));
+  }
+  function markDigestSeenAction(slotKey: string): void {
+    update((prev) => ({ ...prev, ...reduceMarkDigestSeen(prev, slotKey) }));
+  }
+  function setMediaEstimateAction(minutes: number): void {
+    update((prev) => ({ ...prev, ...reduceSetMediaEstimate(prev, minutes) }));
+  }
+  function setMediaBudgetAction(minutes: number): void {
+    update((prev) => ({ ...prev, ...reduceSetMediaBudget(prev, minutes) }));
+  }
+  function setMediaMinutesTodayAction(minutes: number): void {
+    update((prev) => ({
+      ...prev,
+      ...reduceSetMediaMinutesToday(prev, localDateString(new Date()), minutes),
+    }));
+  }
+
   // ── Provider functions ─────────────────────────────────────────────────────
   // loadPersona and resetDemoData stay here rather than becoming reducers
   // because their control flow cannot be expressed as a pure reducer:
@@ -339,6 +386,20 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       wakeTime = rawWakeTime;
     }
 
+    // Resolve media seed before setState so day-offset arithmetic uses the same
+    // `today` that the main seed uses. Null when the persona has no media history
+    // (per-new, per-sam, per-lea, per-ayla); defaults from buildInitialState() apply.
+    const mediaSeed = getPersonaMediaSeed(id);
+    const mediaMinutesByDate: Record<string, number> = {};
+    if (mediaSeed) {
+      for (const [offsetStr, minutes] of Object.entries(
+        mediaSeed.mediaMinutesByDayOffset,
+      )) {
+        const offset = parseInt(offsetStr, 10);
+        mediaMinutesByDate[addDays(today, offset)] = minutes;
+      }
+    }
+
     setState((prev) => {
       const next: UserDataState = {
         // Spreads plan-slice defaults (activityOverrides, moveUpPutOff) so new
@@ -366,6 +427,20 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         reviewSeen: { week: null, month: null },
         reviewPreview: false,
         plainVersion: prev.plainVersion,
+        // Media seed — applied after buildInitialState() so persona-specific values
+        // override the empty defaults. Absent when mediaSeed is null; the spread
+        // resolves to an empty object and the defaults from buildInitialState() stand.
+        ...(mediaSeed
+          ? {
+              interests: mediaSeed.interests,
+              digestTimes: mediaSeed.digestTimes,
+              media: {
+                estimateMinutes: mediaSeed.estimateMinutes,
+                budgetMinutes: mediaSeed.budgetMinutes,
+              },
+              mediaMinutesByDate,
+            }
+          : {}),
       };
       persist(next);
       return next;
@@ -407,6 +482,12 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     markReviewSeen: markReviewSeenAction,
     setReviewPreview: setReviewPreviewAction,
     setPlainVersion: setPlainVersionAction,
+    setInterests: setInterestsAction,
+    setDigestTimes: setDigestTimesAction,
+    markDigestSeen: markDigestSeenAction,
+    setMediaEstimate: setMediaEstimateAction,
+    setMediaBudget: setMediaBudgetAction,
+    setMediaMinutesToday: setMediaMinutesTodayAction,
     loadPersona,
     resetDemoData,
   };

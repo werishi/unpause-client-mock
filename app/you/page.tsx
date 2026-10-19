@@ -18,6 +18,8 @@ export default function YouPage() {
       <nav className="flex flex-col gap-3">
         <Link href="/you/about">{YOU.youPageAboutLabel}</Link>
         <Link href="/you/values">{YOU.valuesEntry}</Link>
+        <Link href="/you/digest">{YOU.interestsAndDigest}</Link>
+        <Link href="/you/media">{YOU.mediaBudget}</Link>
         <Link href="/safety">{YOU.youPageSafetyLabel}</Link>
         <Link href="/you/demo">{YOU.youPageDemoLabel}</Link>
       </nav>

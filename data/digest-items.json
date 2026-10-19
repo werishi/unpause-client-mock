@@ -1,0 +1,72 @@
+[
+  {
+    "id": "dig-001",
+    "title": "Cozy Cabin Dev: a solo developer's first commercial release",
+    "source": "Placeholder Dev Journal",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 4
+  },
+  {
+    "id": "dig-002",
+    "title": "Pixel Harvest launches on all platforms after three-year development",
+    "source": "Placeholder Games Weekly",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 3
+  },
+  {
+    "id": "dig-003",
+    "title": "Night Market Stories: turn-based RPG goes gold",
+    "source": "Placeholder Indie Spotlight",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 5
+  },
+  {
+    "id": "dig-004",
+    "title": "WoW Forever funding round closes as subscription numbers hold steady",
+    "source": "Placeholder Games Finance",
+    "tags": ["news-wow-forever"],
+    "minutesToRead": 4
+  },
+  {
+    "id": "dig-005",
+    "title": "How WoW Forever plans to sustain its classic-server model long-term",
+    "source": "Placeholder MMO Observer",
+    "tags": ["news-wow-forever"],
+    "minutesToRead": 6
+  },
+  {
+    "id": "dig-006",
+    "title": "River Crossing: a puzzle game about water and patience",
+    "source": "Placeholder Indie Spotlight",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 3
+  },
+  {
+    "id": "dig-007",
+    "title": "Two-person studios that shipped in the last quarter",
+    "source": "Placeholder Dev Journal",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 5
+  },
+  {
+    "id": "dig-008",
+    "title": "The economics of a breakout indie hit in year one",
+    "source": "Placeholder Games Finance",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 7
+  },
+  {
+    "id": "dig-009",
+    "title": "Community voices: what keeps players returning to long-running online worlds",
+    "source": "Placeholder MMO Observer",
+    "tags": ["news-wow-forever"],
+    "minutesToRead": 5
+  },
+  {
+    "id": "dig-010",
+    "title": "When a passion project finds its audience: three recent releases",
+    "source": "Placeholder Indie Spotlight",
+    "tags": ["indie-game-releases"],
+    "minutesToRead": 4
+  }
+]

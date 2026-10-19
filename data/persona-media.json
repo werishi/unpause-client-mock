@@ -1,0 +1,17 @@
+{
+  "per-jonas": {
+    "interests": ["Indie game releases", "News about financing of WoW Forever"],
+    "digestTimes": ["07:30", "12:30"],
+    "estimateMinutes": 180,
+    "budgetMinutes": 135,
+    "mediaMinutesByDayOffset": {
+      "-6": 120,
+      "-5": 180,
+      "-4": 90,
+      "-3": 60,
+      "-2": 180,
+      "-1": 120,
+      "0": 180
+    }
+  }
+}

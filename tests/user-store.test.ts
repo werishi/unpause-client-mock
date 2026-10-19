@@ -91,6 +91,47 @@ describe('corePersonaState', () => {
   })
 })
 
+// ─── Digest slice fields ──────────────────────────────────────────────────────
+
+describe('buildInitialState digest fields', () => {
+  // These assertions catch a field removed from buildInitialState() (or never added)
+  // before it surfaces as a silent reset bug at demo time. The digest fields live in
+  // DigestState / DIGEST_DEFAULTS (digest-slice.ts) and are spread into buildInitialState()
+  // in store-state.ts. A field not in buildInitialState() is invisible to resetDemoData()
+  // (which delegates entirely to buildInitialState()), so a persona switch leaves stale
+  // interests or a stale budget behind.
+  it('interests is present and is an empty array', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'interests')).toBe(true)
+    expect(init.interests).toEqual([])
+  })
+
+  it('digestTimes is present and is an empty array', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'digestTimes')).toBe(true)
+    expect(init.digestTimes).toEqual([])
+  })
+
+  it('digestSeenSlot is present and is null', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'digestSeenSlot')).toBe(true)
+    expect(init.digestSeenSlot).toBeNull()
+  })
+
+  it('media is present with estimateMinutes null and budgetMinutes null', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'media')).toBe(true)
+    expect(init.media.estimateMinutes).toBeNull()
+    expect(init.media.budgetMinutes).toBeNull()
+  })
+
+  it('mediaMinutesByDate is present and is an empty object', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'mediaMinutesByDate')).toBe(true)
+    expect(init.mediaMinutesByDate).toEqual({})
+  })
+})
+
 // ─── Mutation safety ──────────────────────────────────────────────────────────
 
 describe('mutation safety', () => {

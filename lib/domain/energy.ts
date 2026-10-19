@@ -67,4 +67,26 @@ export function suggestTaskForEnergy(energy: EnergyLevel, tasks: Task[]): Task {
   );
 }
 
+/**
+ * Returns true when an activity's energy requirement is compatible with the
+ * user's current energy level.
+ *
+ * Matching rules (mirrors the filter inside suggestTaskForEnergy):
+ *   "low"    → only activities where energyRequired === "low"
+ *   "medium" → energyRequired "low" or "medium"
+ *   "high"   → any energyRequired
+ *
+ * Extracted as a standalone function so the swap domain layer can use it
+ * without depending on the full Task-list selector.
+ */
+export function isEnergyCompatible(
+  energyRequired: EnergyLevel,
+  currentEnergy: EnergyLevel
+): boolean {
+  if (currentEnergy === 'low') return energyRequired === 'low';
+  if (currentEnergy === 'medium')
+    return energyRequired === 'low' || energyRequired === 'medium';
+  return true; // "high" matches any
+}
+
 export type { Activity } from './types';

@@ -203,5 +203,35 @@
     "id": "act-screen-free-evening", "title": "A screen-free evening", "cue": "After putting my phone in a drawer, I …", "twoMinuteVersion": "Phone in a drawer for the first 15 minutes",
     "minutes": 180, "energyRequired": "medium", "category": "media",
     "strenuous": false, "valueIds": ["val-play", "val-friends"], "sourceIds": ["src-social-hunt", "src-social-may", "src-bundling-milkman"]
+  },
+  {
+    "id": "act-swap-1", "title": "Five deep breaths", "cue": "When I notice the urge to scroll, I …", "twoMinuteVersion": "Take one slow breath in and one slow breath out",
+    "minutes": 5, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": []
+  },
+  {
+    "id": "act-swap-2", "title": "Shoulder and neck stretch", "cue": "After sitting for a while, I …", "twoMinuteVersion": "Roll your shoulders back once",
+    "minutes": 5, "energyRequired": "low", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": []
+  },
+  {
+    "id": "act-swap-3", "title": "Walk around the block", "cue": "When I want a break, I …", "twoMinuteVersion": "Step outside and walk to the end of the street",
+    "minutes": 5, "energyRequired": "low", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health", "val-nature"], "sourceIds": []
+  },
+  {
+    "id": "act-swap-4", "title": "Sketch one object near you", "cue": "When I feel restless, I …", "twoMinuteVersion": "Pick an object and draw its outline",
+    "minutes": 5, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-creativity"], "sourceIds": []
+  },
+  {
+    "id": "act-swap-5", "title": "Drink a full glass of water slowly", "cue": "Before reaching for my phone, I …", "twoMinuteVersion": "Fill a glass and take three slow sips",
+    "minutes": 5, "energyRequired": "low", "category": "pleasant",
+    "strenuous": false, "valueIds": ["val-health"], "sourceIds": []
+  },
+  {
+    "id": "act-swap-6", "title": "Stand outside for five minutes", "cue": "After finishing a task, I …", "twoMinuteVersion": "Open the door and stand on the step",
+    "minutes": 5, "energyRequired": "low", "category": "movement",
+    "strenuous": false, "valueIds": ["val-health", "val-nature"], "sourceIds": []
   }
 ]

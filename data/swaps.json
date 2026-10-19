@@ -1,0 +1,8 @@
+[
+  { "id": "swap-1", "activityId": "act-swap-1", "partOfDay": "any" },
+  { "id": "swap-2", "activityId": "act-swap-2", "partOfDay": "morning" },
+  { "id": "swap-3", "activityId": "act-swap-3", "partOfDay": "afternoon" },
+  { "id": "swap-4", "activityId": "act-swap-4", "partOfDay": "any" },
+  { "id": "swap-5", "activityId": "act-swap-5", "partOfDay": "morning" },
+  { "id": "swap-6", "activityId": "act-swap-6", "partOfDay": "evening" }
+]

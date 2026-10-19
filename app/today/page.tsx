@@ -26,6 +26,7 @@ import { getActivities } from "@/lib/repo/activity-repo";
 import { getValues } from "@/lib/repo/value-repo";
 import { CHECK_IN, TODAY, ONBOARDING } from "@/lib/copy";
 import { isMonday, isFirstOfMonth } from "@/lib/domain/day";
+import { currentDigestSlot } from "@/lib/domain/digest";
 import { weekSummary, monthSummary } from "@/lib/domain/look-back";
 import { weekDates } from "@/lib/domain/planner";
 import ActivityCard from "@/components/ActivityCard";
@@ -54,6 +55,9 @@ export default function TodayPage() {
     reviewSeen,
     reviewPreview,
     markReviewSeen,
+    digestTimes,
+    digestSeenSlot,
+    markDigestSeen,
   } = useUserData();
 
   const flowStore = useFlow();
@@ -110,6 +114,13 @@ export default function TodayPage() {
     todayPlan.plan.activities.every(
       (item) => getLogEntry(item.activityId) !== null
     );
+
+  // Computed after the hydration guard so `digestTimes` (localStorage-derived)
+  // is never read server-side — identical deferral pattern to `getGreeting`.
+  // Returns null when no slot is currently active or the current slot has already
+  // been seen (markDigestSeen was called). The ternary is defensive; `hydrated`
+  // is always true here because we returned early above if it were false.
+  const digestSlot = hydrated ? currentDigestSlot(digestTimes, digestSeenSlot, new Date()) : null;
 
   // ── Review card computations ───────────────────────────────────────────────
   // All date arithmetic uses the local-calendar constructor (new Date(y, m-1, d))
@@ -240,8 +251,18 @@ export default function TodayPage() {
         </div>
       )}
 
-      {/* End-of-day note */}
-      {allLogged && <p>{TODAY.endOfDay}</p>}
+      {/* Digest card — shown when a current slot exists and has not yet been seen.
+          digestSlot is null when no times are configured, no slot window is active,
+          or the user already opened/dismissed the current slot. */}
+      {digestSlot !== null && (
+        <div>
+          <p>{TODAY.digestCardTitle}</p>
+          <button onClick={() => router.push("/digest")}>Read it</button>
+          <button onClick={() => markDigestSeen(digestSlot.slotKey)}>
+            {ONBOARDING.notNowLabel}
+          </button>
+        </div>
+      )}
 
       {/* "Make it yours" offer — visible from day two onward */}
       {showPersonaliseOffer && (
@@ -283,6 +304,16 @@ export default function TodayPage() {
           </button>
         );
       })}
+
+      {/* Swap line — offered only while the plan is not yet complete; hidden once
+          allLogged because the end sentence already marks the day as done (§2.4). */}
+      {!allLogged && (
+        <a href="/swap">{TODAY.swapLine}</a>
+      )}
+
+      {/* End-of-day note — absolute bottom of State B, after the anchor row and
+          swap line, so no content ever follows it (parent §3.3). */}
+      {allLogged && <p>{TODAY.endOfDay}</p>}
     </main>
   );
 }

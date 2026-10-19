@@ -32,6 +32,9 @@ import {
   PLAN,
   YOU,
   LOOK_BACK,
+  DIGEST,
+  SWAP,
+  MEDIA_BUDGET,
 } from '../lib/copy'
 
 /**
@@ -52,6 +55,7 @@ describe('copy tone', () => {
     const allExports: unknown[] = [
       SHELL, SAFETY_PLAN_LINK, MOOD_RATING, SAFETY_PAGE, DONE_SCREEN,
       START_SCREEN, MOOD_BEFORE_PAGE, MOOD_AFTER_PAGE, NOT_FOUND_PAGE,
+      DIGEST, SWAP, MEDIA_BUDGET,
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
       ABOUT, DEMO, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
     ]
@@ -90,6 +94,25 @@ describe("LOOK_BACK / WELCOME_BACK bonus / TODAY review — no deficit language"
   const lookBackStrings = collectStrings(LOOK_BACK);
   const allChecked = [bonusLine, ...reviewStrings, ...lookBackStrings];
   const badSubstrings = ["missed", "skipped", " left", "lost"];
+  const badPattern = /\d+\s*(of|\/)\s*\d+/;
+
+  it.each(allChecked)("'%s' contains no deficit substring", (s) => {
+    for (const bad of badSubstrings) {
+      expect(s).not.toContain(bad);
+    }
+    expect(s).not.toMatch(badPattern);
+  });
+});
+
+describe("DIGEST and MEDIA_BUDGET — no deficit language", () => {
+  // Concept §2.7: no N-of-M, no "missed", no "skipped", no " left" in digest or
+  // media-budget copy. The budget is the user's own intention; framing unread items
+  // or over-budget minutes as a deficit contradicts G10 (non-shaming) and the tone
+  // established in the rest of the app.
+  const digestStrings = collectStrings(DIGEST);
+  const mediaBudgetStrings = collectStrings(MEDIA_BUDGET);
+  const allChecked = [...digestStrings, ...mediaBudgetStrings];
+  const badSubstrings = ["missed", "skipped", " left"];
   const badPattern = /\d+\s*(of|\/)\s*\d+/;
 
   it.each(allChecked)("'%s' contains no deficit substring", (s) => {
