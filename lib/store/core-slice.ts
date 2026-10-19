@@ -15,6 +15,7 @@
  */
 
 import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
+import { LookBackState, LOOK_BACK_DEFAULTS } from "./look-back-slice";
 import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
 import { planDay, addDays } from "@/lib/domain/planner";
 import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
@@ -112,7 +113,7 @@ export const CORE_DEFAULTS: CoreState = {
 export function corePersonaState(
   id: string,
   today: string
-): CoreState | null {
+): (CoreState & LookBackState) | null {
   const personas = getPersonas();
   const persona = personas.find((p) => p.id === id);
   if (!persona) return null;
@@ -171,6 +172,13 @@ export function corePersonaState(
     lastOpenedDate,
     welcomeBackDue,
     todayPlan: null,
+    // LookBack defaults — this is a pure snapshot function; it cannot read current
+    // UI preferences, so plainVersion returns its default (false). The provider's
+    // loadPersona preserves the live value separately.
+    ...LOOK_BACK_DEFAULTS,
+    comebackGrants: [],
+    rewardsReached: [],
+    reviewSeen: { week: null, month: null },
   };
 }
 

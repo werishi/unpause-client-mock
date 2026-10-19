@@ -14,6 +14,7 @@
 
 import { CoreState, CORE_DEFAULTS, WELCOME_BACK_GAP_DAYS } from './core-slice';
 import { PlanState, PLAN_DEFAULTS } from './plan-slice';
+import { LookBackState, LOOK_BACK_DEFAULTS } from './look-back-slice';
 import { daysBetween } from '@/lib/domain/day';
 
 // ---------------------------------------------------------------------------
@@ -28,7 +29,7 @@ import { daysBetween } from '@/lib/domain/day';
  * **Do not import this type into any `*-slice.ts` file.** Each slice knows only its own state
  * type; slices are composed here, not inside each other.
  */
-export type UserDataState = CoreState & PlanState;
+export type UserDataState = CoreState & PlanState & LookBackState;
 
 // ---------------------------------------------------------------------------
 // buildInitialState
@@ -53,6 +54,7 @@ export function buildInitialState(): UserDataState {
   return {
     ...CORE_DEFAULTS,
     ...PLAN_DEFAULTS,
+    ...LOOK_BACK_DEFAULTS,
     // Freshly allocated arrays — do not remove; see doc comment above.
     log: [],
     checkIns: [],
@@ -61,6 +63,10 @@ export function buildInitialState(): UserDataState {
     valueIds: [],
     // PlanState object fields re-allocated to avoid sharing PLAN_DEFAULTS references.
     activityOverrides: {},
+    // LookBackState array and object fields re-allocated to avoid sharing LOOK_BACK_DEFAULTS references.
+    comebackGrants: [],
+    rewardsReached: [],
+    reviewSeen: { week: null, month: null },
   };
 }
 

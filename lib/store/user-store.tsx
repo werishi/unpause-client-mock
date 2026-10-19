@@ -25,6 +25,10 @@ import { localDateString, isWelcomeBackDue, latestDate } from "@/lib/domain/day"
 import { WELCOME_BACK_GAP_DAYS, coreReducers } from "./core-slice";
 import { planReducers } from "./plan-slice";
 import type { ActivityOverridePatch } from "./plan-slice";
+import {
+  grantComebackBonus, setReward, removeReward, markRewardReached,
+  dismissRewardOffer, markReviewSeen, setReviewPreview, setPlainVersion,
+} from "./look-back-slice";
 import { buildInitialState, hydrate } from "./store-state";
 import type { UserDataState } from "./store-state";
 
@@ -94,6 +98,14 @@ export type UserDataContext = {
   // Persisted plan state
   activityOverrides: Record<string, ActivityOverridePatch>;
   moveUpPutOff: string | null;
+  // Persisted look-back state
+  comebackGrants: string[];
+  reward: { text: string; at: number; setOn: string } | null;
+  rewardsReached: { text: string; at: number; reachedOn: string }[];
+  rewardOfferDismissed: boolean;
+  reviewSeen: { week: string | null; month: string | null };
+  reviewPreview: boolean;
+  plainVersion: boolean;
   // Core actions (bound reducers)
   recordActivity: (entry: LogEntry) => void;
   recordCheckIn: (energy: EnergyLevel) => void;
@@ -111,6 +123,15 @@ export type UserDataContext = {
   setActivityOverride: (activityId: string, patch: ActivityOverridePatch) => void;
   clearActivityOverride: (activityId: string) => void;
   putOffMoveUp: (templateId: string) => void;
+  // Look-back actions (bound reducers)
+  grantComebackBonus: (today: string) => void;
+  setReward: (text: string, at: number, today: string) => void;
+  removeReward: () => void;
+  markRewardReached: (today: string) => void;
+  dismissRewardOffer: () => void;
+  markReviewSeen: (kind: "week" | "month", key: string) => void;
+  setReviewPreview: (value: boolean) => void;
+  setPlainVersion: (value: boolean) => void;
   // Provider functions (not reducers — see module doc)
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
@@ -227,6 +248,36 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     persist(hydratedState);
   }, []);
 
+  // ── LookBack action bindings ──────────────────────────────────────────────
+  // These reducers take LookBackState directly (not via the bind helper's ctx
+  // pattern) so they are wired individually here and listed explicitly in the
+  // value prop below.
+
+  function grantComebackBonusAction(today: string): void {
+    setState((prev) => ({ ...prev, ...grantComebackBonus(prev, today) }));
+  }
+  function setRewardAction(text: string, at: number, today: string): void {
+    setState((prev) => ({ ...prev, ...setReward(prev, text, at, today) }));
+  }
+  function removeRewardAction(): void {
+    setState((prev) => ({ ...prev, ...removeReward(prev) }));
+  }
+  function markRewardReachedAction(today: string): void {
+    setState((prev) => ({ ...prev, ...markRewardReached(prev, today) }));
+  }
+  function dismissRewardOfferAction(): void {
+    setState((prev) => ({ ...prev, ...dismissRewardOffer(prev) }));
+  }
+  function markReviewSeenAction(kind: "week" | "month", key: string): void {
+    setState((prev) => ({ ...prev, ...markReviewSeen(prev, kind, key) }));
+  }
+  function setReviewPreviewAction(value: boolean): void {
+    setState((prev) => ({ ...prev, ...setReviewPreview(prev, value) }));
+  }
+  function setPlainVersionAction(value: boolean): void {
+    setState((prev) => ({ ...prev, ...setPlainVersion(prev, value) }));
+  }
+
   // ── Provider functions ─────────────────────────────────────────────────────
   // loadPersona and resetDemoData stay here rather than becoming reducers
   // because their control flow cannot be expressed as a pure reducer:
@@ -288,7 +339,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       wakeTime = rawWakeTime;
     }
 
-    setState(() => {
+    setState((prev) => {
       const next: UserDataState = {
         // Spreads plan-slice defaults (activityOverrides, moveUpPutOff) so new
         // slice fields are never undefined when a persona is loaded.
@@ -306,6 +357,15 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         lastOpenedDate,
         welcomeBackDue,
         todayPlan: null,
+        // LookBack fields reset to defaults; plainVersion is a UI preference, not
+        // persona data, so it is preserved across demo-persona switches.
+        comebackGrants: [],
+        reward: null,
+        rewardsReached: [],
+        rewardOfferDismissed: false,
+        reviewSeen: { week: null, month: null },
+        reviewPreview: false,
+        plainVersion: prev.plainVersion,
       };
       persist(next);
       return next;
@@ -339,6 +399,14 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     ...state,
     ...bind(coreReducers),
     ...bind(planReducers),
+    grantComebackBonus: grantComebackBonusAction,
+    setReward: setRewardAction,
+    removeReward: removeRewardAction,
+    markRewardReached: markRewardReachedAction,
+    dismissRewardOffer: dismissRewardOfferAction,
+    markReviewSeen: markReviewSeenAction,
+    setReviewPreview: setReviewPreviewAction,
+    setPlainVersion: setPlainVersionAction,
     loadPersona,
     resetDemoData,
   };

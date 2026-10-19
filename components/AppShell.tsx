@@ -48,6 +48,7 @@ export default function AppShell({ children }: AppShellProps) {
         tabs={[
           { href: "/today", label: TABS.todayLabel },
           { href: "/plan", label: TABS.planLabel },
+          { href: "/look-back", label: TABS.lookBackLabel },
           { href: "/you", label: TABS.youLabel },
         ]}
       />

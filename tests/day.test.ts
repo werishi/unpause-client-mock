@@ -4,6 +4,8 @@ import {
   isWelcomeBackDue,
   localDateString,
   latestDate,
+  isMonday,
+  isFirstOfMonth,
 } from "../lib/domain/day";
 
 describe("daysBetween", () => {
@@ -67,5 +69,33 @@ describe("latestDate", () => {
     expect(
       latestDate(["2025-01-10", "2025-03-01", "2025-02-15"])
     ).toBe("2025-03-01");
+  });
+});
+
+describe("isMonday", () => {
+  it("returns true for 2026-10-19 (Monday — the look-back test anchor date)", () => {
+    expect(isMonday("2026-10-19")).toBe(true);
+  });
+
+  it("returns false for 2026-10-20 (Tuesday)", () => {
+    expect(isMonday("2026-10-20")).toBe(false);
+  });
+
+  it("returns false for 2026-10-18 (Sunday)", () => {
+    expect(isMonday("2026-10-18")).toBe(false);
+  });
+});
+
+describe("isFirstOfMonth", () => {
+  it("returns true for 2026-10-01", () => {
+    expect(isFirstOfMonth("2026-10-01")).toBe(true);
+  });
+
+  it("returns false for 2026-10-02", () => {
+    expect(isFirstOfMonth("2026-10-02")).toBe(false);
+  });
+
+  it("returns false for 2026-09-30 (last day of previous month)", () => {
+    expect(isFirstOfMonth("2026-09-30")).toBe(false);
   });
 });

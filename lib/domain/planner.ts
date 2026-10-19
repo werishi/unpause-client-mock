@@ -13,6 +13,7 @@
  * this. All state arrives as function arguments: pure, deterministic, no side effects.
  */
 
+import { isRatedDone, wasFollowedByBetterMood } from './mood';
 import type {
   Activity,
   DayPlan,
@@ -284,18 +285,11 @@ export function planDay(input: PlanInput): DayPlan {
     // outlier session must not dominate the score and cause daily recommendations)
     const cutoff28 = addDays(input.today, -28);
     const ratedDone = input.log.filter(
-      (e) =>
-        e.activityId === activity.id &&
-        e.outcome === 'done' &&
-        e.moodBefore != null &&
-        e.moodAfter != null &&
-        e.date >= cutoff28
+      (e) => e.activityId === activity.id && isRatedDone(e) && e.date >= cutoff28
     );
     const helpShare =
       ratedDone.length >= 3
-        ? ratedDone.filter(
-            (e) => (e.moodAfter as number) > (e.moodBefore as number)
-          ).length / ratedDone.length
+        ? ratedDone.filter(wasFollowedByBetterMood).length / ratedDone.length
         : 0;
     const moodScore = 0.5 * helpShare;
 

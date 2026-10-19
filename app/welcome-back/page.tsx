@@ -23,7 +23,7 @@ import { useUserData } from "@/lib/store/user-store";
 import { WELCOME_BACK } from "@/lib/copy";
 
 export default function WelcomeBackPage() {
-  const { hydrated, acknowledgeWelcomeBack } = useUserData();
+  const { hydrated, acknowledgeWelcomeBack, plainVersion } = useUserData();
   const router = useRouter();
 
   const handleCta = () => {
@@ -37,6 +37,9 @@ export default function WelcomeBackPage() {
     <div className="flex flex-col gap-6 py-6">
       <h1 className="text-2xl font-semibold">{WELCOME_BACK.headline}</h1>
       <p className="text-base leading-relaxed">{WELCOME_BACK.body}</p>
+      {hydrated && !plainVersion && (
+        <p className="text-base leading-relaxed">{WELCOME_BACK.bonusLine}</p>
+      )}
       <button
         onClick={handleCta}
         className="self-start rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white dark:bg-indigo-500"

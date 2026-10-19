@@ -76,3 +76,33 @@ export function latestDate(dates: string[]): string | null {
   if (dates.length === 0) return null;
   return [...dates].sort((a, b) => (a < b ? 1 : a > b ? -1 : 0))[0];
 }
+
+/**
+ * Returns `true` when the YYYY-MM-DD date string falls on a Monday.
+ *
+ * Parts are parsed from the string and passed to `new Date(year, month - 1, day)`
+ * (local-time constructor), not to `new Date(isoString)`. `new Date(isoString)`
+ * parses at UTC midnight and shifts the calendar day for any session between
+ * local midnight and UTC midnight — the same UTC-trap documented for
+ * `localDateString` above. The local-time constructor always produces the correct
+ * calendar day regardless of the browser's timezone.
+ *
+ * `Date.prototype.getDay()` returns 1 for Monday (0 = Sunday, 1 = Monday,
+ * …, 6 = Saturday).
+ */
+export function isMonday(date: string): boolean {
+  const [year, month, day] = date.split('-').map(Number);
+  return new Date(year, month - 1, day).getDay() === 1;
+}
+
+/**
+ * Returns `true` when the YYYY-MM-DD date string is the first day of its month.
+ *
+ * Uses the same parts-based parsing as `isMonday` to avoid the UTC midnight trap
+ * (see `localDateString` above): `day` is read directly from the string rather
+ * than from a `Date` constructed with an ISO string.
+ */
+export function isFirstOfMonth(date: string): boolean {
+  const [, , day] = date.split('-').map(Number);
+  return day === 1;
+}

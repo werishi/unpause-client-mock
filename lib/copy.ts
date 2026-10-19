@@ -8,7 +8,10 @@
  * Constraints enforced in this file (profile Tone invariant + spec citations):
  *   - No shaming copy, no lost-streak wording.
  *   - No "21 days" habit claims (spec 01-daily-structure.md:73).
- *   - No points, payment, or reward framing (spec 02-gamification.md:51).
+ *   - No payment or unlock framing: never 'earn N to unlock', never a deduction
+ *     or a balance going down, never a target shown as unmet. Points describe what
+ *     the user did; a reward is an optional extra the user chose.
+ *     (spec 02-gamification.md:49-70; §0 watch point in LOOK_BACK_AND_GENTLE_GAMIFICATION_CONCEPT.md)
  *   - No claim that doing a task will improve or lift mood — ratings are
  *     informational, not a promise (concept Section 2.4, Goal G4).
  *   - No phone numbers or tel: links anywhere.
@@ -152,6 +155,7 @@ export const TABS = {
   todayLabel: "Today",
   planLabel: "Plan",
   youLabel: "You",
+  lookBackLabel: "Look back",
 } as const;
 
 /** Strings for the flow close/exit control (FlowCloseButton component). */
@@ -207,6 +211,21 @@ export const TODAY = {
    * can read it inline in this file.
    */
   wakeAnchor: "Up around",
+  /**
+   * Heading of the weekly review card shown on the Today screen on Mondays
+   * (concept §2.7). No specific week label — Today already shows the date.
+   */
+  weekReviewCardHeading: "How last week went",
+  /**
+   * Heading of the monthly review card shown on Today on the 1st of each month
+   * (concept §2.8).
+   */
+  monthReviewCardHeading: "How last month went",
+  /**
+   * CTA label on review cards that takes the user to /look-back.
+   * Matches the tab label so users recognise the destination.
+   */
+  lookBackCtaLabel: "Look back",
 } as const;
 
 /** Strings for the welcome screen (/welcome — first open). */
@@ -278,6 +297,12 @@ export const DEMO = {
   intro:
     "Tap a persona to explore how Unpause looks at different points in someone's journey.",
   resetLabel: "Reset demo data",
+  /**
+   * Label for the plain-version toggle on /you/demo (concept §2.9).
+   * Plain version hides points and the reward card for users who prefer a simpler
+   * layout. Basis: setPlainVersion store action.
+   */
+  plainVersionLabel: "Plain version",
 } as const;
 
 /** Strings for the welcome-back screen (/welcome-back). */
@@ -289,6 +314,12 @@ export const WELCOME_BACK = {
   headline: "Welcome back.",
   body: "Today is a fresh start. Everything you did before is still here.",
   ctaLabel: "See today",
+  /**
+   * Short line shown when the comeback bonus is granted. No gap length, no count
+   * of missed days (G5, G10 — no shaming, no gap named). Tone: matter-of-fact
+   * encouragement, not effusive.
+   */
+  bonusLine: "Coming back is what counts.",
 } as const;
 
 /** Strings for the Plan tab and its sub-routes (/plan, /plan/templates, /plan/activity). */
@@ -382,4 +413,167 @@ export const YOU = {
    * Matches the pattern used by SAFETY_PAGE.backLabel and other pages — "Back".
    */
   valuesBack: "Back",
+} as const;
+
+/**
+ * Strings for the Look back screen (/look-back) and its sub-components.
+ *
+ * categoryLabels keys correspond to ActivityCategory values minus "media"
+ * (lib/domain/types.ts:33-40). No import needed here — the keys are plain
+ * string literals. A page that renders a PatternResult indexes this object
+ * by result.categoryKey.
+ *
+ * Deficit language is banned by tests/copy.test.ts (deficit check extended in
+ * part 2). No key in this object may contain "missed", "skipped", " left",
+ * "lost", or a pattern matching /\d+\s*(of|\/)\s*\d+/.
+ */
+export const LOOK_BACK = {
+  heading: "Look back",
+
+  /** Strings for the "Since you started" stats block (concept §2.3). */
+  sinceStarted: {
+    heading: "Since you started",
+    /** Number suffix when count === 1 */
+    thingDoneSuffix: "thing done",
+    /** Number suffix when count !== 1 */
+    thingsDoneSuffix: "things done",
+    /** Number suffix when count === 1 */
+    activeDaySuffix: "day showing up",
+    /** Number suffix when count !== 1 */
+    activeDaysSuffix: "days showing up",
+    /** Number suffix when count === 1 */
+    pointSuffix: "point collected",
+    /** Number suffix when count !== 1 */
+    pointsSuffix: "points collected",
+  },
+
+  /**
+   * Friendly labels for each non-media activity category. Keys match
+   * ActivityCategory minus "media" (types.ts:33-40).
+   */
+  categoryLabels: {
+    anchor: "Your anchor habit",
+    movement: "Moving your body",
+    routine: "Daily routines",
+    mastery: "Building skills",
+    pleasant: "Something enjoyable",
+    social: "Time with people",
+  },
+
+  /**
+   * Sentence suffix for a rank-0 (primary) pattern. Page renders:
+   * "{categoryLabels[result.categoryKey]} {patternPrimary}"
+   */
+  patternPrimary: "tends to help you.",
+  /**
+   * Sentence suffix for a rank-1 (secondary) pattern.
+   */
+  patternSecondary: "has helped too.",
+
+  /** Strings for the reward offer card (§2.5, shown at pointsTotal >= FIRST_REWARD_AT). */
+  rewardOffer: {
+    heading: "Set a reward for yourself",
+    body: "You've been doing a lot. You can choose a real-world treat if you like — no pressure.",
+    inputPlaceholder: "e.g. a coffee out, a new book",
+    saveLabel: "Save reward",
+    dismissLabel: "Maybe later",
+  },
+
+  /** Strings for the active reward card display (§2.6). */
+  reward: {
+    heading: "Your reward",
+    /** Shown after markRewardReached is called. */
+    reachedHeading: "You got your reward",
+    reachedBody: "Nice. Set a new one whenever you like.",
+    changeLabel: "Change reward",
+    removeLabel: "Remove reward",
+    /** Button that calls markRewardReached. */
+    gotItLabel: "I got it",
+  },
+
+  /** Strings for weekly review cards on /look-back (§2.7). */
+  weekReview: {
+    /** Page sets the week heading, e.g. "This week" or "Week of 13 Oct". */
+    heading: "This week",
+    thingSuffix: "thing",
+    thingsSuffix: "things",
+    activeDaySuffix: "day",
+    activeDaysSuffix: "days",
+    /** Button that calls markReviewSeen("week", weekKey). */
+    gotItLabel: "Got it",
+  },
+
+  /** Strings for monthly review cards on /look-back (§2.8). */
+  monthReview: {
+    heading: "This month",
+    activeDaySuffix: "day",
+    activeDaysSuffix: "days",
+    /** Button that calls markReviewSeen("month", monthKey). */
+    gotItLabel: "Got it",
+  },
+
+  /** Values section on /look-back — shown when valuesServed returns results. */
+  valuesHeading: "Things you care about",
+
+  /**
+   * Demo toggle label for the force-preview that shows the weekly review card on
+   * Today on non-Monday days (Open Direction Question 7 comparison mode).
+   */
+  reviewPreviewLabel: "Show this week's review card on Today",
+  /** Plain-version toggle also appears in the Look back page footer or settings. */
+  plainVersionLabel: "Plain version",
+  plainVersionHint: "Simpler layout, no points.",
+
+  // ── Per-new quiet state ──────────────────────────────────────────────────
+  /** Shown in the "Since you started" block when doneCount(log) === 0 (concept §2.3). */
+  perNewMessage: "Nothing to look back on yet — check back once you've done a few activities.",
+
+  // ── Since you started extras ─────────────────────────────────────────────
+  /** Prefix for the start-date sentence: "{startedOnLabel} {day} {MonthName}." */
+  startedOnLabel: "You started on",
+  /** Prefix for each reward already enjoyed, in the "Since you started" block. */
+  rewardEnjoyedLabel: "Reward enjoyed:",
+
+  // ── This month block ──────────────────────────────────────────────────────
+  /** Heading for the "This month" active-days block (§2.8). */
+  thisMonthHeading: "This month",
+  /** Shown when doneCount > 0 but no done rows fall in the current month. */
+  noActiveDaysThisMonthMessage: "Nothing yet this month.",
+
+  // ── Patterns block ────────────────────────────────────────────────────────
+  /** Heading for the "What tended to help" patterns block (§2.4). */
+  patternsHeading: "What tended to help",
+  /** Shown when no category meets the qualifying floors yet (§2.4). */
+  noPatternsYetMessage: "Come back once you've done a few activities.",
+
+  // ── Points and your reward block ──────────────────────────────────────────
+  /** Heading for the "Points and your reward" block (§2.5–2.6). */
+  pointsHeading: "Points and your reward",
+  /**
+   * Explanation shown below the points total (§2.5). No deficit language;
+   * no "N of M" pattern. Constraint: lib/copy.ts header comment, line 11.
+   */
+  pointsExplanation:
+    "You earn 10 points for each activity done, and a bonus when you come back after time away.",
+  /** Abbreviation used in the reward-level selector radio buttons. */
+  pointsAbbreviation: "pts",
+
+  // ── Reward card extras ────────────────────────────────────────────────────
+  /** Quiet link shown when the offer was dismissed and reward === null (§2.6). */
+  setRewardLink: "Set a reward for yourself",
+  /** Button on the offer card that opens the inline form. */
+  chooseRewardLabel: "Choose a reward",
+  /** Link shown after the "reached" card to set the next reward. */
+  setNextRewardLabel: "Set the next one",
+  /**
+   * Five pre-filled suggestions in the inline reward form (§2.6).
+   * None contains payment, pricing, or unlock framing (copy.ts:11 constraint).
+   */
+  rewardSuggestions: [
+    "A coffee out",
+    "A new book",
+    "A long walk",
+    "A favourite meal",
+    "Time for yourself",
+  ],
 } as const;

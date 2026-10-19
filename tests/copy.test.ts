@@ -31,6 +31,7 @@ import {
   WELCOME_BACK,
   PLAN,
   YOU,
+  LOOK_BACK,
 } from '../lib/copy'
 
 /**
@@ -52,7 +53,7 @@ describe('copy tone', () => {
       SHELL, SAFETY_PLAN_LINK, MOOD_RATING, SAFETY_PAGE, DONE_SCREEN,
       START_SCREEN, MOOD_BEFORE_PAGE, MOOD_AFTER_PAGE, NOT_FOUND_PAGE,
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
-      ABOUT, DEMO, WELCOME_BACK, PLAN, YOU,
+      ABOUT, DEMO, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
     ]
     const strings = allExports.flatMap(collectStrings)
 
@@ -72,6 +73,26 @@ describe("PLAN copy — no deficit language", () => {
   const badSubstrings = ["missed", "skipped", " left"];
   const badPattern = /\d+\s*(of|\/)\s*\d+/;
   it.each(planStrings)("'%s' contains no deficit substring", (s) => {
+    for (const bad of badSubstrings) {
+      expect(s).not.toContain(bad);
+    }
+    expect(s).not.toMatch(badPattern);
+  });
+});
+
+describe("LOOK_BACK / WELCOME_BACK bonus / TODAY review — no deficit language", () => {
+  const { bonusLine } = WELCOME_BACK;
+  const reviewStrings = [
+    TODAY.weekReviewCardHeading,
+    TODAY.monthReviewCardHeading,
+    TODAY.lookBackCtaLabel,
+  ];
+  const lookBackStrings = collectStrings(LOOK_BACK);
+  const allChecked = [bonusLine, ...reviewStrings, ...lookBackStrings];
+  const badSubstrings = ["missed", "skipped", " left", "lost"];
+  const badPattern = /\d+\s*(of|\/)\s*\d+/;
+
+  it.each(allChecked)("'%s' contains no deficit substring", (s) => {
     for (const bad of badSubstrings) {
       expect(s).not.toContain(bad);
     }

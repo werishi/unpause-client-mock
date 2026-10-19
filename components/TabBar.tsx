@@ -28,6 +28,7 @@ export default function TabBar({ tabs }: TabBarProps) {
   const isTabbed =
     pathname === "/today" ||
     pathname === "/plan" ||
+    pathname === "/look-back" ||
     // /you itself and its sub-pages (/you/demo, /you/about) show the tab bar;
     // focused flows under /you/values are excluded, mirroring the /plan exact guard.
     (pathname.startsWith("/you") && !pathname.startsWith("/you/values"));

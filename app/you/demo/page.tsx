@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useUserData } from "@/lib/store/user-store";
 import { getPersonas } from "@/lib/repo/persona-repo";
 import type { Persona } from "@/lib/domain/types";
-import { DEMO } from "@/lib/copy";
+import { DEMO, LOOK_BACK } from "@/lib/copy";
 
 /** `blurb` exists in personas.json but is not on the public Persona interface. */
 type PersonaWithBlurb = Persona & { blurb?: string };
@@ -28,7 +28,15 @@ type PersonaWithBlurb = Persona & { blurb?: string };
 const personas = getPersonas() as unknown as PersonaWithBlurb[];
 
 export default function DemoPage() {
-  const { hydrated, loadPersona, resetDemoData } = useUserData();
+  const {
+    hydrated,
+    loadPersona,
+    resetDemoData,
+    plainVersion,
+    setPlainVersion,
+    reviewPreview,
+    setReviewPreview,
+  } = useUserData();
   const router = useRouter();
 
   const handleLoad = (id: string) => {
@@ -38,6 +46,7 @@ export default function DemoPage() {
 
   const handleReset = () => {
     resetDemoData();
+    setPlainVersion(false);
     router.push("/");
   };
 
@@ -65,6 +74,43 @@ export default function DemoPage() {
           ))}
         </ul>
       )}
+
+      {/*
+       * Demo toggles — disabled until hydrated to avoid pre-hydration overwrites.
+       * plainVersion hides points and rewards site-wide (Open Direction Question 7).
+       * reviewPreview forces the week review card to show on Today on non-Monday days.
+       */}
+      <ul
+        className={`flex flex-col gap-2${!hydrated ? " pointer-events-none opacity-50" : ""}`}
+        aria-disabled={!hydrated}
+      >
+        <li className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+          <span className="text-sm">{DEMO.plainVersionLabel}</span>
+          <button
+            onClick={() => setPlainVersion(!plainVersion)}
+            aria-pressed={plainVersion}
+            className={`w-10 h-6 rounded-full transition-colors ${
+              plainVersion
+                ? "bg-indigo-600 dark:bg-indigo-500"
+                : "bg-gray-300 dark:bg-gray-600"
+            }`}
+            aria-label={DEMO.plainVersionLabel}
+          />
+        </li>
+        <li className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+          <span className="text-sm">{LOOK_BACK.reviewPreviewLabel}</span>
+          <button
+            onClick={() => setReviewPreview(!reviewPreview)}
+            aria-pressed={reviewPreview}
+            className={`w-10 h-6 rounded-full transition-colors ${
+              reviewPreview
+                ? "bg-indigo-600 dark:bg-indigo-500"
+                : "bg-gray-300 dark:bg-gray-600"
+            }`}
+            aria-label={LOOK_BACK.reviewPreviewLabel}
+          />
+        </li>
+      </ul>
 
       <button
         onClick={handleReset}

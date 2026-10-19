@@ -25,6 +25,9 @@ import { useFlow } from "@/lib/store/flow-store";
 import { getActivities } from "@/lib/repo/activity-repo";
 import { getValues } from "@/lib/repo/value-repo";
 import { CHECK_IN, TODAY, ONBOARDING } from "@/lib/copy";
+import { isMonday, isFirstOfMonth } from "@/lib/domain/day";
+import { weekSummary, monthSummary } from "@/lib/domain/look-back";
+import { weekDates } from "@/lib/domain/planner";
 import ActivityCard from "@/components/ActivityCard";
 import type { PlanItem, EnergyLevel } from "@/lib/domain/types";
 
@@ -48,6 +51,9 @@ export default function TodayPage() {
     clearTodayPlan,
     dismissPersonalise,
     recordActivity,
+    reviewSeen,
+    reviewPreview,
+    markReviewSeen,
   } = useUserData();
 
   const flowStore = useFlow();
@@ -104,6 +110,34 @@ export default function TodayPage() {
     todayPlan.plan.activities.every(
       (item) => getLogEntry(item.activityId) !== null
     );
+
+  // ── Review card computations ───────────────────────────────────────────────
+  // All date arithmetic uses the local-calendar constructor (new Date(y, m-1, d))
+  // to match the parts-based UTC-safe parsing convention in lib/domain/day.ts.
+  const mondayDate = weekDates(today)[0];
+  const [mondayY, mondayM, mondayD] = mondayDate.split('-').map(Number);
+  const lastWeekStartDt = new Date(mondayY, mondayM - 1, mondayD - 7);
+  const lastWeekStart = `${lastWeekStartDt.getFullYear()}-${String(lastWeekStartDt.getMonth() + 1).padStart(2, '0')}-${String(lastWeekStartDt.getDate()).padStart(2, '0')}`;
+  const [todayY, todayM] = today.split('-').map(Number);
+  let prevMonthYear = todayY;
+  let prevMonthNum = todayM - 1;
+  if (prevMonthNum === 0) { prevMonthNum = 12; prevMonthYear -= 1; }
+  const prevMonthKey = `${prevMonthYear}-${String(prevMonthNum).padStart(2, '0')}`;
+
+  const prevWeekData = weekSummary(log, lastWeekStart);
+  const prevMonthData = monthSummary(log, prevMonthYear, prevMonthNum);
+
+  // Month card takes precedence when Monday is also the 1st — never two cards at once (concept §2.8).
+  const showMonthCard =
+    isFirstOfMonth(today) &&
+    reviewSeen.month !== prevMonthKey &&
+    prevMonthData.activeDays > 0;
+
+  const showWeekCard =
+    !showMonthCard &&
+    (isMonday(today) || reviewPreview) &&
+    reviewSeen.week !== mondayDate &&
+    prevWeekData.doneCount > 0;
 
   /**
    * Starts the activity loop for the given plan item. Resets flow state first
@@ -163,6 +197,48 @@ export default function TodayPage() {
           />
         );
       })}
+
+      {/* Review cards — at most one shown; month card takes precedence when Monday is also 1st */}
+      {showMonthCard && (
+        <div>
+          <p>{TODAY.monthReviewCardHeading}</p>
+          <p>
+            {prevMonthData.activeDays}{" "}
+            {prevMonthData.activeDays === 1 ? "day" : "days"}
+          </p>
+          <button
+            onClick={() => {
+              markReviewSeen("month", prevMonthKey);
+              router.push("/look-back");
+            }}
+          >
+            {TODAY.lookBackCtaLabel}
+          </button>
+          <button onClick={() => markReviewSeen("month", prevMonthKey)}>
+            {ONBOARDING.notNowLabel}
+          </button>
+        </div>
+      )}
+      {showWeekCard && (
+        <div>
+          <p>{TODAY.weekReviewCardHeading}</p>
+          <p>
+            {prevWeekData.doneCount}{" "}
+            {prevWeekData.doneCount === 1 ? "thing" : "things"}
+          </p>
+          <button
+            onClick={() => {
+              markReviewSeen("week", mondayDate);
+              router.push("/look-back");
+            }}
+          >
+            {TODAY.lookBackCtaLabel}
+          </button>
+          <button onClick={() => markReviewSeen("week", mondayDate)}>
+            {ONBOARDING.notNowLabel}
+          </button>
+        </div>
+      )}
 
       {/* End-of-day note */}
       {allLogged && <p>{TODAY.endOfDay}</p>}
