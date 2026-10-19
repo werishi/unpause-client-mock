@@ -28,6 +28,13 @@ export interface FlowState {
   moodAfter: 1 | 2 | 3 | 4 | 5 | null;
   /** "skip" is exact — downstream route pages depend on this literal. */
   outcome: "done" | "skip" | null;
+  /**
+   * Set when the loop was started from a shared (buddy) card. `/mood-after`
+   * reads this to write `LogEntry.templateId: SHARED_TEMPLATE_ID` instead of
+   * the activity's own template id. `undefined` on all non-shared runs; cleared
+   * by `reset()` automatically because `INITIAL_STATE` omits it.
+   */
+  sharedId: string | undefined;
 }
 
 /** Setters and reset exposed through context. */
@@ -41,6 +48,12 @@ export interface FlowContextValue {
   setOutcome: (outcome: "done" | "skip") => void;
   /** Restores all fields to null. Correct for demo reset or returning to start. */
   reset: () => void;
+  /**
+   * Sets `sharedId` when starting the loop from a shared (buddy) card, or
+   * clears it to `undefined` when starting from a regular card. `/mood-after`
+   * reads `flow.sharedId` to write `SHARED_TEMPLATE_ID` on the `LogEntry`.
+   */
+  setSharedId: (sharedId: string | undefined) => void;
 }
 
 const INITIAL_STATE: FlowState = {
@@ -50,6 +63,7 @@ const INITIAL_STATE: FlowState = {
   moodBefore: null,
   moodAfter: null,
   outcome: null,
+  sharedId: undefined,
 };
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -74,11 +88,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, moodAfter }));
   const setOutcome = (outcome: "done" | "skip") =>
     setState((prev) => ({ ...prev, outcome }));
+  const setSharedId = (sharedId: string | undefined) =>
+    setState((prev) => ({ ...prev, sharedId }));
   const reset = () => setState(INITIAL_STATE);
 
   return (
     <FlowContext.Provider
-      value={{ state, setEnergy, setTaskId, setTemplateId, setMoodBefore, setMoodAfter, setOutcome, reset }}
+      value={{ state, setEnergy, setTaskId, setTemplateId, setMoodBefore, setMoodAfter, setOutcome, reset, setSharedId }}
     >
       {children}
     </FlowContext.Provider>

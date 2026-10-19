@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { planDay, suggestNextTemplate, addDays, weekDates, weekOffers } from '../lib/domain/planner'
+import { SHARED_TEMPLATE_ID, SHARED_ACTIVITY_IDS } from '../lib/domain/buddy'
 import type { PlanInput, Activity, TemplateItem, LogEntry, Template } from '../lib/domain/types'
 
 // ─── Fixture helpers (file-local) ────────────────────────────────────────────
@@ -59,6 +60,7 @@ function basePlanInput(overrides: Partial<PlanInput> = {}): PlanInput {
     activities: [],
     items: [],
     log: [],
+    shared: [],
     ...overrides,
   }
 }
@@ -290,6 +292,51 @@ describe('planner', () => {
       const result = weekOffers(['tpl-test'], [item], [])
       expect(result.byTemplate[0].activities).toEqual([])
       expect(result.anchors).toEqual([])
+    })
+  })
+
+  describe('shared plan items', () => {
+    it('shared item appears in DayPlan.shared, not in DayPlan.activities', () => {
+      const act = makeActivity({ id: 'act-message-one', energyRequired: 'low', category: 'pleasant' })
+      const item = makeItem({ activityId: 'act-message-one' })
+      const result = planDay(
+        basePlanInput({
+          activities: [act],
+          items: [item],
+          shared: [{ sharedId: 'sid1', activityId: 'act-message-one' }],
+        })
+      )
+      expect(result.shared).toHaveLength(1)
+      expect((result.shared ?? [])[0].sharedId).toBe('sid1')
+      expect((result.shared ?? [])[0].templateId).toBe(SHARED_TEMPLATE_ID)
+      expect(result.activities.map((a) => a.activityId)).not.toContain('act-message-one')
+    })
+
+    it('P1–P12 scoring unchanged when input.shared is empty', () => {
+      const acts = ['a', 'b', 'c'].map((id) =>
+        makeActivity({ id: `act-${id}`, energyRequired: 'medium' })
+      )
+      const items = acts.map((a) => makeItem({ activityId: a.id, timesPerWeek: 3 }))
+      const result = planDay(basePlanInput({ energy: 'medium', activities: acts, items, shared: [] }))
+      expect(result.shared).toHaveLength(0)
+      // medium energy: count = 2 slots; at most 2 from 3 candidates
+      expect(result.activities.length).toBeLessThanOrEqual(2)
+    })
+
+    it('no duplicate: same activityId in shared does not appear in activities', () => {
+      // Pick a social activity from the fixed SHARED_ACTIVITY_IDS list
+      const activityId = SHARED_ACTIVITY_IDS[0] // 'act-message-one'
+      const act = makeActivity({ id: activityId, energyRequired: 'low', category: 'pleasant' })
+      const item = makeItem({ activityId })
+      const result = planDay(
+        basePlanInput({
+          activities: [act],
+          items: [item],
+          shared: [{ sharedId: 'sha-test-01', activityId }],
+        })
+      )
+      expect(result.activities.map((a) => a.activityId)).not.toContain(activityId)
+      expect((result.shared ?? []).map((s) => s.activityId)).toContain(activityId)
     })
   })
 

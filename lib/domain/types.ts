@@ -55,6 +55,12 @@ export interface Activity extends Task {
   strenuous: boolean;
   /** IDs from data/sources.json that support this activity's inclusion. */
   sourceIds: string[];
+  /**
+   * Optional list of activity IDs offered as suggested "starter" actions when
+   * sharing this activity with a buddy. Absent for activities that have no
+   * recommended starter variant.
+   */
+  starters?: string[];
 }
 
 // ─── Lookup tables ───────────────────────────────────────────────────────────
@@ -131,6 +137,19 @@ export interface Persona {
   wakeTime: string;
   reasonIds: string[];
   templateIds: string[];
+  /**
+   * Optional buddy linked to this persona. When present the Connection & Buddy
+   * feature shows the buddy's name and offers shared activities. Absent for
+   * personas that have no buddy configured in the seed data.
+   */
+  buddy?: { name: string };
+  /**
+   * Activities this persona has agreed to share with their buddy, keyed by
+   * dayOffset (relative to today) so the seed data round-trips through JSON
+   * without a date-calculation step. The repo layer resolves dayOffset to an
+   * ISO date when reading history. Absent when no shared activities exist.
+   */
+  sharedActivities?: { activityId: string; dayOffset: number }[];
 }
 
 /**
@@ -190,6 +209,15 @@ export interface PlanItem {
 }
 
 /**
+ * A shared plan item — a PlanItem that was agreed with a buddy and therefore
+ * carries a stable sharedId. The sharedId is used by the Today screen and the
+ * store slice to match incoming buddy confirmations to the correct plan row.
+ * DayPlan.shared is optional (`?`) because stored demo blobs written before
+ * this feature lack the field; all call sites must guard with `?? []`.
+ */
+export type SharedPlanItem = PlanItem & { sharedId: string };
+
+/**
  * Output of planDay. activities holds the scored activity slots (1–3 depending
  * on energy, P2). anchors holds anchor-category items eligible today, ordered by
  * partOfDay, returned separately so Today can place them in the rhythm row.
@@ -199,6 +227,12 @@ export interface DayPlan {
   date: string;
   activities: PlanItem[];
   anchors: PlanItem[];
+  /**
+   * Activities agreed with the buddy for this day. Optional because blobs stored
+   * before the Connection & Buddy feature lack this key; call sites must use
+   * `todayPlan.plan.shared ?? []` (concept §2.7) — never a required read.
+   */
+  shared?: SharedPlanItem[];
 }
 
 /** Input to the planDay function in lib/domain/planner.ts. */
@@ -214,4 +248,11 @@ export interface PlanInput {
   activities: Activity[];
   /** All history rows, resolved to ISO dates by the caller. */
   log: LogEntry[];
+  /**
+   * Shared activities the user has committed to with their buddy for this plan.
+   * Required (not optional) — callers that have no buddy pass an empty array.
+   * Each entry carries a stable sharedId (used to match buddy confirmations) and
+   * the activityId to place in DayPlan.shared.
+   */
+  shared: { sharedId: string; activityId: string }[];
 }

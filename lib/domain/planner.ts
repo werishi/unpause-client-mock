@@ -14,6 +14,7 @@
  */
 
 import { isRatedDone, wasFollowedByBetterMood } from './mood';
+import { SHARED_TEMPLATE_ID } from './buddy';
 import type {
   Activity,
   DayPlan,
@@ -21,6 +22,7 @@ import type {
   LogEntry,
   PlanInput,
   PlanItem,
+  SharedPlanItem,
   Template,
   TemplateItem,
 } from './types';
@@ -250,10 +252,19 @@ export function planDay(input: PlanInput): DayPlan {
   const eligibleItems: ScoredItem[] = [];
   const anchorItems: PlanItem[] = [];
 
+  // Dedup: activities already committed as shared must not enter the scoring
+  // / selection loop. P4 would silently block them after a solo run that week,
+  // breaking the commitment without telling anyone. Guard with ?? [] so callers
+  // that predate PlanInput.shared are safe.
+  const sharedActivityIds = new Set((input.shared ?? []).map(s => s.activityId));
+
   for (const item of input.items) {
     const activity = activityMap.get(item.activityId);
     // Missing activity is a seed-data gap, not a logic error — skip rather than throw
     if (!activity) continue;
+    // Skip activities already committed as shared — prevents the same activity
+    // from appearing in both DayPlan.activities and DayPlan.shared on one day.
+    if (sharedActivityIds.has(activity.id)) continue;
 
     // ─ Anchor path: rhythm routines, no two-minute/full split ─────────────
     if (activity.category === 'anchor') {
@@ -319,6 +330,28 @@ export function planDay(input: PlanInput): DayPlan {
     (a, b) => (partOrder[a.partOfDay] ?? 3) - (partOrder[b.partOfDay] ?? 3)
   );
 
+  // ─ Shared build block: bypass all scoring gates ──────────────────────────
+  // A shared activity is a commitment to another person, not a planner
+  // candidate. P3 (energy gate), P4 (offer-rate gate), P8 (rotation) and P9
+  // (exploration) do not apply — same reasoning as anchors. Built from
+  // input.shared directly, bypassing the item-scoring loop entirely.
+  // leadWithTwoMinute is false: §2.5 — the two-minute version of
+  // act-meet-in-person is "Say hello to a neighbour", not the right action
+  // when meeting a buddy. partOfDay defaults to 'any' because shared
+  // activities have no template-item row to source a time slot from.
+  const shared: SharedPlanItem[] = (input.shared ?? []).map(s => {
+    const activity = activityMap.get(s.activityId);
+    if (!activity) return null;
+    return {
+      activityId: activity.id,
+      templateId: SHARED_TEMPLATE_ID,
+      partOfDay: 'any' as const,
+      leadWithTwoMinute: false,
+      offerFullVersion: false,
+      sharedId: s.sharedId,
+    } satisfies SharedPlanItem;
+  }).filter(Boolean) as SharedPlanItem[];
+
   // ─ Selection (P9, P10, P11) ───────────────────────────────────────────────
 
   // P10: tiebreaker — lower template index wins; then lower item row index
@@ -382,11 +415,12 @@ export function planDay(input: PlanInput): DayPlan {
     };
   });
 
-  // P12: if no eligible non-anchor items, activities is []. Anchors are still included.
+  // P12: if no eligible non-anchor items, activities is []. Anchors and shared are still included.
   return {
     date: input.today,
     activities,
     anchors: anchorItems,
+    shared,
   };
 }
 

@@ -436,6 +436,104 @@ export const YOU = {
    * Shown alongside the other You hub entries once the budget feature is built.
    */
   mediaBudget: "Media budget",
+  /**
+   * Navigation link in the You hub that leads to /you/buddy (buddy management).
+   * The label is static — it does not include the buddy's name even when one is
+   * set, because reading the store here would turn the You page into a client
+   * component (concept §2.7, Part 4 Domain Notes).
+   */
+  buddyEntry: "Buddy",
+} as const;
+
+/**
+ * Strings for connection-nudge helpers shown on the task page when the active
+ * activity has `category === "social"`. All strings pass tests/banned-words.ts.
+ *
+ * Placed as a named export consistent with PLAN, LOOK_BACK and similar objects.
+ */
+export const CONNECTION = {
+  /** Disclosure label on the "Need words?" <details> element on /task. */
+  disclosureLabel: "Need words?",
+  /**
+   * Motivational line inside the disclosure.
+   * Source: concept §2.3; do not paraphrase — it carries the study framing.
+   */
+  honestLine: "Research shows people usually appreciate hearing from someone more than the sender expects.",
+  /** Follow-up line reinforcing that any contact counts. */
+  anyoneCounts: "Anyone counts — an old friend, a colleague, a neighbour.",
+  /** Label on the copy-to-clipboard button beside each starter textarea. */
+  copyLabel: "Copy",
+} as const;
+
+/**
+ * Strings for the buddy feature: /you/buddy, /buddy/choose, and the shared
+ * card on Today and Plan.
+ *
+ * `{name}` in a value is a plain token replaced by `.replace("{name}", buddy.name)`
+ * at render time. It is not a template literal because that would change the type
+ * away from `string`, break `as const` inference, and complicate the banned-words
+ * check (see Rejected Alternatives in ConnectionAndBuddyMap.md, Part 3).
+ *
+ * All strings pass tests/banned-words.ts.
+ */
+export const BUDDY = {
+  // ── /you/buddy — empty state ────────────────────────────────────────────────
+  /** Introductory sentence shown when no buddy is set. */
+  emptyState: "Doing one thing together with someone you know can make it easier.",
+  /** CTA button label to open /buddy/choose. */
+  chooseSomeone: "Choose someone",
+
+  // ── /you/buddy — with buddy ─────────────────────────────────────────────────
+  /**
+   * Section heading that previews what the buddy would see.
+   * `{name}` is replaced with `buddy.name` at render time.
+   */
+  whatTheyWouldSee: "What {name} would see",
+  /** CTA button to navigate to /buddy/share for adding a shared activity. */
+  planTogether: "Plan something together",
+  /** Revoke button label for a single shared activity. */
+  removeIt: "Remove it",
+  /** Button to remove the buddy entirely (navigates to confirm flow). */
+  stopHavingBuddy: "Stop having a buddy",
+
+  // ── /buddy/choose ────────────────────────────────────────────────────────────
+  /**
+   * Disclaimer shown before the user confirms their choice.
+   * Exact string from concept §2.4; do not paraphrase.
+   * `{name}` is replaced with the entered name at render time.
+   */
+  notATherapist: "{name} is a friend, not a therapist. If things get heavy, your safety plan is always at the top right.",
+  /** Confirm button on /buddy/choose. */
+  agree: "Agree",
+  /** Cancel button on /buddy/choose. */
+  notNow: "Not now",
+  /**
+   * Helper hint below the name input on /buddy/choose.
+   * Concept §2.4: keeps the tone warm and concrete without prescribing a
+   * relationship type. Do not change without re-reading concept §2.4.
+   */
+  nameHint: "Someone you already know — a friend, a sibling, a neighbour.",
+
+  // ── Today shared card ────────────────────────────────────────────────────────
+  /**
+   * Low-day note rendered below the shared activity card on Today.
+   * `{name}` is replaced with `buddy.name` at render time.
+   * Principle: a commitment is not hidden on low-energy days; this line offers
+   * a minimal alternative instead.
+   */
+  lowDay: "Low day? A message to {name} to move it counts too.",
+  /**
+   * Badge label on an activity card when it is a shared commitment.
+   * `{name}` is replaced with `buddy.name` at render time.
+   */
+  withName: "with {name}",
+
+  // ── /done offer ──────────────────────────────────────────────────────────────
+  /**
+   * Offer line on /done when no buddy is set and the completed activity was
+   * social. Shown at most once (buddyOfferDismissed gate).
+   */
+  doneOfferText: "Want to do something together with someone you know?",
 } as const;
 
 /**

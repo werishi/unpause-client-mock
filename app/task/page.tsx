@@ -21,18 +21,23 @@
  * Renders inside AppShell's <main> — no additional container or padding needed.
  */
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFlow } from "@/lib/store/flow-store";
 import { useUserData } from "@/lib/store/user-store";
 import { getTaskById } from "@/lib/repo/activity-repo";
 import { localDateString } from "@/lib/domain/day";
-import { TASK_SCREEN } from "@/lib/copy";
+import { TASK_SCREEN, CONNECTION } from "@/lib/copy";
 
 export default function TaskPage() {
   const router = useRouter();
   const { state, setOutcome } = useFlow();
   const store = useUserData();
+
+  // Refs for each starter textarea — one entry per starter, used for the
+  // clipboard-fallback path (`textarea.select()` when Clipboard API is absent).
+  // Declared here, before any early returns, so it is always called (hook rules).
+  const starterRefs = useRef<(HTMLTextAreaElement | null)[]>([]);
 
   // Prerequisite guard: replace so the back button cannot return here out of order.
   useEffect(() => {
@@ -94,6 +99,47 @@ export default function TaskPage() {
           </>
         )}
       </div>
+
+      {/* Connection starter disclosure — shown only for social activities.
+          Starts closed so the "I did it" button is always reachable without
+          opening the disclosure (principle 3 + concept §2.3). Starters are
+          editable but ephemeral — the textarea is never persisted (G11). */}
+      {task.category === "social" && task.starters && (
+        <details className="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800/50">
+          <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300">
+            {CONNECTION.disclosureLabel}
+          </summary>
+          <div className="mt-3 flex flex-col gap-3">
+            {task.starters.map((starter, i) => (
+              <div key={i} className="flex flex-col gap-1">
+                <textarea
+                  ref={(el) => { starterRefs.current[i] = el; }}
+                  defaultValue={starter}
+                  rows={3}
+                  className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-800
+                             focus:outline-none focus:ring-2 focus:ring-blue-500
+                             dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = starterRefs.current[i];
+                    if (!el) return;
+                    navigator.clipboard?.writeText(el.value).catch(() => el.select());
+                  }}
+                  className="self-end rounded bg-gray-200 px-3 py-1 text-xs font-medium
+                             text-gray-700 hover:bg-gray-300
+                             dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                >
+                  {CONNECTION.copyLabel}
+                </button>
+              </div>
+            ))}
+            <p className="text-gray-600 dark:text-gray-400">{CONNECTION.honestLine}</p>
+            <p className="text-gray-600 dark:text-gray-400">{CONNECTION.anyoneCounts}</p>
+          </div>
+        </details>
+      )}
 
       {/* Action buttons */}
       <div className="flex flex-col gap-3 mt-2">

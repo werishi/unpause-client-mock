@@ -16,6 +16,7 @@
 
 import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
 import { LookBackState, LOOK_BACK_DEFAULTS } from "./look-back-slice";
+import type { SharedActivityItem } from "./buddy-slice";
 import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
 import { planDay, addDays } from "@/lib/domain/planner";
 import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
@@ -256,12 +257,23 @@ export const coreReducers = {
    *
    * `dayOffset`-based log entries are resolved to ISO dates before being passed
    * to `planDay`, mirroring user-store.tsx:371–373.
+   *
+   * `ctx.sharedActivities` drives two side effects that run before `planDay`:
+   * (1) Past items (`date < today`) are pruned; the pruned list is returned so
+   *     the caller can persist it into `BuddyState`. Pruning here — not in a
+   *     separate action — ensures no plan is ever built from stale shared items.
+   * (2) Today's items are forwarded as `PlanInput.shared`; `planDay` inserts
+   *     them as committed shared cards alongside anchors, outside scoring.
    */
   startDay(
     prev: CoreState,
-    ctx: { today: string },
+    ctx: { today: string; sharedActivities?: SharedActivityItem[] },
     energy: EnergyLevel
-  ): CoreState {
+  ): CoreState & { sharedActivities: SharedActivityItem[] } {
+    const pruned = (ctx.sharedActivities ?? []).filter((a) => a.date >= ctx.today);
+    const sharedForToday = pruned
+      .filter((a) => a.date === ctx.today)
+      .map((a) => ({ sharedId: a.id, activityId: a.activityId }));
     const templates = getTemplates().filter((t) =>
       prev.templateIds.includes(t.id)
     );
@@ -279,6 +291,7 @@ export const coreReducers = {
       items,
       activities,
       log,
+      shared: sharedForToday,
     };
     const plan = planDay(input);
     const todayPlan = { date: ctx.today, energy, plan };
@@ -286,6 +299,7 @@ export const coreReducers = {
       ...prev,
       checkIns: [...prev.checkIns, { date: ctx.today, energy }],
       todayPlan,
+      sharedActivities: pruned,
     };
   },
 

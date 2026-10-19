@@ -37,15 +37,20 @@ export function getTasks(): Task[] {
 }
 
 /**
- * Finds a single task by its `id` field, returning it as `Task`.
+ * Finds a single activity by its `id` field, returning it as `Activity`.
  *
  * Returns `undefined` when no activity with that id exists — callers must
  * guard against that case, for example when resolving a URL param.
  *
+ * Return type changed from `Task` to `Activity` so callers can access
+ * Activity-specific fields (`category`, `starters`, etc.) without a cast.
+ * The underlying data has always been full Activity objects; only the
+ * declared return type was narrowed to `Task`.
+ *
  * @param id - The activity's `id` string as stored in `data/activities.json`.
  */
-export function getTaskById(id: string): Task | undefined {
-  return (activitiesJson as unknown as Task[]).find((t) => t.id === id);
+export function getTaskById(id: string): Activity | undefined {
+  return (activitiesJson as unknown as Activity[]).find((t) => t.id === id);
 }
 
 /**

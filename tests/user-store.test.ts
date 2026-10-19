@@ -2,6 +2,18 @@ import { describe, it, expect } from 'vitest'
 import { hydrate, buildInitialState } from '@/lib/store/store-state'
 import { coreReducers, CORE_DEFAULTS, corePersonaState } from '@/lib/store/core-slice'
 import { planReducers, PLAN_DEFAULTS } from '@/lib/store/plan-slice'
+import {
+  BUDDY_DEFAULTS,
+  setBuddy,
+  removeBuddy,
+  addSharedActivity,
+  removeSharedActivity,
+  dismissBuddyOffer,
+  type BuddyState,
+  type SharedActivityItem,
+} from '@/lib/store/buddy-slice'
+import { SHARED_ACTIVITY_IDS } from '@/lib/domain/buddy'
+import { addDays } from '@/lib/domain/planner'
 
 const today = '2026-10-18'
 
@@ -129,6 +141,94 @@ describe('buildInitialState digest fields', () => {
     const init = buildInitialState()
     expect(Object.prototype.hasOwnProperty.call(init, 'mediaMinutesByDate')).toBe(true)
     expect(init.mediaMinutesByDate).toEqual({})
+  })
+})
+
+// ─── buddy-slice reducers ─────────────────────────────────────────────────────
+
+describe('buddy-slice reducers', () => {
+  it('setBuddy sets name and agreedAt', () => {
+    const result = setBuddy(BUDDY_DEFAULTS, 'Robin', '2026-01-01T00:00:00.000Z')
+    expect(result.buddy?.name).toBe('Robin')
+    expect(result.buddy?.agreedAt).toBe('2026-01-01T00:00:00.000Z')
+  })
+
+  it('removeBuddy clears both buddy and sharedActivities', () => {
+    const state: BuddyState = {
+      ...BUDDY_DEFAULTS,
+      buddy: { name: 'Alex', agreedAt: '2026-01-01T00:00:00.000Z' },
+      sharedActivities: [{ id: 'sha-alex-01', activityId: 'act-call-one', date: '2026-10-20' }],
+    }
+    const result = removeBuddy(state)
+    expect(result.buddy).toBeNull()
+    expect(result.sharedActivities).toHaveLength(0)
+  })
+
+  it('addSharedActivity and removeSharedActivity', () => {
+    const item1: SharedActivityItem = { id: 'sha-01', activityId: 'act-call-one', date: '2026-10-20' }
+    const item2: SharedActivityItem = { id: 'sha-02', activityId: 'act-meet-in-person', date: '2026-10-21' }
+    const after2 = addSharedActivity(addSharedActivity(BUDDY_DEFAULTS, item1), item2)
+    expect(after2.sharedActivities).toHaveLength(2)
+    const removed = removeSharedActivity(after2, 'sha-01')
+    expect(removed.sharedActivities).toHaveLength(1)
+    expect(removed.sharedActivities[0].id).toBe('sha-02')
+  })
+
+  it('dismissBuddyOffer sets flag; not reset by removeBuddy', () => {
+    expect(BUDDY_DEFAULTS.buddyOfferDismissed).toBe(false)
+    const dismissed = dismissBuddyOffer(BUDDY_DEFAULTS)
+    expect(dismissed.buddyOfferDismissed).toBe(true)
+    const afterRemove = removeBuddy(dismissed)
+    expect(afterRemove.buddyOfferDismissed).toBe(true)
+  })
+})
+
+// ─── startDay shared and prune ────────────────────────────────────────────────
+
+describe('startDay shared and prune', () => {
+  const testToday = '2026-10-19'
+
+  it('startDay prune: past entry removed, today entry kept', () => {
+    const yesterday = addDays(testToday, -1)
+    const sharedActivities: SharedActivityItem[] = [
+      { id: 'sha-past', activityId: 'act-call-one', date: yesterday },
+      { id: 'sha-today', activityId: 'act-call-one', date: testToday },
+    ]
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday, sharedActivities }, 'low')
+    expect(result.sharedActivities).toHaveLength(1)
+    expect(result.sharedActivities[0].date).toBe(testToday)
+  })
+
+  it('startDay builds shared plan items for today', () => {
+    const activityId = SHARED_ACTIVITY_IDS[0] // 'act-message-one'
+    const sharedActivities: SharedActivityItem[] = [
+      { id: 'sha-buddy-01', activityId, date: testToday },
+    ]
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday, sharedActivities }, 'medium')
+    const sharedPlan = result.todayPlan?.plan?.shared ?? []
+    expect(sharedPlan).toHaveLength(1)
+    expect(sharedPlan[0].sharedId).toBe('sha-buddy-01')
+  })
+
+  it('startDay with empty sharedActivities: no error, shared is empty', () => {
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday, sharedActivities: [] }, 'low')
+    expect((result.todayPlan?.plan?.shared ?? []).length).toBe(0)
+  })
+})
+
+// ─── hydrate backward compat ──────────────────────────────────────────────────
+
+describe('hydrate backward compat', () => {
+  it('todayPlan.plan without shared field does not throw and shared is empty', () => {
+    const raw = JSON.stringify({ todayPlan: { date: today, plan: { activities: [] } } })
+    let state: ReturnType<typeof hydrate>['state'] | undefined
+    expect(() => {
+      state = hydrate(raw, today).state
+    }).not.toThrow()
+    expect((state?.todayPlan?.plan?.shared ?? []).length).toBe(0)
   })
 })
 

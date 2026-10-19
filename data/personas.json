@@ -24,7 +24,9 @@
     "reasonIds": ["rsn-games", "rsn-pulled-away"],
     "templateIds": ["tpl-games-in-balance", "tpl-reconnect"],
     "valueIds": ["val-play", "val-friends", "val-learning"],
-    "wakeTime": "08:00"
+    "wakeTime": "08:00",
+    "buddy": { "name": "Robin" },
+    "sharedActivities": [{ "activityId": "act-walk-with-someone", "dayOffset": 0 }]
   },
   {
     "id": "per-lea",

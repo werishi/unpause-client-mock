@@ -110,12 +110,32 @@ export function getPersonaSeed(
 ): {
   log: (LogEntry & { date: string })[];
   checkIns: (CheckIn & { date: string })[];
+  sharedActivities: { id: string; activityId: string; date: string }[];
 } {
   const filteredCheckIns = (checkInsJson as unknown as RawCheckIn[]).filter(
     (c) => c.personaId === personaId,
   );
   const filteredLog = (personaLogJson as unknown as RawLogEntry[]).filter(
     (e) => e.personaId === personaId,
+  );
+
+  // Resolve the persona's sharedActivities from personas.json. Each raw entry
+  // carries only { activityId, dayOffset } — no id — so IDs are generated here
+  // following the same prefix-name-sequence convention as the checkin/log seed
+  // files (e.g., "sha-jonas-01"). The short name is the personaId with "per-"
+  // stripped, which matches how checkin IDs like "chk-jonas-01" are formed.
+  // Absent or empty sharedActivities always yields [] — no optional-chaining
+  // errors and no difference in store shape for personas that have no buddy.
+  const persona = (personasJson as unknown as Persona[]).find(
+    (p) => p.id === personaId,
+  );
+  const shortName = personaId.slice(4); // strips "per-" prefix, e.g. "per-jonas" → "jonas"
+  const sharedActivities = (persona?.sharedActivities ?? []).map(
+    ({ activityId, dayOffset }, i) => ({
+      id: `sha-${shortName}-${String(i + 1).padStart(2, "0")}`,
+      activityId,
+      date: addDays(today, dayOffset),
+    }),
   );
 
   // addDays uses consistent UTC arithmetic and avoids the UTC-parse / local-setDate
@@ -129,5 +149,6 @@ export function getPersonaSeed(
       ...rest,
       date: addDays(today, dayOffset),
     })) as (LogEntry & { date: string })[],
+    sharedActivities,
   };
 }

@@ -192,4 +192,51 @@ describe('data integrity', () => {
       assertNoban(row.title ?? '', 'digest-items', row.id, 'title')
     }
   })
+
+  it('every social activity has 2–3 non-empty starters', () => {
+    // starters feed the connection-and-buddy starter-phrase picker; a social row with
+    // no starters (or only one) leaves the UI with nothing to offer the user.
+    for (const row of activities as any[]) {
+      if (row.category !== 'social') continue
+      expect(
+        Array.isArray(row.starters),
+        `activity ${row.id}: starters must be an array`
+      ).toBe(true)
+      expect(
+        row.starters.length >= 2 && row.starters.length <= 3,
+        `activity ${row.id}: starters must have 2–3 entries, found ${row.starters?.length}`
+      ).toBe(true)
+      for (const starter of row.starters) {
+        expect(
+          typeof starter === 'string' && starter.trim().length > 0,
+          `activity ${row.id}: each starter must be a non-empty string`
+        ).toBe(true)
+      }
+    }
+  })
+
+  it('no non-social activity has starters', () => {
+    // starters are a social-category concern; a non-social row that accidentally gains
+    // a starters field would be served to the wrong UI path.
+    for (const row of activities as any[]) {
+      if (row.category === 'social') continue
+      expect(
+        row.starters === undefined || row.starters === null,
+        `activity ${row.id} (category '${row.category}'): non-social rows must not have starters`
+      ).toBe(true)
+    }
+  })
+
+  it('personas sharedActivities FK: every activityId resolves', () => {
+    // SHARED_ACTIVITY_IDS is built from the same ids, so a typo here is caught before
+    // it can silently produce a phantom id in the runtime set.
+    for (const persona of personas as any[]) {
+      for (const entry of (persona.sharedActivities ?? []) as any[]) {
+        expect(
+          activityIds.has(entry.activityId),
+          `persona ${persona.id}: sharedActivities activityId '${entry.activityId}' not found in activities`
+        ).toBe(true)
+      }
+    }
+  })
 })

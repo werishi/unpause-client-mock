@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlanItem, LogEntry, Activity } from "@/lib/domain/types";
-import { TODAY } from "@/lib/copy";
+import { TODAY, BUDDY } from "@/lib/copy";
 
 export interface ActivityCardProps {
   item: PlanItem;
@@ -11,6 +11,12 @@ export interface ActivityCardProps {
   /** Log entry for today with matching activityId, or null if not yet started. */
   logEntry: LogEntry | null;
   onStart: () => void;
+  /**
+   * When present, renders a "with {name}" label between the title block and the
+   * cue line. Used by Today when rendering a shared plan card. Optional so all
+   * existing callers (non-shared activities) continue to work unchanged.
+   */
+  withName?: string;
 }
 
 /**
@@ -35,6 +41,7 @@ export default function ActivityCard({
   valueTag,
   logEntry,
   onStart,
+  withName,
 }: ActivityCardProps) {
   // Collapsed — activity has already been logged today
   if (logEntry !== null) {
@@ -53,6 +60,9 @@ export default function ActivityCard({
     <div>
       <p>{headline}</p>
       {subtitle !== null && <p>{subtitle}</p>}
+      {withName && (
+        <span>{BUDDY.withName.replace("{name}", withName)}</span>
+      )}
       <p>{activity.cue}</p>
       {valueTag !== null && (
         <span>

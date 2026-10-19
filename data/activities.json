@@ -152,37 +152,44 @@
   {
     "id": "act-message-one", "title": "Message one person", "cue": "After thinking of someone I miss, I …", "twoMinuteVersion": "Open the chat with one person",
     "minutes": 5, "energyRequired": "low", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-grief-eisma"]
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-ekers", "src-cobra", "src-dose-pearce", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-grief-eisma"],
+    "starters": ["Saw this and thought of you", "Just wanted to say hello", "Been thinking about you lately"]
   },
   {
     "id": "act-call-one", "title": "Call someone or send a voice message", "cue": "After a quiet evening, I …", "twoMinuteVersion": "Send one voice message",
     "minutes": 15, "energyRequired": "low", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-ba-anxiety-stein"]
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-ba-lejuez", "src-exercise-noetel", "src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-ba-anxiety-stein"],
+    "starters": ["Would love to catch up — free for a call sometime?", "Haven't talked in a while — wanted to reach out", "Sending a voice message because I've been thinking about you"]
   },
   {
     "id": "act-meet-in-person", "title": "Meet someone for coffee or a visit", "cue": "After reaching out, I …", "twoMinuteVersion": "Say hello to a neighbour",
     "minutes": 60, "energyRequired": "medium", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-social-hunt", "src-social-may", "src-bundling-milkman", "src-relapse-dobson"]
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-social-hunt", "src-social-may", "src-bundling-milkman", "src-relapse-dobson"],
+    "starters": ["Would you want to grab a coffee this week?", "It's been too long — would love to see you", "Thinking of you and hoping we can find a time soon"]
   },
   {
     "id": "act-group-place", "title": "Go to a group or shared place — a class, club, library or volunteering", "cue": "After checking the schedule, I …", "twoMinuteVersion": "Look up one group's time and place",
     "minutes": 75, "energyRequired": "high", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-latent-paul", "src-ipsrt-frank"]
+    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-contact-teo", "src-group-heissel", "src-reachout-liu", "src-latent-paul", "src-ipsrt-frank"],
+    "starters": ["There's a class I've been going to — thought of you", "Wanted to share something I've been doing lately"]
   },
   {
     "id": "act-shared-time", "title": "Shared time with someone, phones and work talk away", "cue": "After putting my phone away, I …", "twoMinuteVersion": "Two minutes of full attention",
     "minutes": 60, "energyRequired": "medium", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+    "strenuous": false, "valueIds": ["val-friends"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"],
+    "starters": ["Would love some proper time together soon", "Thinking about doing something together — phones away, just us"]
   },
   {
     "id": "act-neglected-contact", "title": "Reach out to someone you've been meaning to", "cue": "After a long day, I …", "twoMinuteVersion": "Send \"thinking of you\"",
     "minutes": 30, "energyRequired": "low", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"]
+    "strenuous": false, "valueIds": ["val-friends", "val-care"], "sourceIds": ["src-values-napier", "src-detach-smit", "src-workaholism-clark"],
+    "starters": ["Been meaning to reach out — thinking of you", "It's been too long — wanted to get in touch", "Just wanted to say I've been thinking about you"]
   },
   {
     "id": "act-play-together", "title": "Play or watch together with friends — online counts", "cue": "After messaging a friend, I …", "twoMinuteVersion": "Send one message suggesting a time",
     "minutes": 60, "energyRequired": "low", "category": "social",
-    "strenuous": false, "valueIds": ["val-friends", "val-play"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"]
+    "strenuous": false, "valueIds": ["val-friends", "val-play"], "sourceIds": ["src-gaming-stevens", "src-gaming-king", "src-play-vuorre"],
+    "starters": ["Want to set up a game night sometime soon?", "Thought of you and wondered if you'd want to play something together"]
   },
   {
     "id": "act-planned-game", "title": "A planned game session, with a start and an end", "cue": "After dinner, I …", "twoMinuteVersion": "Write down when and how long you'll play",

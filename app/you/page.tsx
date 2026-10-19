@@ -2,7 +2,7 @@
  * You page (/you).
  *
  * Settings-style hub for the current user. Renders navigation links to
- * sub-pages: About Unpause, Safety plan, and Demo. The tab bar shows
+ * sub-pages: About Unpause, Safety plan, Demo, and Buddy. The tab bar shows
  * automatically because "/you" matches the TabBar allow-list prefix.
  *
  * Server component — no client hooks needed; initial HTML is prerendered
@@ -20,6 +20,7 @@ export default function YouPage() {
         <Link href="/you/values">{YOU.valuesEntry}</Link>
         <Link href="/you/digest">{YOU.interestsAndDigest}</Link>
         <Link href="/you/media">{YOU.mediaBudget}</Link>
+        <Link href="/you/buddy">{YOU.buddyEntry}</Link>
         <Link href="/safety">{YOU.youPageSafetyLabel}</Link>
         <Link href="/you/demo">{YOU.youPageDemoLabel}</Link>
       </nav>

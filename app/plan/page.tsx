@@ -45,7 +45,7 @@ const allTemplates = getTemplates();
  * prerender (which has no localStorage) never shows stale or incorrect dates.
  */
 export default function PlanPage() {
-  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides } = useUserData();
+  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides, buddy, sharedActivities } = useUserData();
   const [mounted, setMounted] = useState(false);
   // `selected` is empty until mount; `effectiveSelected` falls back to `today`.
   const [selected, setSelected] = useState("");
@@ -169,6 +169,23 @@ export default function PlanPage() {
             />
           );
         })}
+        {(() => {
+          // Look up today's shared activity from the store (not from DayPlan.shared,
+          // which covers only the current day's plan blob; sharedActivities spans the
+          // whole week). The activity display name is resolved from the in-memory
+          // catalogue returned by getActivities() — consistent with how plan rows above
+          // resolve their titles.
+          const sharedItem = sharedActivities.find((a) => a.date === today);
+          if (!sharedItem) return null;
+          const sharedActivity = allActivities.find((a) => a.id === sharedItem.activityId);
+          return (
+            <PlanActivityRow
+              title={sharedActivity?.title ?? PLAN.noActivity}
+              twoMinuteVersion={sharedActivity?.twoMinuteVersion}
+              withName={buddy?.name}
+            />
+          );
+        })()}
         {anchors.length > 0 && (
           <p>
             {PLAN.anchorPrefix}{" "}

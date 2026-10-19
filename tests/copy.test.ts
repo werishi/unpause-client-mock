@@ -35,6 +35,8 @@ import {
   DIGEST,
   SWAP,
   MEDIA_BUDGET,
+  CONNECTION,
+  BUDDY,
 } from '../lib/copy'
 
 /**
@@ -58,6 +60,7 @@ describe('copy tone', () => {
       DIGEST, SWAP, MEDIA_BUDGET,
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
       ABOUT, DEMO, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
+      CONNECTION, BUDDY,
     ]
     const strings = allExports.flatMap(collectStrings)
 

@@ -24,13 +24,13 @@ import { useUserData } from "@/lib/store/user-store";
 import { useFlow } from "@/lib/store/flow-store";
 import { getActivities } from "@/lib/repo/activity-repo";
 import { getValues } from "@/lib/repo/value-repo";
-import { CHECK_IN, TODAY, ONBOARDING } from "@/lib/copy";
+import { BUDDY, CHECK_IN, TODAY, ONBOARDING } from "@/lib/copy";
 import { isMonday, isFirstOfMonth } from "@/lib/domain/day";
 import { currentDigestSlot } from "@/lib/domain/digest";
 import { weekSummary, monthSummary } from "@/lib/domain/look-back";
 import { weekDates } from "@/lib/domain/planner";
 import ActivityCard from "@/components/ActivityCard";
-import type { PlanItem, EnergyLevel } from "@/lib/domain/types";
+import type { PlanItem, SharedPlanItem, EnergyLevel } from "@/lib/domain/types";
 
 // Module-level: both functions are synchronous in-memory reads that return the
 // same array reference on every call. Loading at module level avoids recreating
@@ -58,6 +58,8 @@ export default function TodayPage() {
     digestTimes,
     digestSeenSlot,
     markDigestSeen,
+    buddy,
+    sharedActivities,
   } = useUserData();
 
   const flowStore = useFlow();
@@ -101,19 +103,26 @@ export default function TodayPage() {
     return log.find((e) => e.date === today && e.activityId === activityId) ?? null;
   }
 
-  // True once any card in today's plan has been completed or skipped.
-  // The "Change energy" button is hidden after this point — re-planning would
-  // remove an activity the user already finished (concept 2.4).
-  const anyLogged = todayPlan.plan.activities.some(
-    (item) => getLogEntry(item.activityId) !== null
-  );
+  // Shared plan items for today — absent in stored blobs written before this
+  // feature, so guarded with `?? []`.
+  const shared = todayPlan.plan.shared ?? [];
 
-  // True when every activity in today's plan has a log row.
+  // True once any card in today's plan has been completed or skipped — includes
+  // shared cards so "Change energy" hides once any commitment is logged.
+  const anyLogged =
+    todayPlan.plan.activities.some((item) => getLogEntry(item.activityId) !== null) ||
+    shared.some((s) => getLogEntry(s.activityId) !== null);
+
+  // True when every planned activity and every shared card has a log row.
+  // Shared cards are keyed by activityId because LogEntry has no sharedId field
+  // (concept §2.4 deliberately omitted it). The planner dedup prevents the same
+  // activityId from appearing in both lists in a current-day plan; stale stored
+  // blobs that predate the dedup accept the remote chance of a double-complete
+  // as benign.
   const allLogged =
     todayPlan.plan.activities.length > 0 &&
-    todayPlan.plan.activities.every(
-      (item) => getLogEntry(item.activityId) !== null
-    );
+    todayPlan.plan.activities.every((item) => getLogEntry(item.activityId) !== null) &&
+    shared.every((s) => getLogEntry(s.activityId) !== null);
 
   // Computed after the hydration guard so `digestTimes` (localStorage-derived)
   // is never read server-side — identical deferral pattern to `getGreeting`.
@@ -165,6 +174,22 @@ export default function TodayPage() {
     router.push("/mood-before");
   }
 
+  /**
+   * Starts the activity loop for a shared (buddy) plan item. Calls `setSharedId`
+   * so that `/mood-after` writes `templateId: SHARED_TEMPLATE_ID` on the resulting
+   * LogEntry — the only trace that this loop came from a shared card. The flow store
+   * has no combined `startActivity` helper; the individual setters are composed here
+   * in the same order as `handleStart`, with `setSharedId` added before the push.
+   */
+  function handleStartShared(s: SharedPlanItem): void {
+    flowStore.reset();
+    flowStore.setEnergy(todayPlan!.energy);
+    flowStore.setTaskId(s.activityId);
+    flowStore.setTemplateId(s.templateId);
+    flowStore.setSharedId(s.sharedId);
+    router.push("/mood-before");
+  }
+
   // "Make it yours" card: shown from the second day onward (startedAt < today),
   // only when personalisation has not been completed or dismissed.
   const showPersonaliseOffer =
@@ -206,6 +231,37 @@ export default function TodayPage() {
             logEntry={logEntry}
             onStart={() => handleStart(item)}
           />
+        );
+      })}
+
+      {/* Shared (buddy) cards — placed after planned activities, before anchors (concept §2.5).
+          Keyed by sharedId because the same activityId could theoretically appear in both
+          DayPlan.activities and DayPlan.shared in a stored blob written before the planner
+          dedup guard was in place. The low-day note is rendered beside the card in Today's
+          JSX rather than inside ActivityCard — it depends on Today's energy-state check and
+          must not couple the generic component to this page's business logic. */}
+      {shared.map((s) => {
+        const activity = activities.find((a) => a.id === s.activityId) ?? null;
+        if (activity === null) return null;
+        const firstValueId = activity.valueIds[0] ?? null;
+        const valueTag = firstValueId !== null
+          ? (values.find((v) => v.id === firstValueId) ?? null)
+          : null;
+        const logEntry = getLogEntry(s.activityId);
+        return (
+          <div key={s.sharedId}>
+            <ActivityCard
+              item={s}
+              activity={activity}
+              valueTag={valueTag}
+              logEntry={logEntry}
+              withName={buddy?.name}
+              onStart={() => handleStartShared(s)}
+            />
+            {todayPlan!.energy === "low" && buddy !== null && (
+              <p>{BUDDY.lowDay.replace("{name}", buddy.name)}</p>
+            )}
+          </div>
         );
       })}
 

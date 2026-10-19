@@ -1,5 +1,7 @@
 "use client";
 
+import { BUDDY } from "@/lib/copy";
+
 /**
  * Renders a single activity row in the Plan tab's template or today-plan list.
  *
@@ -28,6 +30,12 @@ export interface PlanActivityRowProps {
    * Used by the week offers section; omitted for today-plan items.
    */
   editHref?: string;
+  /**
+   * When present, renders a small "with {name}" badge beside the title.
+   * Used by the Plan page when rendering a shared plan item. Optional so all
+   * existing callers continue to work unchanged.
+   */
+  withName?: string;
 }
 
 export default function PlanActivityRow({
@@ -35,6 +43,7 @@ export default function PlanActivityRow({
   twoMinuteVersion,
   done,
   editHref,
+  withName,
 }: PlanActivityRowProps) {
   return (
     <div className="flex items-start justify-between gap-4 py-2">
@@ -42,6 +51,11 @@ export default function PlanActivityRow({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-normal text-foreground">{title}</span>
+          {withName && (
+            <span className="text-xs text-muted-foreground">
+              {BUDDY.withName.replace("{name}", withName)}
+            </span>
+          )}
           {done && (
             <span className="text-xs text-muted-foreground">Done</span>
           )}

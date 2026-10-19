@@ -7,6 +7,8 @@
  *
  * No `"use client"` directive. Pure TypeScript — no React, no hooks, no browser APIs.
  *
+ * Active slices: CoreState, PlanState, LookBackState, DigestState, BuddyState.
+ *
  * To add a new slice later: (1) create `lib/store/{name}-slice.ts`; (2) add `& {Name}State` to
  * `UserDataState`; (3) add `...{NAME}_DEFAULTS` to `buildInitialState()`'s return and
  * re-allocate any arrays that slice introduces.
@@ -16,6 +18,7 @@ import { CoreState, CORE_DEFAULTS, WELCOME_BACK_GAP_DAYS } from './core-slice';
 import { PlanState, PLAN_DEFAULTS } from './plan-slice';
 import { LookBackState, LOOK_BACK_DEFAULTS } from './look-back-slice';
 import { DigestState, DIGEST_DEFAULTS } from './digest-slice';
+import { BuddyState, BUDDY_DEFAULTS } from './buddy-slice';
 import { daysBetween } from '@/lib/domain/day';
 
 // ---------------------------------------------------------------------------
@@ -30,7 +33,7 @@ import { daysBetween } from '@/lib/domain/day';
  * **Do not import this type into any `*-slice.ts` file.** Each slice knows only its own state
  * type; slices are composed here, not inside each other.
  */
-export type UserDataState = CoreState & PlanState & LookBackState & DigestState;
+export type UserDataState = CoreState & PlanState & LookBackState & DigestState & BuddyState;
 
 // ---------------------------------------------------------------------------
 // buildInitialState
@@ -57,6 +60,7 @@ export function buildInitialState(): UserDataState {
     ...PLAN_DEFAULTS,
     ...LOOK_BACK_DEFAULTS,
     ...DIGEST_DEFAULTS,
+    ...BUDDY_DEFAULTS,
     // Freshly allocated arrays — do not remove; see doc comment above.
     log: [],
     checkIns: [],
@@ -74,6 +78,8 @@ export function buildInitialState(): UserDataState {
     digestTimes: [],
     mediaMinutesByDate: {},
     media: { estimateMinutes: null, budgetMinutes: null },
+    // BuddyState array re-allocated to avoid sharing BUDDY_DEFAULTS reference.
+    sharedActivities: [],
   };
 }
 

@@ -35,6 +35,10 @@ import {
   reduceSetMediaEstimate, reduceSetMediaBudget, reduceSetMediaMinutesToday,
 } from "./digest-slice";
 import type { MediaState } from "./digest-slice";
+import {
+  setBuddy, removeBuddy, addSharedActivity, removeSharedActivity, dismissBuddyOffer,
+} from "./buddy-slice";
+import type { SharedActivityItem } from "./buddy-slice";
 import { buildInitialState, hydrate } from "./store-state";
 import type { UserDataState } from "./store-state";
 
@@ -151,6 +155,21 @@ export type UserDataContext = {
   setMediaEstimate: (minutes: number) => void;
   setMediaBudget: (minutes: number) => void;
   setMediaMinutesToday: (minutes: number) => void;
+  // Persisted buddy state (BuddyState fields, top-level on UserDataState)
+  buddy: { name: string; agreedAt: string } | null;
+  sharedActivities: SharedActivityItem[];
+  buddyOfferDismissed: boolean;
+  // Buddy actions (bound reducers from buddy-slice.ts)
+  /** Records a buddy agreement. `agreedAt` is generated internally as `new Date().toISOString()`. */
+  setBuddy: (name: string) => void;
+  /** Removes the buddy and clears all shared activities atomically. */
+  removeBuddy: () => void;
+  /** Appends a shared activity item. Caller must supply a stable `id`. */
+  addSharedActivity: (item: SharedActivityItem) => void;
+  /** Removes the shared activity with the given `id`. No-op if id is absent. */
+  removeSharedActivity: (id: string) => void;
+  /** Sets buddyOfferDismissed permanently. No reset path (anti-nagging rule). */
+  dismissBuddyOffer: () => void;
   // Provider functions (not reducers — see module doc)
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
@@ -267,6 +286,22 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     persist(hydratedState);
   }, []);
 
+  // ── startDay override ────────────────────────────────────────────────────
+  // `bind(coreReducers)` passes only `{ today }` as ctx; `startDay` also needs
+  // `sharedActivities` in ctx so it can prune past items and build PlanInput.shared.
+  // Wired individually here and overrides the bind-generated binding in the
+  // context value so the correct implementation is always called.
+  function startDayAction(energy: EnergyLevel): void {
+    update((prev) => ({
+      ...prev,
+      ...coreReducers.startDay(
+        prev,
+        { today, sharedActivities: prev.sharedActivities },
+        energy
+      ),
+    }));
+  }
+
   // ── LookBack action bindings ──────────────────────────────────────────────
   // These reducers take LookBackState directly (not via the bind helper's ctx
   // pattern) so they are wired individually here and listed explicitly in the
@@ -323,6 +358,27 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       ...reduceSetMediaMinutesToday(prev, localDateString(new Date()), minutes),
     }));
+  }
+
+  // ── Buddy action bindings ─────────────────────────────────────────────────
+  // These reducers take BuddyState directly (no ctx arg) so they are wired
+  // individually and use update() so the buddy fields are persisted immediately.
+  // `setBuddy` generates `agreedAt` here so the reducer stays pure.
+
+  function setBuddyAction(name: string): void {
+    update((prev) => ({ ...prev, ...setBuddy(prev, name, new Date().toISOString()) }));
+  }
+  function removeBuddyAction(): void {
+    update((prev) => ({ ...prev, ...removeBuddy(prev) }));
+  }
+  function addSharedActivityAction(item: SharedActivityItem): void {
+    update((prev) => ({ ...prev, ...addSharedActivity(prev, item) }));
+  }
+  function removeSharedActivityAction(id: string): void {
+    update((prev) => ({ ...prev, ...removeSharedActivity(prev, id) }));
+  }
+  function dismissBuddyOfferAction(): void {
+    update((prev) => ({ ...prev, ...dismissBuddyOffer(prev) }));
   }
 
   // ── Provider functions ─────────────────────────────────────────────────────
@@ -473,6 +529,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     today,
     ...state,
     ...bind(coreReducers),
+    startDay: startDayAction,
     ...bind(planReducers),
     grantComebackBonus: grantComebackBonusAction,
     setReward: setRewardAction,
@@ -488,6 +545,11 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     setMediaEstimate: setMediaEstimateAction,
     setMediaBudget: setMediaBudgetAction,
     setMediaMinutesToday: setMediaMinutesTodayAction,
+    setBuddy: setBuddyAction,
+    removeBuddy: removeBuddyAction,
+    addSharedActivity: addSharedActivityAction,
+    removeSharedActivity: removeSharedActivityAction,
+    dismissBuddyOffer: dismissBuddyOfferAction,
     loadPersona,
     resetDemoData,
   };
