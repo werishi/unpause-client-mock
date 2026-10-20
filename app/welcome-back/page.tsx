@@ -42,7 +42,7 @@ export default function WelcomeBackPage() {
       )}
       <button
         onClick={handleCta}
-        className="self-start rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white dark:bg-indigo-500"
+        className="self-start rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white"
       >
         {WELCOME_BACK.ctaLabel}
       </button>

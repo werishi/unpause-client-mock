@@ -14,13 +14,14 @@
  */
 
 import { isRatedDone, wasFollowedByBetterMood } from './mood';
-import { SHARED_TEMPLATE_ID } from './buddy';
+import { HOMEWORK_TEMPLATE_ID, SHARED_TEMPLATE_ID } from './buddy';
 import type {
   Activity,
   DayPlan,
   EnergyLevel,
   LogEntry,
   PlanInput,
+  HomeworkPlanItem,
   PlanItem,
   SharedPlanItem,
   Template,
@@ -257,6 +258,9 @@ export function planDay(input: PlanInput): DayPlan {
   // breaking the commitment without telling anyone. Guard with ?? [] so callers
   // that predate PlanInput.shared are safe.
   const sharedActivityIds = new Set((input.shared ?? []).map(s => s.activityId));
+  // Same dedup for therapist homework. `?? []` although PlanInput.homework is
+  // required: planDay is also called with hand-built inputs, and the guard is free.
+  const homeworkActivityIds = new Set((input.homework ?? []).map(h => h.activityId));
 
   for (const item of input.items) {
     const activity = activityMap.get(item.activityId);
@@ -265,6 +269,10 @@ export function planDay(input: PlanInput): DayPlan {
     // Skip activities already committed as shared — prevents the same activity
     // from appearing in both DayPlan.activities and DayPlan.shared on one day.
     if (sharedActivityIds.has(activity.id)) continue;
+    // Skip activities set as homework — the same activity must not appear in both
+    // DayPlan.activities and DayPlan.homework on one day, and the weekly-frequency
+    // gate (P4) would otherwise silently drop a therapist commitment after a solo run.
+    if (homeworkActivityIds.has(activity.id)) continue;
 
     // ─ Anchor path: rhythm routines, no two-minute/full split ─────────────
     if (activity.category === 'anchor') {
@@ -352,6 +360,43 @@ export function planDay(input: PlanInput): DayPlan {
     } satisfies SharedPlanItem;
   }).filter(Boolean) as SharedPlanItem[];
 
+  // ─ Homework build block: a third lane, bypassing all scoring gates ─────────
+  // Homework is a commitment made with a therapist, not a planner candidate, so
+  // P3 (energy gate), P4 (weekly cap), P5 (strenuous rest), P8 (score) and P9
+  // (exploration) do not apply. It is built here, next to the shared lane, and
+  // not by reusing the shared lane with an origin flag (refused in concept §2.7):
+  // the shared lane carries buddy rules — one item at a time, deletion after its
+  // day, a "with {name}" label — that do not fit homework.
+  // The slot count `count` (P2) is not touched: homework sits outside the 1–3
+  // slots by construction, because the slots protect a low-energy day from
+  // overload and the user's own pick must not be crowded out by a therapist task,
+  // nor the therapist task by the user's pick.
+  // leadWithTwoMinute follows `input.energy === 'low'` — the same condition the
+  // scored items use via `count === 1` — because spec 05 Implication 6 says every
+  // homework task has a two-minute version (Activity.twoMinuteVersion is required),
+  // and on a low-energy day that two-minute lead is what keeps a bypassed gate safe.
+  // offerFullVersion is false: P11 is computed from the user's own done history,
+  // and the planner must not nudge a therapist task toward its full version.
+  // A missing activity is a seed-data gap and is skipped silently (same as shared).
+  // A second entry for an activityId already emitted is skipped: the log is keyed
+  // by activity id, so two cards for one activity would both flip on one completion.
+  const homework: HomeworkPlanItem[] = [];
+  const emittedHomeworkActivityIds = new Set<string>();
+  for (const h of input.homework ?? []) {
+    const activity = activityMap.get(h.activityId);
+    if (!activity) continue;
+    if (emittedHomeworkActivityIds.has(activity.id)) continue;
+    emittedHomeworkActivityIds.add(activity.id);
+    homework.push({
+      activityId: activity.id,
+      templateId: HOMEWORK_TEMPLATE_ID,
+      partOfDay: 'any' as const,
+      leadWithTwoMinute: input.energy === 'low',
+      offerFullVersion: false,
+      homeworkId: h.homeworkId,
+    } satisfies HomeworkPlanItem);
+  }
+
   // ─ Selection (P9, P10, P11) ───────────────────────────────────────────────
 
   // P10: tiebreaker — lower template index wins; then lower item row index
@@ -415,12 +460,14 @@ export function planDay(input: PlanInput): DayPlan {
     };
   });
 
-  // P12: if no eligible non-anchor items, activities is []. Anchors and shared are still included.
+  // P12: if no eligible non-anchor items, activities is []. Anchors, shared and
+  // homework are still included.
   return {
     date: input.today,
     activities,
     anchors: anchorItems,
     shared,
+    homework,
   };
 }
 

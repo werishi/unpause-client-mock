@@ -22,6 +22,7 @@
 import { useState, useEffect, type ReactNode } from "react";
 import Link from "next/link";
 import { useUserData } from "@/lib/store/user-store";
+import { pruneHomeworkItems } from "@/lib/store/sharing-slice";
 import { localDateString } from "@/lib/domain/day";
 import { weekDates, weekOffers, suggestNextTemplate } from "@/lib/domain/planner";
 import { getActivities } from "@/lib/repo/activity-repo";
@@ -45,7 +46,7 @@ const allTemplates = getTemplates();
  * prerender (which has no localStorage) never shows stale or incorrect dates.
  */
 export default function PlanPage() {
-  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides, buddy, sharedActivities } = useUserData();
+  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides, buddy, sharedActivities, homework } = useUserData();
   const [mounted, setMounted] = useState(false);
   // `selected` is empty until mount; `effectiveSelected` falls back to `today`.
   const [selected, setSelected] = useState("");
@@ -169,6 +170,27 @@ export default function PlanPage() {
             />
           );
         })}
+        {/* Homework rows come from the plan fixed at check-in, not from the
+            store's `homework`: an item linked or seeded after check-in joins
+            the plan at the next check-in (part 2's startDay). */}
+        {(todayPlan.plan.homework ?? []).map((h) => {
+          const activity = allActivities.find((a) => a.id === h.activityId);
+          const isDone = log.some(
+            (e) =>
+              e.date === today &&
+              e.activityId === h.activityId &&
+              e.outcome === "done",
+          );
+          return (
+            <PlanActivityRow
+              key={h.homeworkId}
+              title={activity?.title ?? PLAN.noActivity}
+              twoMinuteVersion={activity?.twoMinuteVersion}
+              done={isDone}
+              fromTherapist
+            />
+          );
+        })}
         {(() => {
           // Look up today's shared activity from the store (not from DayPlan.shared,
           // which covers only the current day's plan blob; sharedActivities spans the
@@ -201,8 +223,28 @@ export default function PlanPage() {
       </>
     );
   } else {
-    // Future day: no plan has been computed yet for this date.
-    dayDetail = <p>{PLAN.futureDay}</p>;
+    // Future day: no plan has been computed yet for this date, but homework
+    // already dated to it is shown. Past items leave the store only at
+    // check-in, so the page prunes with the shared helper before matching.
+    const futureHomework = pruneHomeworkItems(homework, today).filter(
+      (h) => h.date === effectiveSelected,
+    );
+    dayDetail = (
+      <>
+        <p>{PLAN.futureDay}</p>
+        {futureHomework.map((h) => {
+          const activity = allActivities.find((a) => a.id === h.activityId);
+          return (
+            <PlanActivityRow
+              key={h.homeworkId}
+              title={activity?.title ?? PLAN.noActivity}
+              twoMinuteVersion={activity?.twoMinuteVersion}
+              fromTherapist
+            />
+          );
+        })}
+      </>
+    );
   }
 
   return (

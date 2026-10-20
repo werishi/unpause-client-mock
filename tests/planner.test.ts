@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { planDay, suggestNextTemplate, addDays, weekDates, weekOffers } from '../lib/domain/planner'
-import { SHARED_TEMPLATE_ID, SHARED_ACTIVITY_IDS } from '../lib/domain/buddy'
+import { SHARED_TEMPLATE_ID, SHARED_ACTIVITY_IDS, HOMEWORK_TEMPLATE_ID } from '../lib/domain/buddy'
 import type { PlanInput, Activity, TemplateItem, LogEntry, Template } from '../lib/domain/types'
 
 // ─── Fixture helpers (file-local) ────────────────────────────────────────────
@@ -61,6 +61,7 @@ function basePlanInput(overrides: Partial<PlanInput> = {}): PlanInput {
     items: [],
     log: [],
     shared: [],
+    homework: [],
     ...overrides,
   }
 }
@@ -337,6 +338,108 @@ describe('planner', () => {
       )
       expect(result.activities.map((a) => a.activityId)).not.toContain(activityId)
       expect((result.shared ?? []).map((s) => s.activityId)).toContain(activityId)
+    })
+  })
+
+  describe('homework plan items', () => {
+    const scored = ['a', 'b', 'c'].map((id) => makeActivity({ id: `act-${id}`, energyRequired: 'low' }))
+    const scoredItems = scored.map((a) => makeItem({ activityId: a.id }))
+    const hwAct = makeActivity({ id: 'act-hw', energyRequired: 'low' })
+
+    it('homework item appears in DayPlan.homework and is deduped from activities', () => {
+      const result = planDay(
+        basePlanInput({
+          activities: [hwAct],
+          items: [makeItem({ activityId: 'act-hw' })],
+          homework: [{ homeworkId: 'hw1', activityId: 'act-hw' }],
+        })
+      )
+      const homework = result.homework ?? []
+      expect(homework).toHaveLength(1)
+      expect(homework[0].templateId).toBe(HOMEWORK_TEMPLATE_ID)
+      expect(homework[0].homeworkId).toBe('hw1')
+      expect(homework[0].activityId).toBe('act-hw')
+      expect(homework[0].partOfDay).toBe('any')
+      expect(result.activities.map((a) => a.activityId)).not.toContain('act-hw')
+    })
+
+    it('homework sits outside the energy slots', () => {
+      const input = (energy: 'low' | 'medium') =>
+        basePlanInput({
+          energy,
+          activities: [...scored, hwAct],
+          items: scoredItems,
+          homework: [{ homeworkId: 'hw1', activityId: 'act-hw' }],
+        })
+      const medium = planDay(input('medium'))
+      expect(medium.activities).toHaveLength(2)
+      expect(medium.homework ?? []).toHaveLength(1)
+      const low = planDay(input('low'))
+      expect(low.activities).toHaveLength(1)
+      expect(low.homework ?? []).toHaveLength(1)
+    })
+
+    it('leads with the two-minute version only on a low-energy day and never offers the full version', () => {
+      for (const [energy, lead] of [['low', true], ['medium', false], ['high', false]] as const) {
+        const result = planDay(
+          basePlanInput({
+            energy,
+            activities: [hwAct],
+            homework: [{ homeworkId: 'hw1', activityId: 'act-hw' }],
+          })
+        )
+        const item = (result.homework ?? [])[0]
+        expect(item.leadWithTwoMinute).toBe(lead)
+        expect(item.offerFullVersion).toBe(false)
+      }
+    })
+
+    it('bypasses the energy gate the scored path applies', () => {
+      // fitsEnergy('low', 'high') is false, so the scored path drops this activity.
+      const heavy = makeActivity({ id: 'act-heavy', energyRequired: 'high' })
+      const items = [makeItem({ activityId: 'act-heavy' })]
+      const control = planDay(basePlanInput({ energy: 'low', activities: [heavy], items }))
+      expect(control.activities.map((a) => a.activityId)).not.toContain('act-heavy')
+
+      const result = planDay(
+        basePlanInput({
+          energy: 'low',
+          activities: [heavy],
+          items,
+          homework: [{ homeworkId: 'hw1', activityId: 'act-heavy' }],
+        })
+      )
+      expect((result.homework ?? []).map((h) => h.activityId)).toEqual(['act-heavy'])
+    })
+
+    it('empty homework yields [] and leaves activities identical to a run without homework', () => {
+      const input = basePlanInput({ activities: scored, items: scoredItems, homework: [] })
+      const result = planDay(input)
+      expect(result.homework).toEqual([])
+      const missing = planDay({ ...input, homework: undefined } as unknown as PlanInput)
+      expect(result.activities).toEqual(missing.activities)
+    })
+
+    it('unknown activity id is skipped without throwing', () => {
+      const run = () =>
+        planDay(basePlanInput({ homework: [{ homeworkId: 'hw1', activityId: 'act-missing' }] }))
+      expect(run).not.toThrow()
+      expect(run().homework).toEqual([])
+    })
+
+    it('two entries with the same activity id yield one card', () => {
+      const result = planDay(
+        basePlanInput({
+          activities: [hwAct],
+          homework: [
+            { homeworkId: 'hw1', activityId: 'act-hw' },
+            { homeworkId: 'hw2', activityId: 'act-hw' },
+          ],
+        })
+      )
+      const homework = result.homework ?? []
+      expect(homework).toHaveLength(1)
+      expect(homework[0].homeworkId).toBe('hw1')
     })
   })
 

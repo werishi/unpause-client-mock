@@ -1,7 +1,7 @@
 "use client";
 
 import type { PlanItem, LogEntry, Activity } from "@/lib/domain/types";
-import { TODAY, BUDDY } from "@/lib/copy";
+import { TODAY, BUDDY, PLAN } from "@/lib/copy";
 
 export interface ActivityCardProps {
   item: PlanItem;
@@ -17,6 +17,14 @@ export interface ActivityCardProps {
    * existing callers (non-shared activities) continue to work unchanged.
    */
   withName?: string;
+  /**
+   * When true, renders the "From your therapist" label in the same position as
+   * `withName`. Used by Today for a homework plan card. The label names no
+   * therapist on purpose: the plan item stores only ids, so a name would go
+   * stale on a day the user unlinks. Shown in the active state only, like
+   * `withName`, because a logged card collapses to one outcome line.
+   */
+  fromTherapist?: boolean;
 }
 
 /**
@@ -42,6 +50,7 @@ export default function ActivityCard({
   logEntry,
   onStart,
   withName,
+  fromTherapist,
 }: ActivityCardProps) {
   // Collapsed — activity has already been logged today
   if (logEntry !== null) {
@@ -63,6 +72,7 @@ export default function ActivityCard({
       {withName && (
         <span>{BUDDY.withName.replace("{name}", withName)}</span>
       )}
+      {fromTherapist && <span>{PLAN.fromTherapist}</span>}
       <p>{activity.cue}</p>
       {valueTag !== null && (
         <span>

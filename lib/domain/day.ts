@@ -106,3 +106,22 @@ export function isFirstOfMonth(date: string): boolean {
   const [, , day] = date.split('-').map(Number);
   return day === 1;
 }
+
+/**
+ * Formats a "YYYY-MM-DD" string as a short display label, e.g. "20 Oct 2026".
+ *
+ * This is the app's single date formatter for printed dates (therapist hub,
+ * share preview). It builds the date with the local-time constructor, as
+ * `isMonday` does, because `new Date(iso).toLocaleDateString()` parses at UTC
+ * midnight and shows the previous day in any timezone west of UTC.
+ * The locale is fixed to "en-GB" so the label does not follow the browser
+ * locale; the mockup's copy is English-only.
+ */
+export function formatDayLabel(iso: string): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}

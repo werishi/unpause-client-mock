@@ -35,10 +35,18 @@ import {
   reduceSetMediaEstimate, reduceSetMediaBudget, reduceSetMediaMinutesToday,
 } from "./digest-slice";
 import type { MediaState } from "./digest-slice";
+import { reduceMarkCheckInReminderShown, reduceMarkDigestBannerShown } from "./banner-slice";
 import {
   setBuddy, removeBuddy, addSharedActivity, removeSharedActivity, dismissBuddyOffer,
 } from "./buddy-slice";
 import type { SharedActivityItem } from "./buddy-slice";
+import { setSafetyEntries, dismissSafetySetup } from "./safety-slice";
+import {
+  linkTherapist, setShareSwitch, unlinkTherapist, removeHomework, resolveSharing,
+  sharingFromPersona,
+} from "./sharing-slice";
+import type { HomeworkItem } from "./sharing-slice";
+import type { ShareType } from "@/lib/domain/sharing";
 import { buildInitialState, hydrate } from "./store-state";
 import type { UserDataState } from "./store-state";
 
@@ -155,6 +163,30 @@ export type UserDataContext = {
   setMediaEstimate: (minutes: number) => void;
   setMediaBudget: (minutes: number) => void;
   setMediaMinutesToday: (minutes: number) => void;
+  // Persisted banner state (BannerState fields, top-level on UserDataState)
+  /**
+   * Local day (`"YYYY-MM-DD"`, from `localDateString`) on which the check-in reminder banner last
+   * had its moment, or null when it is armed. Equal to today means: do not show it again today.
+   */
+  checkInReminderShownDay: string | null;
+  /**
+   * Digest slot key (`"YYYY-MM-DD_HH:MM"`, from `currentDigestSlot`) for which the digest banner
+   * was last shown, or null when it is armed. Independent of `digestSeenSlot`.
+   */
+  digestBannerShownSlot: string | null;
+  // Banner actions
+  /**
+   * Records that the check-in reminder has had its moment on `day`. Persists immediately.
+   * Call it at the moment the banner is displayed, or at the moment it is silenced because the
+   * welcome-back screen already spoke today, from an effect and never from render.
+   */
+  markCheckInReminderShown: (day: string) => void;
+  /**
+   * Records that the digest banner was shown for `slotKey`. Persists immediately. Does not mark
+   * the digest seen. Call it at the moment the banner is displayed, from an effect and never from
+   * render.
+   */
+  markDigestBannerShown: (slotKey: string) => void;
   // Persisted buddy state (BuddyState fields, top-level on UserDataState)
   buddy: { name: string; agreedAt: string } | null;
   sharedActivities: SharedActivityItem[];
@@ -170,6 +202,34 @@ export type UserDataContext = {
   removeSharedActivity: (id: string) => void;
   /** Sets buddyOfferDismissed permanently. No reset path (anti-nagging rule). */
   dismissBuddyOffer: () => void;
+  // Persisted safety-plan state (SafetyState fields, top-level on UserDataState)
+  safetyEntries: string[][];
+  safetySetupDismissedWeek: string | null;
+  // Safety-plan actions (bound reducers from safety-slice.ts)
+  /** Replaces all six Stanley-Brown steps' entries at once. Stores copies; does not normalise. */
+  setSafetyEntries: (entries: string[][]) => void;
+  /** Hides the safety-plan setup card for the week starting `mondayDate` (YYYY-MM-DD) only. */
+  dismissSafetySetup: (mondayDate: string) => void;
+  // Persisted therapist/sharing state (SharingState fields, top-level on UserDataState)
+  therapist: { name: string; linkedOn: string } | null;
+  /**
+   * Full switch record, already passed through `resolveSharing` — pages never
+   * see the raw stored partial, so a missing or corrupt key reads as not shared.
+   */
+  sharing: Record<ShareType, boolean>;
+  homework: HomeworkItem[];
+  // Sharing actions (reducers from sharing-slice.ts)
+  /**
+   * Links a therapist; supplies `linkedOn` as `today`. A blank name is a no-op.
+   * `initialSharing` carries the linking step's choices; omitted, all switches are off.
+   */
+  linkTherapist: (name: string, initialSharing?: Partial<Record<ShareType, boolean>>) => void;
+  /** Turns one share type on or off. No-op while no therapist is linked. */
+  setShareSwitch: (type: ShareType, on: boolean) => void;
+  /** Unlinks the therapist, turns every switch off and drops all homework at once. */
+  unlinkTherapist: () => void;
+  /** Removes one homework item by id. No-op if the id is absent. */
+  removeHomework: (homeworkId: string) => void;
   // Provider functions (not reducers — see module doc)
   loadPersona: (id: string) => void;
   resetDemoData: () => void;
@@ -288,7 +348,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
   // ── startDay override ────────────────────────────────────────────────────
   // `bind(coreReducers)` passes only `{ today }` as ctx; `startDay` also needs
-  // `sharedActivities` in ctx so it can prune past items and build PlanInput.shared.
+  // `sharedActivities` and `homework` in ctx so it can prune past items and build
+  // PlanInput.shared / PlanInput.homework; the spread writes both pruned lists back.
   // Wired individually here and overrides the bind-generated binding in the
   // context value so the correct implementation is always called.
   function startDayAction(energy: EnergyLevel): void {
@@ -296,7 +357,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       ...prev,
       ...coreReducers.startDay(
         prev,
-        { today, sharedActivities: prev.sharedActivities },
+        { today, sharedActivities: prev.sharedActivities, homework: prev.homework },
         energy
       ),
     }));
@@ -347,6 +408,13 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   function markDigestSeenAction(slotKey: string): void {
     update((prev) => ({ ...prev, ...reduceMarkDigestSeen(prev, slotKey) }));
   }
+  // Banner bindings: same shape as markDigestSeenAction, so a shown-record survives a reload.
+  function markCheckInReminderShownAction(day: string): void {
+    update((prev) => ({ ...prev, ...reduceMarkCheckInReminderShown(prev, day) }));
+  }
+  function markDigestBannerShownAction(slotKey: string): void {
+    update((prev) => ({ ...prev, ...reduceMarkDigestBannerShown(prev, slotKey) }));
+  }
   function setMediaEstimateAction(minutes: number): void {
     update((prev) => ({ ...prev, ...reduceSetMediaEstimate(prev, minutes) }));
   }
@@ -381,6 +449,37 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     update((prev) => ({ ...prev, ...dismissBuddyOffer(prev) }));
   }
 
+  // ── Safety-plan action bindings ───────────────────────────────────────────
+  // Same pattern as buddy: the reducers take SafetyState directly (no ctx arg),
+  // so they cannot go through bind(); each is wired through update() so the
+  // safety fields are persisted immediately.
+  function setSafetyEntriesAction(entries: string[][]): void {
+    update((prev) => ({ ...prev, ...setSafetyEntries(prev, entries) }));
+  }
+  function dismissSafetySetupAction(mondayDate: string): void {
+    update((prev) => ({ ...prev, ...dismissSafetySetup(prev, mondayDate) }));
+  }
+
+  // ── Sharing action bindings ───────────────────────────────────────────────
+  // Same pattern as buddy: the reducers take SharingState directly (no ctx arg),
+  // so they cannot go through bind(); each uses update() so the change persists
+  // at once. `linkTherapist` receives `today` here so the reducer stays pure.
+  function linkTherapistAction(
+    name: string,
+    initialSharing?: Partial<Record<ShareType, boolean>>,
+  ): void {
+    update((prev) => ({ ...prev, ...linkTherapist(prev, name, today, initialSharing) }));
+  }
+  function setShareSwitchAction(type: ShareType, on: boolean): void {
+    update((prev) => ({ ...prev, ...setShareSwitch(prev, type, on) }));
+  }
+  function unlinkTherapistAction(): void {
+    update((prev) => ({ ...prev, ...unlinkTherapist(prev) }));
+  }
+  function removeHomeworkAction(homeworkId: string): void {
+    update((prev) => ({ ...prev, ...removeHomework(prev, homeworkId) }));
+  }
+
   // ── Provider functions ─────────────────────────────────────────────────────
   // loadPersona and resetDemoData stay here rather than becoming reducers
   // because their control flow cannot be expressed as a pure reducer:
@@ -395,6 +494,10 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
    * history date, lastOpenedDate from the latest history date, and recomputes
    * welcomeBackDue before writing state. For "per-new" all new fields are reset
    * to their initial defaults.
+   *
+   * Also replaces the therapist link, sharing switches and homework with the
+   * persona's (`sharingFromPersona`); a persona without a therapist loads
+   * unlinked, all switches off, no homework.
    *
    * `wakeTime` and `valueIds` are cast via `unknown` because the Persona
    * interface omits them (planner does not yet consume them); the cast avoids
@@ -483,6 +586,10 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         reviewSeen: { week: null, month: null },
         reviewPreview: false,
         plainVersion: prev.plainVersion,
+        // Banner records (checkInReminderShownDay, digestBannerShownSlot) are deliberately NOT
+        // carried: they come back null from ...buildInitialState(), so a persona switch re-arms
+        // both banners. A switched-to persona has not had today's reminder yet; carrying the
+        // records would make the switch look like it skipped the notification.
         // Media seed — applied after buildInitialState() so persona-specific values
         // override the empty defaults. Absent when mediaSeed is null; the spread
         // resolves to an empty object and the defaults from buildInitialState() stand.
@@ -497,6 +604,9 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
               mediaMinutesByDate,
             }
           : {}),
+        // Therapist link, switches and homework. Without this the three fields
+        // stay at buildInitialState() defaults and a linked persona loads unlinked.
+        ...sharingFromPersona(persona, id, today),
       };
       persist(next);
       return next;
@@ -528,6 +638,9 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     hydrated,
     today,
     ...state,
+    // Deliberately overrides the raw stored partial from the spread: no page may
+    // read switches that have not been through resolveSharing.
+    sharing: resolveSharing(state.sharing),
     ...bind(coreReducers),
     startDay: startDayAction,
     ...bind(planReducers),
@@ -545,11 +658,19 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     setMediaEstimate: setMediaEstimateAction,
     setMediaBudget: setMediaBudgetAction,
     setMediaMinutesToday: setMediaMinutesTodayAction,
+    markCheckInReminderShown: markCheckInReminderShownAction,
+    markDigestBannerShown: markDigestBannerShownAction,
     setBuddy: setBuddyAction,
     removeBuddy: removeBuddyAction,
     addSharedActivity: addSharedActivityAction,
     removeSharedActivity: removeSharedActivityAction,
     dismissBuddyOffer: dismissBuddyOfferAction,
+    setSafetyEntries: setSafetyEntriesAction,
+    dismissSafetySetup: dismissSafetySetupAction,
+    linkTherapist: linkTherapistAction,
+    setShareSwitch: setShareSwitchAction,
+    unlinkTherapist: unlinkTherapistAction,
+    removeHomework: removeHomeworkAction,
     loadPersona,
     resetDemoData,
   };

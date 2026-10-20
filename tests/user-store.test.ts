@@ -12,7 +12,13 @@ import {
   type BuddyState,
   type SharedActivityItem,
 } from '@/lib/store/buddy-slice'
-import { SHARED_ACTIVITY_IDS } from '@/lib/domain/buddy'
+import type { HomeworkItem } from '@/lib/store/sharing-slice'
+import {
+  BANNER_DEFAULTS,
+  reduceMarkCheckInReminderShown,
+  reduceMarkDigestBannerShown,
+} from '@/lib/store/banner-slice'
+import { SHARED_ACTIVITY_IDS, HOMEWORK_TEMPLATE_ID } from '@/lib/domain/buddy'
 import { addDays } from '@/lib/domain/planner'
 
 const today = '2026-10-18'
@@ -73,6 +79,27 @@ describe('reducer shape', () => {
     for (const key of Object.keys(planResult)) {
       expect(initKeys.has(key), `unexpected key '${key}' from planReducers`).toBe(true)
     }
+  })
+
+  it('banner reducers emit only buildInitialState keys and hold the given values', () => {
+    const initKeys = new Set(Object.keys(buildInitialState()))
+    const reminderResult = reduceMarkCheckInReminderShown(BANNER_DEFAULTS, today)
+    const digestResult = reduceMarkDigestBannerShown(BANNER_DEFAULTS, '2026-10-18_08:00')
+    for (const key of Object.keys(reminderResult)) {
+      expect(initKeys.has(key), `unexpected key '${key}' from reduceMarkCheckInReminderShown`).toBe(true)
+    }
+    for (const key of Object.keys(digestResult)) {
+      expect(initKeys.has(key), `unexpected key '${key}' from reduceMarkDigestBannerShown`).toBe(true)
+    }
+    expect(reminderResult.checkInReminderShownDay).toBe(today)
+    expect(digestResult.digestBannerShownSlot).toBe('2026-10-18_08:00')
+  })
+
+  it('banner reducers do not mutate BANNER_DEFAULTS', () => {
+    reduceMarkCheckInReminderShown(BANNER_DEFAULTS, today)
+    reduceMarkDigestBannerShown(BANNER_DEFAULTS, '2026-10-18_08:00')
+    expect(BANNER_DEFAULTS.checkInReminderShownDay).toBeNull()
+    expect(BANNER_DEFAULTS.digestBannerShownSlot).toBeNull()
   })
 })
 
@@ -141,6 +168,47 @@ describe('buildInitialState digest fields', () => {
     const init = buildInitialState()
     expect(Object.prototype.hasOwnProperty.call(init, 'mediaMinutesByDate')).toBe(true)
     expect(init.mediaMinutesByDate).toEqual({})
+  })
+})
+
+// ─── Banner slice fields ──────────────────────────────────────────────────────
+
+describe('buildInitialState banner fields', () => {
+  // Same guard as the digest block: a banner field missing from buildInitialState() would
+  // survive resetDemoData() and loadPersona(), so a banner stays silenced after a reset.
+  it('checkInReminderShownDay is present and is null', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'checkInReminderShownDay')).toBe(true)
+    expect(init.checkInReminderShownDay).toBeNull()
+  })
+
+  it('digestBannerShownSlot is present and is null', () => {
+    const init = buildInitialState()
+    expect(Object.prototype.hasOwnProperty.call(init, 'digestBannerShownSlot')).toBe(true)
+    expect(init.digestBannerShownSlot).toBeNull()
+  })
+
+  it('hydrate keeps a stored checkInReminderShownDay and fills null for a blob saved without it', () => {
+    // The second blob predates the banner slice: the flat spread in hydrate must fill null, no migration.
+    const withField = JSON.stringify({ lastOpenedDate: '2026-10-17', checkInReminderShownDay: '2026-10-17' })
+    expect(hydrate(withField, today).state.checkInReminderShownDay).toBe('2026-10-17')
+    const withoutField = JSON.stringify({ lastOpenedDate: '2026-10-17' })
+    const { state } = hydrate(withoutField, today)
+    expect(state.checkInReminderShownDay).toBeNull()
+    expect(state.digestBannerShownSlot).toBeNull()
+  })
+
+  it('a fresh buildInitialState spread re-arms both banners after a previous state had them set', () => {
+    // loadPersona / resetDemoData start from { ...buildInitialState() }, not from the previous state.
+    const previous = {
+      ...buildInitialState(),
+      checkInReminderShownDay: today,
+      digestBannerShownSlot: '2026-10-18_08:00',
+    }
+    expect(previous.checkInReminderShownDay).toBe(today)
+    const next = { ...buildInitialState() }
+    expect(next.checkInReminderShownDay).toBeNull()
+    expect(next.digestBannerShownSlot).toBeNull()
   })
 })
 
@@ -219,6 +287,41 @@ describe('startDay shared and prune', () => {
   })
 })
 
+// ─── startDay homework ────────────────────────────────────────────────────────
+
+describe('startDay homework', () => {
+  const testToday = '2026-10-19'
+  const activityId = SHARED_ACTIVITY_IDS[0] // a catalogue id getActivities() contains
+  const homework: HomeworkItem[] = [
+    { homeworkId: 'hw-past', activityId, date: addDays(testToday, -1) },
+    { homeworkId: 'hw-today', activityId, date: testToday },
+    { homeworkId: 'hw-future', activityId, date: addDays(testToday, 2) },
+  ]
+
+  it('prunes past homework and keeps today and future-dated items', () => {
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday, homework }, 'low')
+    expect(result.homework).toHaveLength(2)
+    expect(result.homework.map((h) => h.homeworkId)).toEqual(['hw-today', 'hw-future'])
+  })
+
+  it("puts only today's homework into the plan lane, stamped with the homework template id", () => {
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday, homework }, 'medium')
+    const lane = result.todayPlan?.plan?.homework ?? []
+    expect(lane).toHaveLength(1)
+    expect(lane[0].homeworkId).toBe('hw-today')
+    expect(lane[0].templateId).toBe(HOMEWORK_TEMPLATE_ID)
+  })
+
+  it('omitting ctx.homework returns an empty list and an empty plan lane', () => {
+    const prev = { ...buildInitialState(), templateIds: ['tpl-starter'] }
+    const result = coreReducers.startDay(prev, { today: testToday }, 'low')
+    expect(result.homework).toEqual([])
+    expect((result.todayPlan?.plan?.homework ?? []).length).toBe(0)
+  })
+})
+
 // ─── hydrate backward compat ──────────────────────────────────────────────────
 
 describe('hydrate backward compat', () => {
@@ -229,6 +332,15 @@ describe('hydrate backward compat', () => {
       state = hydrate(raw, today).state
     }).not.toThrow()
     expect((state?.todayPlan?.plan?.shared ?? []).length).toBe(0)
+  })
+
+  it('todayPlan.plan without homework field does not throw and homework is empty', () => {
+    const raw = JSON.stringify({ todayPlan: { date: today, plan: { activities: [] } } })
+    let state: ReturnType<typeof hydrate>['state'] | undefined
+    expect(() => {
+      state = hydrate(raw, today).state
+    }).not.toThrow()
+    expect(state?.todayPlan?.plan.homework ?? []).toEqual([])
   })
 })
 

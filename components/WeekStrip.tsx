@@ -68,10 +68,10 @@ export default function WeekStrip({
               "rounded-lg transition-colors",
               // Today: filled background highlight — purely structural, not data-driven
               isToday
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground hover:bg-muted",
+                ? "bg-indigo-600 text-white"
+                : "text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800",
               // Selected: distinct outline ring so today+selected is visually separate
-              isSelected ? "ring-2 ring-primary ring-offset-1" : "",
+              isSelected ? "ring-2 ring-indigo-600 ring-offset-1 dark:ring-indigo-400 dark:ring-offset-gray-950" : "",
             ]
               .filter(Boolean)
               .join(" ")}

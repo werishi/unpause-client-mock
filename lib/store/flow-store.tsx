@@ -29,12 +29,21 @@ export interface FlowState {
   /** "skip" is exact — downstream route pages depend on this literal. */
   outcome: "done" | "skip" | null;
   /**
-   * Set when the loop was started from a shared (buddy) card. `/mood-after`
-   * reads this to write `LogEntry.templateId: SHARED_TEMPLATE_ID` instead of
-   * the activity's own template id. `undefined` on all non-shared runs; cleared
-   * by `reset()` automatically because `INITIAL_STATE` omits it.
+   * Set when the loop was started from a shared (buddy) card; `undefined` on all
+   * non-shared runs. Cleared by `reset()` because `INITIAL_STATE` sets it to
+   * `undefined`. It does not decide the log row's origin: `/mood-after` and the
+   * skip path write `templateId: state.templateId ?? ""`, and the shared plan
+   * item's `templateId` (set through `setTemplateId`) carries `SHARED_TEMPLATE_ID`.
    */
   sharedId: string | undefined;
+  /**
+   * Set when the loop was started from a homework card; `undefined` on all other
+   * runs. Cleared by `reset()` because `INITIAL_STATE` sets it to `undefined`.
+   * Lets a later page in the loop tell which standing homework item the run came
+   * from. It does not decide the log row's origin: that is `templateId`, which
+   * the planner stamps as `HOMEWORK_TEMPLATE_ID` on homework plan items.
+   */
+  homeworkId: string | undefined;
 }
 
 /** Setters and reset exposed through context. */
@@ -50,10 +59,16 @@ export interface FlowContextValue {
   reset: () => void;
   /**
    * Sets `sharedId` when starting the loop from a shared (buddy) card, or
-   * clears it to `undefined` when starting from a regular card. `/mood-after`
-   * reads `flow.sharedId` to write `SHARED_TEMPLATE_ID` on the `LogEntry`.
+   * clears it to `undefined` when starting from a regular card. The log row's
+   * origin comes from `templateId`, not from this field.
    */
   setSharedId: (sharedId: string | undefined) => void;
+  /**
+   * Sets `homeworkId` when starting the loop from a homework card, or clears it
+   * to `undefined`. The log row's origin comes from `templateId`
+   * (`HOMEWORK_TEMPLATE_ID`), not from this field.
+   */
+  setHomeworkId: (homeworkId: string | undefined) => void;
 }
 
 const INITIAL_STATE: FlowState = {
@@ -64,6 +79,7 @@ const INITIAL_STATE: FlowState = {
   moodAfter: null,
   outcome: null,
   sharedId: undefined,
+  homeworkId: undefined,
 };
 
 const FlowContext = createContext<FlowContextValue | null>(null);
@@ -90,11 +106,13 @@ export function FlowProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, outcome }));
   const setSharedId = (sharedId: string | undefined) =>
     setState((prev) => ({ ...prev, sharedId }));
+  const setHomeworkId = (homeworkId: string | undefined) =>
+    setState((prev) => ({ ...prev, homeworkId }));
   const reset = () => setState(INITIAL_STATE);
 
   return (
     <FlowContext.Provider
-      value={{ state, setEnergy, setTaskId, setTemplateId, setMoodBefore, setMoodAfter, setOutcome, reset, setSharedId }}
+      value={{ state, setEnergy, setTaskId, setTemplateId, setMoodBefore, setMoodAfter, setOutcome, reset, setSharedId, setHomeworkId }}
     >
       {children}
     </FlowContext.Provider>

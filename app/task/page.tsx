@@ -117,7 +117,7 @@ export default function TaskPage() {
                   defaultValue={starter}
                   rows={3}
                   className="w-full rounded border border-gray-300 bg-white p-2 text-sm text-gray-800
-                             focus:outline-none focus:ring-2 focus:ring-blue-500
+                             focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
                              dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200"
                 />
                 <button
@@ -152,7 +152,7 @@ export default function TaskPage() {
           className="min-h-[44px] w-full rounded-md bg-blue-600 px-4 text-sm font-semibold
                      text-white hover:bg-blue-700 focus-visible:outline focus-visible:outline-2
                      focus-visible:outline-offset-2 focus-visible:outline-blue-600
-                     dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus-visible:outline-blue-400"
+                     dark:focus-visible:outline-blue-400"
         >
           {TASK_SCREEN.startLabel}
         </button>

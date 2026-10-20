@@ -17,6 +17,7 @@
  */
 
 import { Task, EnergyLevel } from './energy';
+import type { ShareType } from './sharing';
 
 // Re-export EnergyLevel so downstream modules can import from types.ts alone
 // when they need both EnergyLevel and a type defined here, avoiding a two-path
@@ -150,6 +151,22 @@ export interface Persona {
    * ISO date when reading history. Absent when no shared activities exist.
    */
   sharedActivities?: { activityId: string; dayOffset: number }[];
+  /**
+   * Optional linked therapist (placeholder name only). When absent the persona
+   * loads unlinked, and `sharing` and `homework` are ignored — no switch may be
+   * on and no homework may stand without a therapist.
+   */
+  therapist?: { name: string };
+  /**
+   * Which data kinds this persona shares with the therapist. Missing keys and
+   * any value other than `true` read as "not shared" (`resolveSharing`).
+   */
+  sharing?: Partial<Record<ShareType, boolean>>;
+  /**
+   * Therapist-set homework. dayOffset is relative to today, same convention as
+   * `sharedActivities`; the store resolves it to a date.
+   */
+  homework?: { activityId: string; dayOffset: number }[];
 }
 
 /**
@@ -218,6 +235,16 @@ export interface PlanItem {
 export type SharedPlanItem = PlanItem & { sharedId: string };
 
 /**
+ * A therapist-set plan item (homework). Its origin is marked only by
+ * `templateId === HOMEWORK_TEMPLATE_ID` — Activity and PlanItem carry no origin
+ * field. `homeworkId` matches the standing HomeworkItem in the sharing store, so
+ * the Today screen and the store can tie a plan row back to the therapist's
+ * assignment. DayPlan.homework is optional (`?`) because stored blobs written
+ * before the therapist-sharing feature lack the key; call sites guard with `?? []`.
+ */
+export type HomeworkPlanItem = PlanItem & { homeworkId: string };
+
+/**
  * Output of planDay. activities holds the scored activity slots (1–3 depending
  * on energy, P2). anchors holds anchor-category items eligible today, ordered by
  * partOfDay, returned separately so Today can place them in the rhythm row.
@@ -233,6 +260,13 @@ export interface DayPlan {
    * `todayPlan.plan.shared ?? []` (concept §2.7) — never a required read.
    */
   shared?: SharedPlanItem[];
+  /**
+   * Therapist-set homework for this day, built outside scoring and outside the
+   * 1–3 activity slots. Optional because blobs stored before the therapist-sharing
+   * feature lack this key; call sites must use `todayPlan.plan.homework ?? []` —
+   * never a required read.
+   */
+  homework?: HomeworkPlanItem[];
 }
 
 /** Input to the planDay function in lib/domain/planner.ts. */
@@ -255,4 +289,12 @@ export interface PlanInput {
    * the activityId to place in DayPlan.shared.
    */
   shared: { sharedId: string; activityId: string }[];
+  /**
+   * Therapist-set homework standing for this plan's day. Required like `shared` —
+   * callers with no homework pass an empty array. Each entry carries the stable
+   * homeworkId of the HomeworkItem in the store and the activityId to place in
+   * DayPlan.homework; those activity ids are removed from the scored candidates
+   * so one activity never appears in two lanes on the same day.
+   */
+  homework: { homeworkId: string; activityId: string }[];
 }

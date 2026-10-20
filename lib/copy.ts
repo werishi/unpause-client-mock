@@ -73,6 +73,49 @@ export const SAFETY_PAGE = {
    * "(placeholder)" marker as a visible UI cue — no real contact details appear here.
    */
   placeholderBadge: "placeholder",
+  /**
+   * Shown under a step whose entries are all empty. G10: names no failure and
+   * asks for nothing now — filling it in can wait for a calm moment.
+   */
+  emptyStepLine:
+    "Nothing here yet. You can add this when you have a calm moment, or with your therapist.",
+  /** Label of the link from /safety to the editor at /safety/edit. */
+  editLinkLabel: "Edit my plan",
+} as const;
+
+/**
+ * Strings for the safety plan editor (/safety/edit). The step hints live here
+ * rather than on SafetyPlanStep because that interface may not gain properties:
+ * it would break the JSON cast in getSafetyPlan (lib/repo/safety-plan-repo.ts).
+ * No string here may contain a digit, a phone number, tel:/mailto: or a crisis
+ * service's name — profile Safety plan invariant: a wrong crisis number in a
+ * demo is worse than none.
+ */
+export const SAFETY_EDIT = {
+  heading: "Edit my safety plan",
+  intro:
+    "Write this on a calm day, in your own words. This is a demo, so please use made-up names. Everything stays in your browser.",
+  therapistLine:
+    "If you have a therapist, you can go through this together. If you don't, you can fill it in on your own.",
+  addLineLabel: "Add a line",
+  removeLabel: "Remove this line",
+  saveLabel: "Save my plan",
+  /**
+   * One hint per seed step, by index: 0 warning signs, 1 internal coping,
+   * 2 people and settings for distraction, 3 people to ask for help,
+   * 4 professionals and crisis services, 5 making the environment safer.
+   * Examples are invented first names only — no surname, address, digit or
+   * real organisation (GOALS.md Non-Goal against holding real people's data).
+   * Index 4 points to a self-checked number without supplying one.
+   */
+  hints: [
+    "e.g. sleeping badly, pulling away from friends, thoughts that keep circling",
+    "e.g. a walk around the block, a warm shower, a song you like",
+    "e.g. a quiet café, or sitting with a friend, like 'Mia'",
+    "e.g. a friend you trust, like 'Sam'",
+    "e.g. your therapist, like 'Alex', or a crisis line — a number I looked up from a trusted source",
+    "e.g. putting certain things out of reach, or asking a friend to keep them for a while",
+  ],
 } as const;
 
 /** Strings for the done/outcome page. */
@@ -239,6 +282,16 @@ export const TODAY = {
    * offered after the end sentence (concept §3.3).
    */
   swapLine: "Feel like scrolling? Try this instead.",
+  /**
+   * Body of the Today card inviting the user to set up their safety plan.
+   * Carries no phone number and no crisis reference (profile Safety plan
+   * invariant), and never mentions points, streaks or a check-in result, so it
+   * cannot read as tied to either.
+   */
+  safetySetupText:
+    "On a good day, it helps to have this ready. Takes about five minutes — or later.",
+  /** CTA on the safety setup card; leads to /safety/edit. */
+  safetySetupCta: "Set up my plan",
 } as const;
 
 /** Strings for the welcome screen (/welcome — first open). */
@@ -316,6 +369,49 @@ export const DEMO = {
    * layout. Basis: setPlainVersion store action.
    */
   plainVersionLabel: "Plain version",
+  /**
+   * Shown on /you/demo to tell reviewers that loading a persona or resetting
+   * replaces the user's saved data, including their own safety plan and any
+   * therapist link (`loadPersona` and `resetDemoData` wipe `safetyEntries` and the
+   * therapist state; concept §2.9).
+   */
+  replacesDataNote:
+    "Loading a persona or resetting replaces everything saved in this browser, including your own safety plan and any therapist link.",
+  /** Heading of the notification-replay controls on /you/demo. */
+  replayHeading: "Show a notification",
+  /** Button that replays the check-in reminder banner. */
+  replayCheckInLabel: "Check-in reminder",
+  /** Button that replays the digest-ready banner. */
+  replayDigestLabel: "Digest ready",
+} as const;
+
+/**
+ * Strings for the in-app notification banners (check-in reminder, digest ready).
+ *
+ * Tone rule (profile Tone invariant; goal G10): neither banner may mention missed
+ * days, counts, streaks or anything the user "should" do. A notification is the
+ * moment pressure lands hardest, so the bodies name only what is on offer and its
+ * real cost. tests/copy.test.ts scans this namespace for deficit words, digits and
+ * obligation words — a new key here is covered automatically by collectStrings.
+ */
+export const BANNER = {
+  /** Sender line of a phone notification. */
+  appName: "Unpause",
+  /** How phones label a fresh notification; no clock time is invented. */
+  timeLabel: "now",
+  /**
+   * Repeats CHECK_IN.heading so the banner and the screen it opens say the same
+   * thing; the second sentence names the real cost (one tap) instead of a duty.
+   * No time-of-day greeting, because the banner can show in the afternoon.
+   */
+  checkInBody: "How is your energy today? One tap is enough.",
+  /** Says the digest is finite and chosen (goal G6) and puts no time pressure on reading it. */
+  digestBody: "Your digest is ready — a few things you chose, whenever you like.",
+  /**
+   * Same words as ONBOARDING.notNowLabel but a separate key, so the banner can
+   * change without changing onboarding.
+   */
+  dismissLabel: "Not now",
 } as const;
 
 /** Strings for the welcome-back screen (/welcome-back). */
@@ -393,6 +489,12 @@ export const PLAN = {
    * selection; the page calls onToggle("") and interprets the empty id.
    */
   activityEditNone: "None",
+  /**
+   * Label on a homework card in the plan. Shown when the plan item carries
+   * HOMEWORK_TEMPLATE_ID — the origin is encoded on the plan item, never on
+   * `Activity`, so the same activity can be homework one day and not the next.
+   */
+  fromTherapist: "From your therapist",
 } as const;
 
 /**
@@ -443,6 +545,12 @@ export const YOU = {
    * component (concept §2.7, Part 4 Domain Notes).
    */
   buddyEntry: "Buddy",
+  /**
+   * Navigation link in the You hub that leads to /you/therapist (therapist access
+   * and sharing). Static label with no therapist name, for the same reason as
+   * buddyEntry: reading the store here would make the You page a client component.
+   */
+  therapistEntry: "Therapist & sharing",
 } as const;
 
 /**
@@ -534,6 +642,124 @@ export const BUDDY = {
    * social. Shown at most once (buddyOfferDismissed gate).
    */
   doneOfferText: "Want to do something together with someone you know?",
+} as const;
+
+/**
+ * Strings for therapist access and sharing: the hub (/you/therapist), the
+ * three-step linking flow, and the "what your therapist would see" preview.
+ *
+ * Token convention: `{name}`, `{date}`, `{days}`, `{label}`, `{step}`, `{total}`,
+ * `{count}` and `{values}` are plain tokens replaced with `.replace(...)` at
+ * render time, the same convention as BUDDY (no template literals, so the type
+ * stays `string` and `as const` inference holds). tests/copy.test.ts rejects any
+ * other token, so a typo such as `{nme}` cannot render literally.
+ *
+ * All strings pass tests/banned-words.ts. The four wording rules of concept §2.8,
+ * enforced by the "THERAPIST copy — wording rules" block in tests/copy.test.ts:
+ *
+ * 1. No deficit language: no "missed", "skipped", " left", "lost", no N-of-M.
+ * 2. Nothing describing what the therapist sees may sound live: "live", "now" and
+ *    "real time" appear only inside a negation ("Nobody watches ..."). This is why
+ *    `previewNothing` says "at your next session" instead of the concept §2.5
+ *    literal "right now" — that sentence breaks the concept's own rule, and the
+ *    rule wins because it exists to protect GOALS.md:118.
+ * 3. No clinical measurement words: no average, trend, band, severity, score, level.
+ * 4. No treatment promise: no recover, treatment, heal, cure, improve, better.
+ *
+ * Further constraints:
+ * - What the therapist would see is written in the conditional voice ("would see")
+ *   because the rest of the app promises nothing is sent (ABOUT.body). If a real
+ *   transport ever exists, these strings need rewording, not just the mock note.
+ * - No string carries a digit. Window lengths are the `{days}` token and the week
+ *   is "your past week", so changing THERAPIST_VIEW_DAYS never needs a copy edit.
+ */
+export const THERAPIST = {
+  // Shared
+  /** Badge marking the therapist feature as a mock placeholder. */
+  placeholderBadge: "placeholder",
+  back: "Back",
+  /** Reassurance that the preview transmits nothing. */
+  mockNote: "In this preview, nothing leaves your browser.",
+  /** Rule 2: "live" appears only in a negation. */
+  noLiveLine: "Nobody watches your data live. Your therapist would see only what you share, at your sessions.",
+  /** Keeps the "not a substitute for professional help" invariant reachable from the hub. */
+  notASubstitute: "Unpause supports your own routine. It does not replace professional help.",
+  // Hub, not linked
+  hubHeading: "Therapist & sharing",
+  hubNotLinkedBody: "Unpause works fully without a therapist. Linking one is optional, and nothing here needs doing.",
+  hubStartCta: "Set this up with your therapist",
+  // Hub, linked
+  /** `{date}` is the formatted link date. */
+  hubLinkedOn: "Linked on {date}",
+  unlinkLabel: "Unlink",
+  switchesHeading: "What you share",
+  switchesIntro: "Everything starts off. You can change any switch at any time, with one tap, and you never need to give a reason.",
+  switchOn: "On",
+  switchOff: "Off",
+  /** `{label}` is the share type's label from `shareTypes`. */
+  switchAriaLabel: "Share: {label}",
+  /**
+   * One entry per SHARE_TYPES value (lib/domain/sharing.ts); the test asserts the
+   * key set matches. `{name}` is the therapist's name, `{days}` THERAPIST_VIEW_DAYS.
+   */
+  shareTypes: {
+    moodRatings: { label: "Mood before and after", description: "{name} would see the ratings you gave before and after each activity, for the last {days} days." },
+    activityLog: { label: "Activities done", description: "{name} would see the activities you did, day by day, for the last {days} days." },
+    weekSummary: { label: "Your look-back", description: "{name} would see a short look back at your past week: active days, the values you acted on, and any patterns." },
+    safetyPlan: { label: "Your safety plan", description: "{name} would see the lines you wrote in your own safety plan. Crisis contacts are not included." },
+  },
+  neverSharedHeading: "Never shared in this preview",
+  /** Data that is never offered for sharing, each with the reason shown to the user. */
+  neverShared: [
+    { id: "media", label: "Media use and interests", reason: "What you read and watch is yours. It is not offered for sharing at all." },
+    { id: "points", label: "Points", reason: "Points describe what you did, not how hard you tried, so they stay out of anything a therapist would see." },
+    { id: "checkIns", label: "Energy check-ins", reason: "They only help Unpause plan your day, so they are not part of what you share." },
+    { id: "buddy", label: "What you share with your buddy", reason: "That belongs to you and your buddy, so it is not passed on." },
+  ],
+  homeworkHeading: "Homework from {name}",
+  homeworkEmpty: "No homework is set.",
+  homeworkToday: "Today",
+  homeworkOnDate: "On {date}",
+  homeworkRemove: "Remove",
+  homeworkNote: "Homework is always your choice. Setting it aside costs nothing.",
+  previewLink: "See what {name} would see",
+  // Linking flow
+  /** `{step}` and `{total}` are numbers substituted at render time, never literals here. */
+  linkStepLabel: "Step {step} of {total}",
+  linkClose: "Close",
+  linkNext: "Next",
+  linkDone: "Done",
+  step1Heading: "Together in a session",
+  step1Body: "In the real app, you would set this up together with your therapist, during a session. You can stop or change it at any time.",
+  step2Heading: "Your therapist's name",
+  step2NameLabel: "Name",
+  /** Placeholder-data invariant: no real person's name in a demo. */
+  step2NameHint: "Please use a made-up name. This is a demo.",
+  step2NamePlaceholder: "for example: Dr. Hartmann",
+  step2NameEmpty: "Please enter a name to continue.",
+  step3Heading: "What would be shared",
+  step3Body: "Nothing is shared until you switch it on. You can change any of these later, from Therapist & sharing.",
+  step3AllOffNote: "You can finish with every switch off. Your therapist would then see nothing.",
+  // Preview
+  previewHeading: "What {name} would see",
+  previewIntro: "This is what {name} would see at your next session.",
+  /** Rule 2: "live" appears only in a negation. */
+  previewNoLive: "Nobody watches live. Nothing here is sent anywhere in this preview.",
+  previewWindowNote: "Each section covers the last {days} days, except the look-back, which covers your past week.",
+  stopSharing: "Stop sharing this",
+  /** Says "at your next session", not the concept §2.5 "right now" — rule 2 bans "now" here. */
+  previewNothing: "{name} would see nothing at your next session.",
+  previewBackToSwitches: "Back to your switches",
+  sectionEmpty: "Nothing to show for these days.",
+  moodBefore: "Before",
+  moodAfter: "After",
+  /** `{count}` is the number of active days, substituted at render time. */
+  weekActiveDays: "Active days in the past week: {count}",
+  /** `{values}` is the comma-joined list of value labels. */
+  weekValues: "Values you acted on: {values}",
+  weekPatternsHeading: "Patterns",
+  safetyPlanEmpty: "Your safety plan is empty, so there is nothing to show.",
+  safetyPlanNote: "Only the lines you wrote yourself. Crisis contacts stay on the Safety page.",
 } as const;
 
 /**

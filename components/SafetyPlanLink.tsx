@@ -23,7 +23,7 @@ export default function SafetyPlanLink() {
                  bg-red-600 text-white font-medium text-sm
                  hover:bg-red-700 focus-visible:outline focus-visible:outline-2
                  focus-visible:outline-offset-2 focus-visible:outline-red-600
-                 dark:bg-red-500 dark:hover:bg-red-600 dark:focus-visible:outline-red-500"
+                 dark:focus-visible:outline-red-400"
     >
       {SAFETY_PLAN_LINK.label}
     </Link>

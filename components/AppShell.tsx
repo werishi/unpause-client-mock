@@ -7,13 +7,16 @@
  * Section 2.3). The content column has top padding equal to the header height
  * so children start below the fixed bar, not behind it.
  *
- * This component is mounted once in app/layout.tsx inside FlowProvider. All
+ * This component is mounted once in app/layout.tsx inside
+ * NotificationBannerProvider (itself inside FlowProvider), and renders the
+ * client NotificationBanner directly below the header. All
  * six route pages are rendered as {children} — the shell never unmounts during
  * client-side navigation in the App Router.
  *
  * Import: server component — no "use client" directive.
  */
 
+import NotificationBanner from "@/components/NotificationBanner";
 import SafetyPlanLink from "@/components/SafetyPlanLink";
 import TabBar from "@/components/TabBar";
 import { SHELL, TABS } from "@/lib/copy";
@@ -29,12 +32,20 @@ export default function AppShell({ children }: AppShellProps) {
        * Fixed header — z-10 keeps it above page content.
        * Inner row is max-w-md so the layout matches the content column width.
        */}
-      <header className="fixed top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 pt-[env(safe-area-inset-top)]">
+      <header className="fixed top-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 pt-[env(safe-area-inset-top)]">
         <div className="max-w-md mx-auto flex items-center justify-between px-4 h-14">
-          <span className="font-semibold text-gray-900">{SHELL.appName}</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100">{SHELL.appName}</span>
           <SafetyPlanLink />
         </div>
       </header>
+
+      {/*
+       * Notification banner — a fixed overlay just under the header (z-20). It
+       * overlays <main> instead of pushing it: a taller header or a pushed <main>
+       * would mean changing the same fixed calc in two places, and covering the
+       * header would hide SafetyPlanLink.
+       */}
+      <NotificationBanner />
 
       {/*
        * Main content area — pt-14 matches the fixed header height (h-14 = 3.5rem).
@@ -57,7 +68,7 @@ export default function AppShell({ children }: AppShellProps) {
        * Footer — one-line disclaimer required by the profile Not-a-medical-product
        * invariant (concept Section 2.3).
        */}
-      <footer className="py-4 text-center text-sm text-gray-500">
+      <footer className="py-4 text-center text-sm text-gray-500 dark:text-gray-400">
         {SHELL.footer}
       </footer>
     </div>

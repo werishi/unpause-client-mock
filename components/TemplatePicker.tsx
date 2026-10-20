@@ -79,7 +79,7 @@ export default function TemplatePicker({
                 <span className="mt-0.5 block text-sm text-gray-500 dark:text-gray-400">
                   {t.summary}
                 </span>
-                <span className="mt-1 block text-xs text-gray-400 dark:text-gray-500">
+                <span className="mt-1 block text-xs text-gray-500 dark:text-gray-400">
                   {`${PLAN.templateLevel} ${t.level}`}
                 </span>
               </button>

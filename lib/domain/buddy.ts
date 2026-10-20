@@ -33,6 +33,14 @@ export const SHARED_ACTIVITY_IDS: readonly string[] = [
 export const SHARED_TEMPLATE_ID = "shared";
 
 /**
+ * The template ID that marks a plan item, and the log row written when it is
+ * done, as homework set by the user's linked therapist. This is the only place
+ * that origin is encoded: never add an origin field to `Activity` (its
+ * `sourceIds` mean research citations, not who suggested it).
+ */
+export const HOMEWORK_TEMPLATE_ID = "therapist";
+
+/**
  * A single date chip as presented in the "pick a day" selector on the buddy
  * screen. `date` is an ISO YYYY-MM-DD string; `label` is a 3-letter English
  * weekday name ("Mon", "Tue", …).

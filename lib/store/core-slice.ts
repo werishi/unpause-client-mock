@@ -17,6 +17,9 @@
 import { getPersonas, getPersonaSeed } from "@/lib/repo/persona-repo";
 import { LookBackState, LOOK_BACK_DEFAULTS } from "./look-back-slice";
 import type { SharedActivityItem } from "./buddy-slice";
+// Runtime import from a pure slice that imports only domain code. sharing-slice
+// must never import core-slice back — that would create an import cycle.
+import { pruneHomeworkItems, type HomeworkItem } from "./sharing-slice";
 import { getTemplatesForReasons } from "@/lib/repo/reason-repo";
 import { planDay, addDays } from "@/lib/domain/planner";
 import { getTemplates, getTemplateItems } from "@/lib/repo/template-repo";
@@ -264,16 +267,33 @@ export const coreReducers = {
    *     separate action — ensures no plan is ever built from stale shared items.
    * (2) Today's items are forwarded as `PlanInput.shared`; `planDay` inserts
    *     them as committed shared cards alongside anchors, outside scoring.
+   * (3) `ctx.homework` gets the same treatment: past items are pruned via
+   *     `pruneHomeworkItems` and the pruned list (today and future-dated) is
+   *     returned for the caller to persist into `SharingState`; only today's
+   *     items become `PlanInput.homework`. Because the plan is computed only
+   *     here, at check-in, homework linked or seeded after check-in appears
+   *     from the next check-in on (the fixed-day rule buddy items follow too).
    */
   startDay(
     prev: CoreState,
-    ctx: { today: string; sharedActivities?: SharedActivityItem[] },
+    ctx: {
+      today: string;
+      sharedActivities?: SharedActivityItem[];
+      homework?: HomeworkItem[];
+    },
     energy: EnergyLevel
-  ): CoreState & { sharedActivities: SharedActivityItem[] } {
+  ): CoreState & {
+    sharedActivities: SharedActivityItem[];
+    homework: HomeworkItem[];
+  } {
     const pruned = (ctx.sharedActivities ?? []).filter((a) => a.date >= ctx.today);
     const sharedForToday = pruned
       .filter((a) => a.date === ctx.today)
       .map((a) => ({ sharedId: a.id, activityId: a.activityId }));
+    const homeworkPruned = pruneHomeworkItems(ctx.homework ?? [], ctx.today);
+    const homeworkForToday = homeworkPruned
+      .filter((h) => h.date === ctx.today)
+      .map((h) => ({ homeworkId: h.homeworkId, activityId: h.activityId }));
     const templates = getTemplates().filter((t) =>
       prev.templateIds.includes(t.id)
     );
@@ -292,6 +312,7 @@ export const coreReducers = {
       activities,
       log,
       shared: sharedForToday,
+      homework: homeworkForToday,
     };
     const plan = planDay(input);
     const todayPlan = { date: ctx.today, energy, plan };
@@ -300,6 +321,7 @@ export const coreReducers = {
       checkIns: [...prev.checkIns, { date: ctx.today, energy }],
       todayPlan,
       sharedActivities: pruned,
+      homework: homeworkPruned,
     };
   },
 

@@ -13,5 +13,20 @@
       "-1": 120,
       "0": 180
     }
+  },
+  "per-noor": {
+    "interests": ["Gardening basics", "Baking videos"],
+    "digestTimes": ["12:30"],
+    "estimateMinutes": 90,
+    "budgetMinutes": 60,
+    "mediaMinutesByDayOffset": {
+      "-6": 45,
+      "-5": 60,
+      "-4": 30,
+      "-3": 75,
+      "-2": 60,
+      "-1": 45,
+      "0": 60
+    }
   }
 }

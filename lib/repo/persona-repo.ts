@@ -78,7 +78,7 @@ export function getPersonaMediaSeed(id: string): PersonaMediaSeed | null {
 }
 
 /**
- * Returns all five demo personas from `data/personas.json`.
+ * Returns all demo personas from `data/personas.json`.
  *
  * No transformation is applied — the raw JSON array is cast to `Persona[]`.
  * The `per-new` persona has empty `reasonIds`, `templateIds`, and `valueIds`;

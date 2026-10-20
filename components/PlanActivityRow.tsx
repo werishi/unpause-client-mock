@@ -1,6 +1,6 @@
 "use client";
 
-import { BUDDY } from "@/lib/copy";
+import { BUDDY, PLAN } from "@/lib/copy";
 
 /**
  * Renders a single activity row in the Plan tab's template or today-plan list.
@@ -36,6 +36,13 @@ export interface PlanActivityRowProps {
    * existing callers continue to work unchanged.
    */
   withName?: string;
+  /**
+   * When true, renders a small "From your therapist" badge beside the title,
+   * in the same place as `withName`. Used for a homework plan item. Names no
+   * therapist: the plan item stores only ids, so the label stays true on a day
+   * the user unlinks.
+   */
+  fromTherapist?: boolean;
 }
 
 export default function PlanActivityRow({
@@ -44,24 +51,30 @@ export default function PlanActivityRow({
   done,
   editHref,
   withName,
+  fromTherapist,
 }: PlanActivityRowProps) {
   return (
     <div className="flex items-start justify-between gap-4 py-2">
       {/* Left: title, optional two-minute version, optional done label */}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
-          <span className="text-base font-normal text-foreground">{title}</span>
+          <span className="text-base font-normal text-gray-900 dark:text-gray-100">{title}</span>
           {withName && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
               {BUDDY.withName.replace("{name}", withName)}
             </span>
           )}
+          {fromTherapist && (
+            <span className="text-xs text-gray-600 dark:text-gray-400">
+              {PLAN.fromTherapist}
+            </span>
+          )}
           {done && (
-            <span className="text-xs text-muted-foreground">Done</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">Done</span>
           )}
         </div>
         {twoMinuteVersion && (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
             {twoMinuteVersion}
           </span>
         )}
@@ -71,7 +84,7 @@ export default function PlanActivityRow({
       {editHref && (
         <a
           href={editHref}
-          className="shrink-0 text-sm text-primary hover:underline"
+          className="shrink-0 text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           Edit
         </a>

@@ -52,9 +52,12 @@ export default function DigestPage() {
   const allActivities = useMemo(() => getActivities(), []);
 
   /**
-   * Mark the current slot as seen the moment the page is visible. A "Not now"
-   * tap on Today also calls markDigestSeen before navigating here, so a double
-   * call is expected and safe — the action writes the same value both times.
+   * Mark the current slot as seen here, in an effect, the moment the page is
+   * visible and the store is hydrated. This is the only place where opening the
+   * digest marks it seen: the Today card's "Read it" and the notification
+   * banner's tap both navigate here without calling markDigestSeen, so deleting
+   * this effect would mean the digest is never marked seen. (Today's "Not now"
+   * does call markDigestSeen, but it does not navigate here.)
    *
    * Deps include digestTimes and digestSeenSlot so the effect re-reads the slot
    * correctly if the store updates, but in practice it fires once after hydration.
@@ -144,7 +147,7 @@ export default function DigestPage() {
                 A short overview of this topic. More details would appear here in a live version.
                 This placeholder text represents two to three sentences of item summary.
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">{item.source}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{item.source}</p>
             </article>
           ))}
         </section>

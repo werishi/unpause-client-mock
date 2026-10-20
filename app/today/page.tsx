@@ -19,6 +19,7 @@
  * (startedAt is set and welcomeBackDue is false by the time Today renders).
  */
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/lib/store/user-store";
 import { useFlow } from "@/lib/store/flow-store";
@@ -29,8 +30,9 @@ import { isMonday, isFirstOfMonth } from "@/lib/domain/day";
 import { currentDigestSlot } from "@/lib/domain/digest";
 import { weekSummary, monthSummary } from "@/lib/domain/look-back";
 import { weekDates } from "@/lib/domain/planner";
+import { normaliseSafetyEntries, isSafetySetupDay } from "@/lib/domain/safety-plan";
 import ActivityCard from "@/components/ActivityCard";
-import type { PlanItem, SharedPlanItem, EnergyLevel } from "@/lib/domain/types";
+import type { PlanItem, SharedPlanItem, HomeworkPlanItem, EnergyLevel } from "@/lib/domain/types";
 
 // Module-level: both functions are synchronous in-memory reads that return the
 // same array reference on every call. Loading at module level avoids recreating
@@ -60,6 +62,9 @@ export default function TodayPage() {
     markDigestSeen,
     buddy,
     sharedActivities,
+    safetyEntries,
+    safetySetupDismissedWeek,
+    dismissSafetySetup,
   } = useUserData();
 
   const flowStore = useFlow();
@@ -106,23 +111,33 @@ export default function TodayPage() {
   // Shared plan items for today — absent in stored blobs written before this
   // feature, so guarded with `?? []`.
   const shared = todayPlan.plan.shared ?? [];
+  // Homework (therapist) plan items — plans stored before the therapist-sharing
+  // feature lack the key entirely, so never read it bare.
+  const homework = todayPlan.plan.homework ?? [];
 
   // True once any card in today's plan has been completed or skipped — includes
-  // shared cards so "Change energy" hides once any commitment is logged.
+  // shared and homework cards so "Change energy" hides once any commitment is logged.
   const anyLogged =
     todayPlan.plan.activities.some((item) => getLogEntry(item.activityId) !== null) ||
-    shared.some((s) => getLogEntry(s.activityId) !== null);
+    shared.some((s) => getLogEntry(s.activityId) !== null) ||
+    homework.some((h) => getLogEntry(h.activityId) !== null);
 
-  // True when every planned activity and every shared card has a log row.
-  // Shared cards are keyed by activityId because LogEntry has no sharedId field
-  // (concept §2.4 deliberately omitted it). The planner dedup prevents the same
-  // activityId from appearing in both lists in a current-day plan; stale stored
-  // blobs that predate the dedup accept the remote chance of a double-complete
-  // as benign.
+  // True when every planned activity, every shared card and every homework card
+  // has a log row. Shared and homework cards are keyed by activityId because
+  // LogEntry has no sharedId/homeworkId field (concept §2.4 deliberately omitted
+  // it). The planner dedup prevents the same activityId from appearing in two
+  // lists in a current-day plan; stale stored blobs that predate the dedup accept
+  // the remote chance of a double-complete as benign.
+  // The non-empty guard keeps an empty plan from ending the day at once. It is
+  // relaxed for homework only, because a plan whose sole content is homework is
+  // not empty. It is deliberately NOT relaxed for `shared`: a shared-only plan
+  // keeps the existing buddy behaviour, which the therapist-sharing feature does
+  // not own.
   const allLogged =
-    todayPlan.plan.activities.length > 0 &&
+    (todayPlan.plan.activities.length > 0 || homework.length > 0) &&
     todayPlan.plan.activities.every((item) => getLogEntry(item.activityId) !== null) &&
-    shared.every((s) => getLogEntry(s.activityId) !== null);
+    shared.every((s) => getLogEntry(s.activityId) !== null) &&
+    homework.every((h) => getLogEntry(h.activityId) !== null);
 
   // Computed after the hydration guard so `digestTimes` (localStorage-derived)
   // is never read server-side — identical deferral pattern to `getGreeting`.
@@ -175,11 +190,13 @@ export default function TodayPage() {
   }
 
   /**
-   * Starts the activity loop for a shared (buddy) plan item. Calls `setSharedId`
-   * so that `/mood-after` writes `templateId: SHARED_TEMPLATE_ID` on the resulting
-   * LogEntry — the only trace that this loop came from a shared card. The flow store
-   * has no combined `startActivity` helper; the individual setters are composed here
-   * in the same order as `handleStart`, with `setSharedId` added before the push.
+   * Starts the activity loop for a shared (buddy) plan item. `setTemplateId` is the
+   * load-bearing call: `/mood-after` and the skip path in `/task` write
+   * `templateId: state.templateId` into the LogEntry and read nothing else, so the
+   * plan item's `SHARED_TEMPLATE_ID` is the only trace that this loop came from a
+   * shared card. `setSharedId` is informational only — no page under `app/` reads it.
+   * The flow store has no combined `startActivity` helper; the individual setters are
+   * composed here in the same order as `handleStart`.
    */
   function handleStartShared(s: SharedPlanItem): void {
     flowStore.reset();
@@ -190,6 +207,21 @@ export default function TodayPage() {
     router.push("/mood-before");
   }
 
+  /**
+   * Starts the activity loop for a homework (therapist) plan item. Same contract
+   * as `handleStartShared`: `setTemplateId` is the load-bearing call that makes the
+   * logged row carry `HOMEWORK_TEMPLATE_ID`, because `/mood-after` and the skip path
+   * in `/task` read only `state.templateId`. `setHomeworkId` is informational only.
+   */
+  function handleStartHomework(h: HomeworkPlanItem): void {
+    flowStore.reset();
+    flowStore.setEnergy(todayPlan!.energy);
+    flowStore.setTaskId(h.activityId);
+    flowStore.setTemplateId(h.templateId);
+    flowStore.setHomeworkId(h.homeworkId);
+    router.push("/mood-before");
+  }
+
   // "Make it yours" card: shown from the second day onward (startedAt < today),
   // only when personalisation has not been completed or dismissed.
   const showPersonaliseOffer =
@@ -197,6 +229,22 @@ export default function TodayPage() {
     !personaliseDismissed &&
     startedAt !== null &&
     startedAt < today;
+
+  // Safety-plan setup card: every rule lives in `isSafetySetupDay`; never tied to points or mood.
+  // "Not now" stores this week's Monday, not a forever flag, so the card may return next week.
+  // `todayPlan.energy` is safe un-chained here: State B guarantees today's check-in is done.
+  const showSafetySetup = isSafetySetupDay({
+    todayEnergy: todayPlan.energy,
+    startedAt,
+    today,
+    // hydrate() validates only JSON syntax, so a corrupted stored blob is coerced here.
+    entries: normaliseSafetyEntries(safetyEntries),
+    dismissedWeek: safetySetupDismissedWeek,
+    mondayDate,
+    // The digest card is excluded: it is content the user configured, not an offer.
+    otherOfferShowing: showMonthCard || showWeekCard || showPersonaliseOffer,
+    dayEnded: allLogged,
+  });
 
   return (
     <main>
@@ -230,6 +278,31 @@ export default function TodayPage() {
             valueTag={valueTag}
             logEntry={logEntry}
             onStart={() => handleStart(item)}
+          />
+        );
+      })}
+
+      {/* Homework (therapist) cards — after planned activities, before shared cards.
+          Keyed by homeworkId for the same stale-blob reason as the shared block below.
+          No low-day note: the planner already leads with the two-minute version on a
+          low-energy day (`leadWithTwoMinute`). */}
+      {homework.map((h) => {
+        const activity = activities.find((a) => a.id === h.activityId) ?? null;
+        if (activity === null) return null;
+        const firstValueId = activity.valueIds[0] ?? null;
+        const valueTag = firstValueId !== null
+          ? (values.find((v) => v.id === firstValueId) ?? null)
+          : null;
+        const logEntry = getLogEntry(h.activityId);
+        return (
+          <ActivityCard
+            key={h.homeworkId}
+            item={h}
+            activity={activity}
+            valueTag={valueTag}
+            logEntry={logEntry}
+            fromTherapist
+            onStart={() => handleStartHomework(h)}
           />
         );
       })}
@@ -327,6 +400,19 @@ export default function TodayPage() {
             {ONBOARDING.offerCta}
           </button>
           <button onClick={dismissPersonalise}>{ONBOARDING.notNowLabel}</button>
+        </div>
+      )}
+
+      {/* Safety-plan setup card — after the other offers and before the anchor row,
+          so it never follows the end-of-day sentence. The CTA only navigates; only
+          "Not now" dismisses, and only for this week. */}
+      {showSafetySetup && (
+        <div>
+          <p>{TODAY.safetySetupText}</p>
+          <Link href="/safety/edit">{TODAY.safetySetupCta}</Link>
+          <button onClick={() => dismissSafetySetup(mondayDate)}>
+            {ONBOARDING.notNowLabel}
+          </button>
         </div>
       )}
 

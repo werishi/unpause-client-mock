@@ -210,7 +210,7 @@ function ActivityForm({
         <button
           type="button"
           onClick={handleSave}
-          className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
         >
           Save
         </button>

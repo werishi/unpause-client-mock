@@ -9,6 +9,13 @@
  * `SafetyPlanStep.entries` holds plain strings (no nested objects); the
  * interface must not gain an `isPlaceholder` field or any other property not
  * present in the source JSON, as that would break the cast in `getSafetyPlan`.
+ *
+ * The step order is load-bearing. The user's own entries live in the store as
+ * `safetyEntries[i]`, addressed by step index, because `SafetyPlanStep` has no
+ * id (and must not gain one, see above). Therefore the order and the count of
+ * steps in `data/safety-plan.json` must not change: reordering or inserting a
+ * step would silently move every user's entries onto the wrong step. Adding or
+ * reordering steps needs a store migration of `safetyEntries` first.
  */
 
 import safetyPlanData from "@/data/safety-plan.json";

@@ -54,5 +54,20 @@
     "templateIds": ["tpl-small-steps"],
     "valueIds": ["val-health", "val-home"],
     "wakeTime": "07:30"
+  },
+  {
+    "id": "per-noor",
+    "displayName": "Noor",
+    "blurb": "My therapist and I agreed on a couple of small things for this week, and I choose what she sees.",
+    "reasonIds": ["rsn-hard-to-start"],
+    "templateIds": ["tpl-start-tiny"],
+    "valueIds": ["val-learning", "val-health", "val-home"],
+    "wakeTime": "07:30",
+    "therapist": { "name": "Dr. Hartmann" },
+    "sharing": { "moodRatings": true, "activityLog": false, "weekSummary": true, "safetyPlan": false },
+    "homework": [
+      { "activityId": "act-avoided-step", "dayOffset": 0 },
+      { "activityId": "act-walk-outside", "dayOffset": 2 }
+    ]
   }
 ]

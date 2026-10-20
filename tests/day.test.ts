@@ -6,6 +6,7 @@ import {
   latestDate,
   isMonday,
   isFirstOfMonth,
+  formatDayLabel,
 } from "../lib/domain/day";
 
 describe("daysBetween", () => {
@@ -97,5 +98,17 @@ describe("isFirstOfMonth", () => {
 
   it("returns false for 2026-09-30 (last day of previous month)", () => {
     expect(isFirstOfMonth("2026-09-30")).toBe(false);
+  });
+});
+
+// October and January only: newer ICU builds abbreviate September as "Sept"
+// in en-GB, so a September case would make the result depend on the Node version.
+describe("formatDayLabel", () => {
+  it("formats 2026-10-20 as 20 Oct 2026", () => {
+    expect(formatDayLabel("2026-10-20")).toBe("20 Oct 2026");
+  });
+
+  it("formats a single-digit day without padding (2026-01-05 -> 5 Jan 2026)", () => {
+    expect(formatDayLabel("2026-01-05")).toBe("5 Jan 2026");
   });
 });

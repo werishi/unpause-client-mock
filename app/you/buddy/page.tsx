@@ -56,7 +56,7 @@ export default function BuddyPage() {
         </p>
         <Link
           href="/buddy/choose"
-          className="rounded-lg bg-indigo-600 dark:bg-indigo-500 px-4 py-3 text-sm font-medium text-white text-center"
+          className="rounded-lg bg-indigo-600 px-4 py-3 text-sm font-medium text-white text-center"
         >
           {BUDDY.chooseSomeone}
         </Link>

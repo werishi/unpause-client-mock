@@ -23,7 +23,7 @@ export default function NotFoundPage() {
 
       <Link
         href="/"
-        className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+        className="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
       >
         {NOT_FOUND_PAGE.homeLinkLabel}
       </Link>

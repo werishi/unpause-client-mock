@@ -14,6 +14,7 @@ import {
   SAFETY_PLAN_LINK,
   MOOD_RATING,
   SAFETY_PAGE,
+  SAFETY_EDIT,
   DONE_SCREEN,
   START_SCREEN,
   MOOD_BEFORE_PAGE,
@@ -28,6 +29,7 @@ import {
   ONBOARDING,
   ABOUT,
   DEMO,
+  BANNER,
   WELCOME_BACK,
   PLAN,
   YOU,
@@ -37,7 +39,9 @@ import {
   MEDIA_BUDGET,
   CONNECTION,
   BUDDY,
+  THERAPIST,
 } from '../lib/copy'
+import { SHARE_TYPES } from '../lib/domain/sharing'
 
 /**
  * Recursively walks an object or array and collects every string leaf value.
@@ -55,12 +59,12 @@ function collectStrings(obj: unknown): string[] {
 describe('copy tone', () => {
   it('no copy key contains a banned word', () => {
     const allExports: unknown[] = [
-      SHELL, SAFETY_PLAN_LINK, MOOD_RATING, SAFETY_PAGE, DONE_SCREEN,
+      SHELL, SAFETY_PLAN_LINK, MOOD_RATING, SAFETY_PAGE, SAFETY_EDIT, DONE_SCREEN,
       START_SCREEN, MOOD_BEFORE_PAGE, MOOD_AFTER_PAGE, NOT_FOUND_PAGE,
       DIGEST, SWAP, MEDIA_BUDGET,
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
-      ABOUT, DEMO, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
-      CONNECTION, BUDDY,
+      ABOUT, DEMO, BANNER, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
+      CONNECTION, BUDDY, THERAPIST,
     ]
     const strings = allExports.flatMap(collectStrings)
 
@@ -107,6 +111,43 @@ describe("LOOK_BACK / WELCOME_BACK bonus / TODAY review — no deficit language"
   });
 });
 
+describe('SAFETY_EDIT hints and setup card', () => {
+  // Profile Safety plan invariant: a wrong crisis number in a demo is worse than
+  // none, so no digit may appear where a viewer could read it as a number to call.
+  const noContactStrings = [
+    ...collectStrings(SAFETY_EDIT),
+    TODAY.safetySetupText,
+    TODAY.safetySetupCta,
+  ]
+  const forbiddenSubstrings = ['tel:', 'mailto:', 'point', 'streak']
+  const deficitStrings = [SAFETY_PAGE.emptyStepLine, TODAY.safetySetupText]
+  const deficitSubstrings = ['missed', 'skipped', ' left', 'lost']
+  const deficitPattern = /\d+\s*(of|\/)\s*\d+/
+
+  it('has one hint per seed step', () => {
+    expect(SAFETY_EDIT.hints).toHaveLength(6)
+  })
+
+  it.each([...SAFETY_EDIT.hints])("hint '%s' has no digit and starts with e.g.", (hint) => {
+    expect(hint).not.toMatch(/\d/)
+    expect(hint.startsWith('e.g.')).toBe(true)
+  })
+
+  it.each(noContactStrings)("'%s' has no digit, contact scheme, points or streak", (s) => {
+    expect(s).not.toMatch(/\d/)
+    for (const bad of forbiddenSubstrings) {
+      expect(s.toLowerCase()).not.toContain(bad)
+    }
+  })
+
+  it.each(deficitStrings)("'%s' contains no deficit substring", (s) => {
+    for (const bad of deficitSubstrings) {
+      expect(s).not.toContain(bad)
+    }
+    expect(s).not.toMatch(deficitPattern)
+  })
+})
+
 describe("DIGEST and MEDIA_BUDGET — no deficit language", () => {
   // Concept §2.7: no N-of-M, no "missed", no "skipped", no " left" in digest or
   // media-budget copy. The budget is the user's own intention; framing unread items
@@ -123,5 +164,117 @@ describe("DIGEST and MEDIA_BUDGET — no deficit language", () => {
       expect(s).not.toContain(bad);
     }
     expect(s).not.toMatch(badPattern);
+  });
+});
+
+describe("BANNER and DEMO replay copy — tone", () => {
+  // Profile Tone invariant / goal G10: a notification may carry no deficit, no count
+  // and no obligation. A digit in a banner is exactly the pressure the concept rules out.
+  const allChecked = [
+    ...collectStrings(BANNER),
+    DEMO.replayHeading,
+    DEMO.replayCheckInLabel,
+    DEMO.replayDigestLabel,
+  ];
+  const badSubstrings = ["missed", "skipped", " left", "lost"];
+  const badPattern = /\d+\s*(of|\/)\s*\d+/;
+  const bodies = [BANNER.checkInBody, BANNER.digestBody];
+  const obligationWords = ["should", "must", "need to", "don't forget"];
+
+  it.each(allChecked)("'%s' contains no deficit substring, count or digit", (s) => {
+    for (const bad of badSubstrings) {
+      expect(s).not.toContain(bad);
+    }
+    expect(s).not.toMatch(badPattern);
+    expect(s).not.toMatch(/\d/);
+  });
+
+  it.each(bodies)("body '%s' asks nothing of the user", (s) => {
+    for (const word of obligationWords) {
+      expect(s.toLowerCase()).not.toContain(word);
+    }
+  });
+});
+
+describe("THERAPIST copy — wording rules", () => {
+  // Concept §2.8 wording rules for therapist access and sharing. collectStrings
+  // reaches nested shareTypes objects and the neverShared array of objects.
+  const strings = collectStrings(THERAPIST);
+  const allowedTokens = new Set(["name", "date", "days", "label", "step", "total", "count", "values"]);
+
+  it("uses only known {tokens}", () => {
+    // Token convention: a typo such as {nme} would render literally in the UI.
+    for (const s of strings) {
+      for (const m of s.matchAll(/\{([^}]*)\}/g)) {
+        expect(allowedTokens.has(m[1]), `unknown token '{${m[1]}}' in '${s}'`).toBe(true);
+      }
+    }
+  });
+
+  it("contains no digit", () => {
+    // Window sizes are {days} tokens; a literal number would drift from THERAPIST_VIEW_DAYS.
+    for (const s of strings) {
+      expect(s, `digit in '${s}'`).not.toMatch(/\d/);
+    }
+  });
+
+  it("contains no deficit language", () => {
+    // Rule 1: same deficit substrings and N-of-M pattern as the PLAN / LOOK_BACK blocks.
+    for (const s of strings) {
+      for (const bad of ["missed", "skipped", " left", "lost"]) {
+        expect(s, `deficit substring '${bad}' in '${s}'`).not.toContain(bad);
+      }
+      expect(s).not.toMatch(/\d+\s*(of|\/)\s*\d+/);
+    }
+  });
+
+  it("uses live / real time / now only inside a negation", () => {
+    // Rule 2: nothing describing what the therapist sees may sound live.
+    for (const s of strings) {
+      if (/\blive\b|real[- ]time|\bnow\b/i.test(s)) {
+        expect(s, `'${s}' sounds live without a negation`).toMatch(/\b(nobody|no one|not|never)\b/i);
+      }
+    }
+  });
+
+  it("states that nobody watches live", () => {
+    // Rule 2: the two no-live lines must carry the explicit negation.
+    expect(THERAPIST.noLiveLine).toMatch(/nobody watches/i);
+    expect(THERAPIST.previewNoLive).toMatch(/nobody watches/i);
+  });
+
+  it("uses no measurement or treatment-promise words", () => {
+    // Rule 3: no clinical measurement framing. Rule 4: no promise of treatment effect.
+    for (const s of strings) {
+      expect(s, `measurement word in '${s}'`).not.toMatch(/\b(average|trend|band|severity|score|level)\b/i);
+      expect(s, `treatment promise in '${s}'`).not.toMatch(/recover|treatment|heal|cure|improv|better/i);
+    }
+  });
+
+  it("describes what the therapist sees in the conditional voice", () => {
+    // Nothing is sent (ABOUT.body), so every description of the therapist's view says "would".
+    for (const type of SHARE_TYPES) {
+      expect(THERAPIST.shareTypes).toHaveProperty(type);
+      expect(THERAPIST.shareTypes[type].description).toContain("would");
+    }
+    expect(THERAPIST.previewIntro).toContain("would");
+    expect(THERAPIST.previewNothing).toContain("would");
+    expect(THERAPIST.previewLink).toContain("would");
+  });
+
+  it("lists four never-shared entries, each with a label and a reason", () => {
+    // The never-shared list explains every exclusion; an empty reason would read as arbitrary.
+    expect(THERAPIST.neverShared).toHaveLength(4);
+    for (const entry of THERAPIST.neverShared) {
+      expect(entry.label.length).toBeGreaterThan(0);
+      expect(entry.reason.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("adds the entry, homework and demo-reset strings outside THERAPIST", () => {
+    // The You hub entry, the homework card label and the reset warning (concept §2.9).
+    expect(YOU.therapistEntry.length).toBeGreaterThan(0);
+    expect(PLAN.fromTherapist.length).toBeGreaterThan(0);
+    expect(DEMO.replacesDataNote).toContain("therapist");
   });
 });

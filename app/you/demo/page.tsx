@@ -7,16 +7,23 @@
  * After either action, navigation goes to `/` and the entry redirect
  * (`app/page.tsx`) routes to `/welcome`, `/welcome-back`, or `/today` based on
  * the loaded state. The demo page does not decide which screen to show — it
- * only sets state and navigates to the redirect.
+ * only sets state and navigates to the redirect. Both the persona switch and
+ * the reset replace the user's safety plan along with all other saved data,
+ * which the `DEMO.replacesDataNote` line under the intro tells reviewers.
  *
  * Guards on `hydrated` before enabling the persona rows: `loadPersona` depends
  * on the store's mount effect having run (today is set in that effect, and
  * getPersonaSeed resolves dayOffset against it). The reset button is not gated
  * because `resetDemoData` does not depend on `today`.
+ *
+ * The replay row (inside the hydrated-gated toggle list) lets a presenter show
+ * the check-in or digest banner again on demand via `requestReplay`; it writes
+ * no stored state and does not navigate, so the viewer stays on this page.
  */
 
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/lib/store/user-store";
+import { useNotificationBanner } from "@/lib/store/notification-banner-store";
 import { getPersonas } from "@/lib/repo/persona-repo";
 import type { Persona } from "@/lib/domain/types";
 import { DEMO, LOOK_BACK } from "@/lib/copy";
@@ -37,6 +44,7 @@ export default function DemoPage() {
     reviewPreview,
     setReviewPreview,
   } = useUserData();
+  const { requestReplay } = useNotificationBanner();
   const router = useRouter();
 
   const handleLoad = (id: string) => {
@@ -54,6 +62,7 @@ export default function DemoPage() {
     <div className="flex flex-col gap-6 py-6">
       <h1 className="text-xl font-semibold">{DEMO.heading}</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400">{DEMO.intro}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400">{DEMO.replacesDataNote}</p>
 
       {hydrated && (
         <ul className="flex flex-col gap-2">
@@ -92,7 +101,7 @@ export default function DemoPage() {
             className={`w-10 h-6 rounded-full transition-colors ${
               plainVersion
                 ? "bg-indigo-600 dark:bg-indigo-500"
-                : "bg-gray-300 dark:bg-gray-600"
+                : "bg-gray-300 dark:bg-gray-500"
             }`}
             aria-label={DEMO.plainVersionLabel}
           />
@@ -105,10 +114,37 @@ export default function DemoPage() {
             className={`w-10 h-6 rounded-full transition-colors ${
               reviewPreview
                 ? "bg-indigo-600 dark:bg-indigo-500"
-                : "bg-gray-300 dark:bg-gray-600"
+                : "bg-gray-300 dark:bg-gray-500"
             }`}
             aria-label={LOOK_BACK.reviewPreviewLabel}
           />
+        </li>
+        {/*
+         * Replay row — one-shot actions, not a pill switch, because replaying a
+         * banner is an action rather than a setting (concept 2.8). `disabled` is
+         * set explicitly because the <ul>'s pointer-events-none does not stop
+         * keyboard activation before hydration.
+         */}
+        <li className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3">
+          <span className="text-sm">{DEMO.replayHeading}</span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => requestReplay("checkIn")}
+              disabled={!hydrated}
+              className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700"
+            >
+              {DEMO.replayCheckInLabel}
+            </button>
+            <button
+              type="button"
+              onClick={() => requestReplay("digest")}
+              disabled={!hydrated}
+              className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700"
+            >
+              {DEMO.replayDigestLabel}
+            </button>
+          </div>
         </li>
       </ul>
 

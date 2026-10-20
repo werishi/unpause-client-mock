@@ -79,7 +79,7 @@ export default function TemplatesPage() {
 
   return (
     <main className="flex flex-col gap-6 px-4 py-6">
-      <h1 className="text-title font-bold text-foreground">
+      <h1 className="text-title font-bold text-gray-900 dark:text-gray-100">
         {PLAN.templatesPageHeading}
       </h1>
       <TemplatePicker
@@ -89,7 +89,7 @@ export default function TemplatesPage() {
       />
       <button
         onClick={save}
-        className="w-full rounded-radius-md bg-primary px-4 py-3 text-base font-semibold text-primary-foreground dark:bg-primary dark:text-primary-foreground"
+        className="w-full rounded-md bg-indigo-600 px-4 py-3 text-base font-semibold text-white"
       >
         {PLAN.saveTemplates}
       </button>

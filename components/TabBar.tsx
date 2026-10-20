@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isTabRoute, normalizePathname } from "@/lib/domain/routes";
 
 interface Tab {
   href: string;
@@ -13,27 +14,18 @@ interface TabBarProps {
 }
 
 /**
- * Fixed bottom tab bar — only renders on tabbed routes (/today, /you/*).
+ * Fixed bottom tab bar — only renders on tabbed routes (see `isTabRoute`).
  * Also renders an in-flow spacer so content above is not hidden behind the bar.
  *
- * Allow-list rationale: every new route is a focused flow by default; a forgotten
- * allow-list entry hides the tab bar rather than leaking one into a flow (concept 2.2).
+ * The allow-list lives in `lib/domain/routes.ts` and is shared with the notification
+ * banner, so the two can never disagree about which routes are tabbed.
  */
 export default function TabBar({ tabs }: TabBarProps) {
   const raw = usePathname();
-  // trailingSlash: true (next.config.ts) emits /today/ and /you/ — strip the trailing slash
-  // before matching, but keep the root "/" intact.
-  const pathname = raw !== "/" && raw.endsWith("/") ? raw.slice(0, -1) : raw;
+  // Normalized pathname is still needed for the isActive computation below.
+  const pathname = normalizePathname(raw);
 
-  const isTabbed =
-    pathname === "/today" ||
-    pathname === "/plan" ||
-    pathname === "/look-back" ||
-    // /you itself and its sub-pages (/you/demo, /you/about) show the tab bar;
-    // focused flows under /you/values are excluded, mirroring the /plan exact guard.
-    (pathname.startsWith("/you") && !pathname.startsWith("/you/values"));
-
-  if (!isTabbed) return null;
+  if (!isTabRoute(pathname)) return null;
 
   return (
     <>
@@ -52,7 +44,7 @@ export default function TabBar({ tabs }: TabBarProps) {
        * min-h-14 ensures the bar is at least 56 px tall on devices with no safe area.
        */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-10 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-[env(safe-area-inset-bottom)]"
         aria-label="Main tabs"
       >
         <div className="max-w-md mx-auto flex">
@@ -69,7 +61,7 @@ export default function TabBar({ tabs }: TabBarProps) {
                 href={tab.href}
                 aria-current={isActive ? "page" : undefined}
                 className={`flex-1 flex items-center justify-center h-14 text-sm font-medium transition-colors ${
-                  isActive ? "text-gray-900" : "text-gray-400"
+                  isActive ? "text-gray-900 dark:text-gray-100" : "text-gray-500 dark:text-gray-400"
                 }`}
               >
                 {tab.label}

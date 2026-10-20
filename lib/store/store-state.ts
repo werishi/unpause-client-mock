@@ -7,7 +7,8 @@
  *
  * No `"use client"` directive. Pure TypeScript — no React, no hooks, no browser APIs.
  *
- * Active slices: CoreState, PlanState, LookBackState, DigestState, BuddyState.
+ * Active slices: CoreState, PlanState, LookBackState, DigestState, BuddyState, SafetyState,
+ * SharingState, BannerState.
  *
  * To add a new slice later: (1) create `lib/store/{name}-slice.ts`; (2) add `& {Name}State` to
  * `UserDataState`; (3) add `...{NAME}_DEFAULTS` to `buildInitialState()`'s return and
@@ -19,6 +20,9 @@ import { PlanState, PLAN_DEFAULTS } from './plan-slice';
 import { LookBackState, LOOK_BACK_DEFAULTS } from './look-back-slice';
 import { DigestState, DIGEST_DEFAULTS } from './digest-slice';
 import { BuddyState, BUDDY_DEFAULTS } from './buddy-slice';
+import { SafetyState, SAFETY_DEFAULTS } from './safety-slice';
+import { SharingState, SHARING_DEFAULTS, resolveSharing } from './sharing-slice';
+import { BannerState, BANNER_DEFAULTS } from './banner-slice';
 import { daysBetween } from '@/lib/domain/day';
 
 // ---------------------------------------------------------------------------
@@ -33,7 +37,14 @@ import { daysBetween } from '@/lib/domain/day';
  * **Do not import this type into any `*-slice.ts` file.** Each slice knows only its own state
  * type; slices are composed here, not inside each other.
  */
-export type UserDataState = CoreState & PlanState & LookBackState & DigestState & BuddyState;
+export type UserDataState = CoreState &
+  PlanState &
+  LookBackState &
+  DigestState &
+  BuddyState &
+  SafetyState &
+  SharingState &
+  BannerState;
 
 // ---------------------------------------------------------------------------
 // buildInitialState
@@ -61,6 +72,13 @@ export function buildInitialState(): UserDataState {
     ...LOOK_BACK_DEFAULTS,
     ...DIGEST_DEFAULTS,
     ...BUDDY_DEFAULTS,
+    ...SAFETY_DEFAULTS,
+    ...SHARING_DEFAULTS,
+    // BannerState: two nullable strings, nothing to re-allocate. No STORAGE_KEY bump and no
+    // migration: an old blob gains null for both fields because hydrate() spreads parsed state
+    // over buildInitialState() (same basis as SafetyState/SharingState). Valid only while
+    // hydrate() keeps that defaults-first spread.
+    ...BANNER_DEFAULTS,
     // Freshly allocated arrays — do not remove; see doc comment above.
     log: [],
     checkIns: [],
@@ -80,6 +98,17 @@ export function buildInitialState(): UserDataState {
     media: { estimateMinutes: null, budgetMinutes: null },
     // BuddyState array re-allocated to avoid sharing BUDDY_DEFAULTS reference.
     sharedActivities: [],
+    // SafetyState outer and inner arrays re-allocated to avoid sharing SAFETY_DEFAULTS references.
+    // No migration and no STORAGE_KEY change: a blob saved before this slice existed gains these
+    // defaults on load because hydrate() spreads parsed state over buildInitialState(). That holds
+    // only while hydrate() keeps its defaults-first spread; if it changes, this slice needs an
+    // explicit migration.
+    safetyEntries: [[], [], [], [], [], []],
+    // SharingState object and array re-allocated to avoid sharing SHARING_DEFAULTS references.
+    // Same no-migration basis as SafetyState: old blobs gain these via hydrate()'s top-level spread.
+    therapist: null,
+    sharing: resolveSharing({}),
+    homework: [],
   };
 }
 

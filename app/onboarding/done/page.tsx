@@ -97,7 +97,7 @@ export default function OnboardingDonePage() {
         <button
           type="button"
           onClick={() => router.push("/today")}
-          className="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+          className="w-full rounded-lg bg-indigo-600 px-6 py-3 text-sm font-medium text-white hover:bg-indigo-700"
         >
           {ONBOARDING.seeTodayLabel}
         </button>
