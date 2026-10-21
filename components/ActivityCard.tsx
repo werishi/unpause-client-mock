@@ -3,6 +3,9 @@
 import type { PlanItem, LogEntry, Activity } from "@/lib/domain/types";
 import { TODAY, BUDDY, PLAN } from "@/lib/copy";
 
+const pill =
+  "self-start rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300";
+
 export interface ActivityCardProps {
   item: PlanItem;
   activity: Activity;
@@ -55,8 +58,10 @@ export default function ActivityCard({
   // Collapsed — activity has already been logged today
   if (logEntry !== null) {
     return (
-      <div>
-        <p>{logEntry.outcome === "done" ? TODAY.doneLine : TODAY.skippedLine}</p>
+      <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-800/50">
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+          {logEntry.outcome === "done" ? TODAY.doneLine : TODAY.skippedLine}
+        </p>
       </div>
     );
   }
@@ -66,20 +71,27 @@ export default function ActivityCard({
   const subtitle = item.leadWithTwoMinute ? `or: ${activity.title}` : null;
 
   return (
-    <div>
-      <p>{headline}</p>
-      {subtitle !== null && <p>{subtitle}</p>}
+    <div className="flex flex-col gap-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-none">
+      <p className="text-lg font-semibold leading-snug text-gray-900 dark:text-gray-100">{headline}</p>
+      {subtitle !== null && <p className="-mt-1 text-sm text-gray-600 dark:text-gray-400">{subtitle}</p>}
       {withName && (
-        <span>{BUDDY.withName.replace("{name}", withName)}</span>
+        <span className={pill}>{BUDDY.withName.replace("{name}", withName)}</span>
       )}
-      {fromTherapist && <span>{PLAN.fromTherapist}</span>}
-      <p>{activity.cue}</p>
-      {valueTag !== null && (
-        <span>
-          {valueTag.emoji} {valueTag.label}
-        </span>
-      )}
-      <button onClick={onStart}>{TODAY.startLabel}</button>
+      {fromTherapist && <span className={pill}>{PLAN.fromTherapist}</span>}
+      <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{activity.cue}</p>
+      <div className="mt-1 flex items-center gap-3">
+        {valueTag !== null && (
+          <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+            {valueTag.emoji} {valueTag.label}
+          </span>
+        )}
+        <button
+          onClick={onStart}
+          className="ml-auto min-h-12 rounded-xl bg-indigo-600 px-6 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400"
+        >
+          {TODAY.startLabel}
+        </button>
+      </div>
     </div>
   );
 }

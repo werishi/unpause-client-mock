@@ -14,9 +14,13 @@
  * flow like /you/values.
  *
  * Hydration pattern: local state is initialised empty so the server prerender
- * and the first client render agree. The useEffect seeds it from the store once
- * `hydrated` becomes true. The `if (!hydrated) return null` guard appears after
- * all hooks to avoid a Rules-of-Hooks violation. This is the same pattern used
+ * and the first client render agree. A render-phase seeding block, guarded by a
+ * `seeded` flag, copies the store values into local state on the first render
+ * where `hydrated` is true. It sits after all hooks and before the
+ * `if (!hydrated) return null` guard (Rules of Hooks keeps the guard after the
+ * hooks; the block must precede the guard or it would never run). It replaced a
+ * `useEffect` seed because React's set-state-in-effect lint rule rejects that
+ * shape and it cost one extra empty commit. This is the same pattern used
  * in app/plan/templates/page.tsx (the source of truth for this repo's hydration
  * idiom); it differs from app/you/values/page.tsx, which skips the guard and
  * therefore flashes defaults on cold load.
@@ -25,7 +29,7 @@
  * always valid here.
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUserData } from "@/lib/store/user-store";
 import { DIGEST } from "@/lib/copy";
 import Link from "next/link";
@@ -39,25 +43,26 @@ export default function DigestSetupPage() {
 
   /**
    * Local mirrors of the store values. Initialised as empty arrays / empty string
-   * so SSR and the first CSR agree; the hydration effect below corrects them once
-   * the store has loaded from localStorage.
+   * so SSR and the first CSR agree; the seeding block below corrects them on the
+   * first render after the store has loaded from localStorage.
    */
   const [localInterests, setLocalInterests] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [localTimes, setLocalTimes] = useState<string[]>([]);
+  /** True once local state has been seeded from the store; makes the seed write-once. */
+  const [seeded, setSeeded] = useState(false);
 
   /**
-   * Seed local state from the store after hydration.
-   * Runs once when `hydrated` flips to true; the dependency array is intentionally
-   * [hydrated] so it does not re-run on every render (no stale-closure risk here
-   * because the seeding is write-once, not a subscription).
+   * Seed local state from the store on the first hydrated render (render-phase
+   * set-state, which React re-renders immediately before committing). The
+   * `seeded` flag makes it write-once, so later store changes do not overwrite
+   * local edits: this is a seed, not a subscription. Must stay before the guard.
    */
-  useEffect(() => {
-    if (hydrated) {
-      setLocalInterests(interests);
-      setLocalTimes(digestTimes);
-    }
-  }, [hydrated]);
+  if (hydrated && !seeded) {
+    setSeeded(true);
+    setLocalInterests(interests);
+    setLocalTimes(digestTimes);
+  }
 
   // Guard must appear after all hooks (Rules of Hooks).
   // Returning null prevents flashing store defaults before localStorage loads.

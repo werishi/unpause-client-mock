@@ -10,8 +10,9 @@
  * - Budget mode: shown once an estimate is set. Displays an adjustable budget,
  *   a self-report chip row for today, and a neutral 7-day bar chart.
  *
- * `showEstimate` starts true and flips to false in the hydration effect when the
- * store has an estimate — the store's `estimateMinutes === null` is the natural
+ * `showEstimate` starts true and flips to false on the first hydrated render
+ * (render-phase seeding guarded by `seeded`, the same idiom as
+ * app/plan/templates/page.tsx) when the store has an estimate — the store's `estimateMinutes === null` is the natural
  * first-visit signal (concept §2.5, DigestAndMediaMap Domain Notes Part 3).
  *
  * `localBudget` holds the step-adjusted value before the user confirms with
@@ -20,7 +21,7 @@
  * "−15 min" disabled guard.
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useUserData } from "@/lib/store/user-store";
 import {
@@ -70,32 +71,38 @@ export default function MediaBudgetPage() {
 
   /**
    * When true, show the estimate chip grid.
-   * Initialised true; flipped false in the hydration effect when the store has
-   * an estimate. Also flipped true by "Change my estimate".
+   * Initialised true; flipped false on the first hydrated render when the store
+   * has an estimate. Also flipped true by "Change my estimate".
+   * Deliberately local state, not derived from `media.estimateMinutes`: with no
+   * estimate at load it stays true until an estimate chip sets it, and a derived
+   * value would instead react to every store change and alter that flow.
    */
   const [showEstimate, setShowEstimate] = useState(true);
 
   /**
    * Step-adjusted budget value before the user confirms with "Use this".
-   * Seeded from `media.budgetMinutes ?? suggestBudget(estimate)` in the
-   * hydration effect; 15 is the store clamp floor and a safe default.
+   * Seeded from `media.budgetMinutes ?? suggestBudget(estimate)` on the first
+   * hydrated render; 15 is the store clamp floor and a safe default.
    */
   const [localBudget, setLocalBudget] = useState(15);
 
+  /** True once local state has been seeded from the store; makes the seed write-once. */
+  const [seeded, setSeeded] = useState(false);
+
   /**
-   * Seed local state from the store after hydration.
-   * Runs once when `hydrated` flips to true; the dependency array is
-   * intentionally [hydrated] so it does not re-run on every render
-   * (write-once seeding, not a subscription).
+   * Seed local state from the store on the first hydrated render (render-phase
+   * set-state, which React re-renders immediately before committing). The
+   * `seeded` flag makes it write-once: a seed, not a subscription. Must stay
+   * after all hooks and before the `!hydrated` guard, or it would never run.
    */
-  useEffect(() => {
-    if (!hydrated) return;
+  if (hydrated && !seeded) {
+    setSeeded(true);
     const est = media.estimateMinutes;
     if (est !== null) {
       setShowEstimate(false);
       setLocalBudget(media.budgetMinutes ?? suggestBudget(est));
     }
-  }, [hydrated]);
+  }
 
   // Guard after all hooks — prevents rendering stale defaults before
   // localStorage loads (same pattern as digest/page.tsx).

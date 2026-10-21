@@ -502,7 +502,8 @@ export const PLAN = {
  *
  * youPageAboutLabel, youPageSafetyLabel, youPageDemoLabel were hard-coded
  * in app/you/page.tsx; they are centralised here so /you/values and future
- * You sub-pages share a single copy location.
+ * You sub-pages share a single copy location. The hub's header, section
+ * headings and row hints now live here too.
  */
 export const YOU = {
   /** Navigation link to /you/about in the You hub. */
@@ -551,6 +552,34 @@ export const YOU = {
    * buddyEntry: reading the store here would make the You page a client component.
    */
   therapistEntry: "Therapist & sharing",
+  /** The <h1> in the You hub's identity header. */
+  title: "You",
+  /** The line under the <h1> in the You hub's identity header. */
+  subtitle: "Your space, at your pace. Change anything whenever you like.",
+  /** Heading of the first section card in the You hub. */
+  sectionMatters: "What matters to you",
+  /** Heading of the second section card in the You hub. */
+  sectionPeople: "Your people",
+  /** Heading of the third section card in the You hub. */
+  sectionSafety: "Safety",
+  /** Heading of the fourth section card in the You hub. */
+  sectionAbout: "About this app",
+  /** Second line of the values row in the You hub. */
+  valuesHint: "What makes an activity feel worth it",
+  /** Second line of the digest row in the You hub. */
+  digestHint: "Topics you like, gathered in one calm place",
+  /** Second line of the media-budget row in the You hub. */
+  mediaHint: "A gentle frame for screen time, set by you",
+  /** Second line of the buddy row in the You hub. */
+  buddyHint: "Someone to share a small win with",
+  /** Second line of the therapist row in the You hub. */
+  therapistHint: "Optional. You choose what, if anything, to share",
+  /** Second line of the safety-plan row in the You hub. */
+  safetyHint: "Your steps for hard moments, always one tap away",
+  /** Second line of the about row in the You hub. */
+  aboutHint: "What this mockup is, and what stays on your device",
+  /** Second line of the demo row in the You hub. */
+  demoHint: "Try personas, replay notifications, reset data",
 } as const;
 
 /**

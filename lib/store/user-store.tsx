@@ -12,13 +12,14 @@
  *
  * Hydration rule (from ScaffoldAndCiMap.md): the first render — server
  * prerender and first client render — must produce identical output. Therefore
- * localStorage is never read at render time. `useState(buildInitialState())`
- * sets the initial value; the mount `useEffect` reads localStorage and, if a
- * saved blob exists, updates state. A missing or corrupt blob silently falls
- * back to the initial defaults.
+ * localStorage is never read during that first render. `useState(buildInitialState())`
+ * sets the initial value; the boot snapshot (localStorage + today's date) is
+ * read once per page load through `useSyncExternalStore`, whose server snapshot
+ * is `null` during hydration, and applied in render while `hydrated` is false.
+ * A missing or corrupt blob silently falls back to the initial defaults.
  */
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useSyncExternalStore } from "react";
 import type { LogEntry, CheckIn, EnergyLevel, DayPlan } from "@/lib/domain/types";
 import { getPersonas, getPersonaSeed, getPersonaMediaSeed } from "@/lib/repo/persona-repo";
 import { addDays } from "@/lib/domain/planner";
@@ -71,6 +72,78 @@ function persist(s: UserDataState): void {
   } catch {
     // Storage unavailable — continue in-memory only.
   }
+}
+
+// ─── Boot snapshot (read once per page load) ─────────────────────────────────
+
+/** The state and session date the provider adopts once hydration has finished. */
+type BootSnapshot = { state: UserDataState; today: string };
+
+/**
+ * Cache for `getClientBoot`. Mandatory, not an optimisation: React calls
+ * `getSnapshot` repeatedly and requires an identical value while nothing
+ * changed, and `hydrate()` is not idempotent (after the first persist,
+ * `lastOpenedDate` is today, so a recompute would clear `welcomeBackDue`).
+ *
+ * Premise: the provider is mounted exactly once, in `app/layout.tsx`, and never
+ * remounts on navigation. If it ever remounted within one page load, it would
+ * re-apply this cached snapshot instead of re-reading storage, so every change
+ * made since load (including `resetDemoData`) would be lost on that remount.
+ */
+let bootSnapshot: BootSnapshot | null = null;
+
+/** The boot snapshot never changes after it is computed, so nothing to subscribe to. */
+function subscribeNever(): () => void {
+  return () => {};
+}
+
+/**
+ * Server snapshot: `null` on the static prerender and during client hydration,
+ * so both render the `buildInitialState()` seed and their HTML matches.
+ */
+function getServerBoot(): BootSnapshot | null {
+  return null;
+}
+
+/**
+ * Client snapshot: derives today, reads and rehydrates the stored blob, drops
+ * the stale v1 blob and persists the hydrated state — all on the first call,
+ * once per page load. Running the persist here (not in a later effect) keeps
+ * it before any child renders with `hydrated === true`; a provider effect
+ * would run after child effects of the same commit (e.g. look-back's
+ * `markRewardReached`) and overwrite storage with the pre-action state.
+ */
+function getClientBoot(): BootSnapshot {
+  if (bootSnapshot !== null) return bootSnapshot;
+
+  const todayVal = localDateString(new Date());
+
+  let raw: string | null = null;
+  try {
+    raw = localStorage.getItem(STORAGE_KEY);
+  } catch {
+    // Storage unavailable — keep initial state.
+  }
+
+  // Remove stale v1 blob; failure here must not abort the rest of the boot.
+  try {
+    localStorage.removeItem("unpause.demo.v1");
+  } catch {
+    // Storage unavailable — ignore.
+  }
+
+  // hydrate() computes welcomeBackDue from the STORED lastOpenedDate before
+  // overwriting it with today — reversing the order suppresses the welcome-back
+  // screen (see store-state.ts hydrate doc comment and original line 214–215).
+  const result = hydrate(raw, todayVal);
+  const hydratedState: UserDataState = {
+    ...result.state,
+    welcomeBackDue: result.welcomeBackDue,
+  };
+  persist(hydratedState);
+
+  bootSnapshot = { state: hydratedState, today: todayVal };
+  return bootSnapshot;
 }
 
 // ─── Bound<R> mapped type ────────────────────────────────────────────────────
@@ -262,22 +335,36 @@ export function useUserData(): UserDataContext {
  * responsible for ensuring the provider is rendered only once in the tree
  * (typically in a root layout). State is initialised to `buildInitialState()`
  * so the server prerender and first client render produce identical HTML; the
- * mount effect then rehydrates from localStorage if a saved blob exists.
+ * boot snapshot is then read once per page load via `useSyncExternalStore` and
+ * applied in render while `hydrated` is false.
  */
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<UserDataState>(buildInitialState);
   /**
-   * today is set once in the mount effect via localDateString(new Date()) so
-   * all actions share the same local calendar date for the session. Not in
-   * UserDataState because it must never be stale from a previous session.
+   * today is set once, from the boot snapshot (localDateString(new Date()) read
+   * once per page load), so all actions share the same local calendar date for
+   * the session. Not in UserDataState because it must never be stale from a
+   * previous session.
    */
   const [today, setToday] = useState<string>("");
   /**
-   * Becomes true after the mount effect rehydrates from localStorage. Components
+   * Becomes true once the boot snapshot has been applied in render. Components
    * that depend on the final hydrated state (e.g. Today) wait for this before
    * making routing decisions.
    */
   const [hydrated, setHydrated] = useState<boolean>(false);
+
+  // Boot snapshot: null during prerender and hydration (seed state renders),
+  // then the client snapshot right after. Applying it here is React's "adjust
+  // state while rendering" pattern — own state, conditional, self-terminating
+  // because `hydrated` becomes true. `state` stays a real useState so every
+  // reducer's `setState(prev => ...)` operates on the true latest state.
+  const boot = useSyncExternalStore(subscribeNever, getClientBoot, getServerBoot);
+  if (boot !== null && !hydrated) {
+    setState(boot.state);
+    setToday(boot.today);
+    setHydrated(true);
+  }
 
   // ── Update and bind helpers ────────────────────────────────────────────────
 
@@ -312,39 +399,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     }
     return result;
   }
-
-  // Mount effect: derive today, rehydrate from localStorage, then set hydrated.
-  // localStorage must never be read at render time (hydration mismatch rule).
-  useEffect(() => {
-    const todayVal = localDateString(new Date());
-    setToday(todayVal);
-
-    let raw: string | null = null;
-    try {
-      raw = localStorage.getItem(STORAGE_KEY);
-    } catch {
-      // Storage unavailable — keep initial state.
-    }
-
-    // Remove stale v1 blob; failure here must not abort the rest of the mount.
-    try {
-      localStorage.removeItem("unpause.demo.v1");
-    } catch {
-      // Storage unavailable — ignore.
-    }
-
-    // hydrate() computes welcomeBackDue from the STORED lastOpenedDate before
-    // overwriting it with today — reversing the order suppresses the welcome-back
-    // screen (see store-state.ts hydrate doc comment and original line 214–215).
-    const result = hydrate(raw, todayVal);
-    const hydratedState: UserDataState = {
-      ...result.state,
-      welcomeBackDue: result.welcomeBackDue,
-    };
-    setState(hydratedState);
-    setHydrated(true);
-    persist(hydratedState);
-  }, []);
 
   // ── startDay override ────────────────────────────────────────────────────
   // `bind(coreReducers)` passes only `{ today }` as ctx; `startDay` also needs
@@ -616,11 +670,13 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   /**
    * Clears localStorage and resets all user state to mount-default values.
    *
-   * Does not reset `today` or `hydrated` — both are re-derived from the system
-   * clock on mount and must not be cleared mid-session. The entry redirect at
-   * `/` guards on `hydrated`; resetting it here would leave the redirect stuck
-   * because the provider does not unmount on navigation, so the mount effect
-   * would not re-fire. After this call, the store's `startedAt` is null, which
+   * Does not reset `today` or `hydrated` — both come from the boot snapshot,
+   * read once per page load via `useSyncExternalStore` and applied in render
+   * while `hydrated` is false, and must not be cleared mid-session. The entry
+   * redirect at `/` guards on `hydrated`; resetting it here would re-apply the
+   * cached boot snapshot (the pre-reset state) on the next render, because the
+   * provider does not unmount on navigation and the snapshot is never re-read.
+   * After this call, the store's `startedAt` is null, which
    * causes the entry redirect to send the user to `/welcome`.
    */
   function resetDemoData(): void {

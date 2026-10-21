@@ -40,6 +40,16 @@ import type { PlanItem, SharedPlanItem, HomeworkPlanItem, EnergyLevel } from "@/
 const activities = getActivities();
 const values = getValues();
 
+// Shared class strings (presentation only) — keep the page's markup readable.
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400";
+const btnPrimary = `inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white hover:bg-indigo-700 ${focusRing}`;
+const btnSecondary = `inline-flex min-h-12 items-center justify-center rounded-xl border border-gray-300 bg-white px-5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 ${focusRing}`;
+const offerCard =
+  "flex flex-col gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50";
+const offerTitle = "font-medium text-gray-900 dark:text-gray-100";
+const muted = "text-sm text-gray-600 dark:text-gray-400";
+
 export default function TodayPage() {
   const {
     hydrated,
@@ -89,16 +99,26 @@ export default function TodayPage() {
 
   if (isStateA) {
     return (
-      <main>
-        <p>{getGreeting()}</p>
-        <h1>{CHECK_IN.heading}</h1>
-        {CHECK_IN.energyOptions.map((opt) => (
-          <button key={opt.value} onClick={() => startDay(opt.value as EnergyLevel)}>
-            {opt.label}
-          </button>
-        ))}
-        <p>{TODAY.lowDayNote}</p>
-      </main>
+      <div className="flex flex-col gap-6 py-8">
+        <div className="flex flex-col gap-2">
+          <p className="text-base text-gray-600 dark:text-gray-400">{getGreeting()}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+            {CHECK_IN.heading}
+          </h1>
+        </div>
+        <div className="flex flex-col gap-3">
+          {CHECK_IN.energyOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => startDay(opt.value as EnergyLevel)}
+              className={`min-h-14 w-full rounded-2xl border border-gray-200 bg-white px-5 text-left text-lg font-medium text-gray-900 shadow-sm transition-colors hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:shadow-none dark:hover:border-indigo-700 dark:hover:bg-indigo-950/40 ${focusRing}`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">{TODAY.lowDayNote}</p>
+      </div>
     );
   }
 
@@ -247,16 +267,23 @@ export default function TodayPage() {
   });
 
   return (
-    <main>
+    <div className="flex flex-col gap-4 py-6">
       {/* Plan header */}
-      <p>
-        {TODAY.planHeading} {todayPlan.energy}
-      </p>
+      <div className="flex min-h-11 items-center justify-between gap-3">
+        <p className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+          {TODAY.planHeading} <span className="capitalize">{todayPlan.energy}</span>
+        </p>
 
-      {/* Change energy — hidden once any card has been logged */}
-      {!anyLogged && (
-        <button onClick={clearTodayPlan}>{TODAY.changeEnergyLabel}</button>
-      )}
+        {/* Change energy — hidden once any card has been logged */}
+        {!anyLogged && (
+          <button
+            onClick={clearTodayPlan}
+            className={`min-h-11 shrink-0 rounded-lg px-2 text-sm font-medium text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300 ${focusRing}`}
+          >
+            {TODAY.changeEnergyLabel}
+          </button>
+        )}
+      </div>
 
       {/* Activity cards */}
       {todayPlan.plan.activities.map((item) => {
@@ -322,7 +349,7 @@ export default function TodayPage() {
           : null;
         const logEntry = getLogEntry(s.activityId);
         return (
-          <div key={s.sharedId}>
+          <div key={s.sharedId} className="flex flex-col gap-2">
             <ActivityCard
               item={s}
               activity={activity}
@@ -332,7 +359,7 @@ export default function TodayPage() {
               onStart={() => handleStartShared(s)}
             />
             {todayPlan!.energy === "low" && buddy !== null && (
-              <p>{BUDDY.lowDay.replace("{name}", buddy.name)}</p>
+              <p className={`px-1 leading-relaxed ${muted}`}>{BUDDY.lowDay.replace("{name}", buddy.name)}</p>
             )}
           </div>
         );
@@ -340,43 +367,53 @@ export default function TodayPage() {
 
       {/* Review cards — at most one shown; month card takes precedence when Monday is also 1st */}
       {showMonthCard && (
-        <div>
-          <p>{TODAY.monthReviewCardHeading}</p>
-          <p>
-            {prevMonthData.activeDays}{" "}
-            {prevMonthData.activeDays === 1 ? "day" : "days"}
-          </p>
-          <button
-            onClick={() => {
-              markReviewSeen("month", prevMonthKey);
-              router.push("/look-back");
-            }}
-          >
-            {TODAY.lookBackCtaLabel}
-          </button>
-          <button onClick={() => markReviewSeen("month", prevMonthKey)}>
-            {ONBOARDING.notNowLabel}
-          </button>
+        <div className={offerCard}>
+          <div className="flex flex-col gap-1">
+            <p className={offerTitle}>{TODAY.monthReviewCardHeading}</p>
+            <p className={muted}>
+              {prevMonthData.activeDays}{" "}
+              {prevMonthData.activeDays === 1 ? "day" : "days"}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnPrimary}
+              onClick={() => {
+                markReviewSeen("month", prevMonthKey);
+                router.push("/look-back");
+              }}
+            >
+              {TODAY.lookBackCtaLabel}
+            </button>
+            <button className={btnSecondary} onClick={() => markReviewSeen("month", prevMonthKey)}>
+              {ONBOARDING.notNowLabel}
+            </button>
+          </div>
         </div>
       )}
       {showWeekCard && (
-        <div>
-          <p>{TODAY.weekReviewCardHeading}</p>
-          <p>
-            {prevWeekData.doneCount}{" "}
-            {prevWeekData.doneCount === 1 ? "thing" : "things"}
-          </p>
-          <button
-            onClick={() => {
-              markReviewSeen("week", mondayDate);
-              router.push("/look-back");
-            }}
-          >
-            {TODAY.lookBackCtaLabel}
-          </button>
-          <button onClick={() => markReviewSeen("week", mondayDate)}>
-            {ONBOARDING.notNowLabel}
-          </button>
+        <div className={offerCard}>
+          <div className="flex flex-col gap-1">
+            <p className={offerTitle}>{TODAY.weekReviewCardHeading}</p>
+            <p className={muted}>
+              {prevWeekData.doneCount}{" "}
+              {prevWeekData.doneCount === 1 ? "thing" : "things"}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className={btnPrimary}
+              onClick={() => {
+                markReviewSeen("week", mondayDate);
+                router.push("/look-back");
+              }}
+            >
+              {TODAY.lookBackCtaLabel}
+            </button>
+            <button className={btnSecondary} onClick={() => markReviewSeen("week", mondayDate)}>
+              {ONBOARDING.notNowLabel}
+            </button>
+          </div>
         </div>
       )}
 
@@ -384,22 +421,26 @@ export default function TodayPage() {
           digestSlot is null when no times are configured, no slot window is active,
           or the user already opened/dismissed the current slot. */}
       {digestSlot !== null && (
-        <div>
-          <p>{TODAY.digestCardTitle}</p>
-          <button onClick={() => router.push("/digest")}>Read it</button>
-          <button onClick={() => markDigestSeen(digestSlot.slotKey)}>
-            {ONBOARDING.notNowLabel}
-          </button>
+        <div className={offerCard}>
+          <p className={offerTitle}>{TODAY.digestCardTitle}</p>
+          <div className="flex flex-wrap gap-2">
+            <button className={btnPrimary} onClick={() => router.push("/digest")}>Read it</button>
+            <button className={btnSecondary} onClick={() => markDigestSeen(digestSlot.slotKey)}>
+              {ONBOARDING.notNowLabel}
+            </button>
+          </div>
         </div>
       )}
 
       {/* "Make it yours" offer — visible from day two onward */}
       {showPersonaliseOffer && (
-        <div>
-          <button onClick={() => router.push("/onboarding/reasons")}>
-            {ONBOARDING.offerCta}
-          </button>
-          <button onClick={dismissPersonalise}>{ONBOARDING.notNowLabel}</button>
+        <div className={offerCard}>
+          <div className="flex flex-wrap gap-2">
+            <button className={btnPrimary} onClick={() => router.push("/onboarding/reasons")}>
+              {ONBOARDING.offerCta}
+            </button>
+            <button className={btnSecondary} onClick={dismissPersonalise}>{ONBOARDING.notNowLabel}</button>
+          </div>
         </div>
       )}
 
@@ -407,55 +448,78 @@ export default function TodayPage() {
           so it never follows the end-of-day sentence. The CTA only navigates; only
           "Not now" dismisses, and only for this week. */}
       {showSafetySetup && (
-        <div>
-          <p>{TODAY.safetySetupText}</p>
-          <Link href="/safety/edit">{TODAY.safetySetupCta}</Link>
-          <button onClick={() => dismissSafetySetup(mondayDate)}>
-            {ONBOARDING.notNowLabel}
-          </button>
+        <div className={offerCard}>
+          <p className="leading-relaxed text-gray-800 dark:text-gray-200">{TODAY.safetySetupText}</p>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/safety/edit" className={btnPrimary}>{TODAY.safetySetupCta}</Link>
+            <button className={btnSecondary} onClick={() => dismissSafetySetup(mondayDate)}>
+              {ONBOARDING.notNowLabel}
+            </button>
+          </div>
         </div>
       )}
 
       {/* Anchor row — wake-time anchor and quick-log chips */}
-      <p>
-        {TODAY.wakeAnchor} {wakeTime}
-      </p>
-      {todayPlan.plan.anchors.map((item) => {
-        const activity = activities.find((a) => a.id === item.activityId) ?? null;
-        if (activity === null) return null;
+      <div className="mt-2 flex flex-col gap-2">
+        <p className={muted}>
+          {TODAY.wakeAnchor} {wakeTime}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {todayPlan.plan.anchors.map((item) => {
+            const activity = activities.find((a) => a.id === item.activityId) ?? null;
+            if (activity === null) return null;
 
-        const alreadyLogged = getLogEntry(item.activityId) !== null;
+            const alreadyLogged = getLogEntry(item.activityId) !== null;
 
-        function handleAnchorTap() {
-          if (alreadyLogged) return; // no undo; chip is visual-only after logging
-          recordActivity({
-            outcome: "done",
-            version: "full",
-            moodBefore: null,
-            moodAfter: null,
-            date: today,
-            activityId: item.activityId,
-            templateId: item.templateId,
-          });
-        }
+            function handleAnchorTap() {
+              if (alreadyLogged) return; // no undo; chip is visual-only after logging
+              recordActivity({
+                outcome: "done",
+                version: "full",
+                moodBefore: null,
+                moodAfter: null,
+                date: today,
+                activityId: item.activityId,
+                templateId: item.templateId,
+              });
+            }
 
-        return (
-          <button key={item.activityId} onClick={handleAnchorTap}>
-            {activity.title}
-            {alreadyLogged && " ✓"}
-          </button>
-        );
-      })}
+            return (
+              <button
+                key={item.activityId}
+                onClick={handleAnchorTap}
+                className={`min-h-11 rounded-xl border px-4 py-2 text-left text-sm font-medium transition-colors ${focusRing} ${
+                  alreadyLogged
+                    ? "border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-400"
+                    : "border-gray-300 bg-white text-gray-800 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                }`}
+              >
+                {activity.title}
+                {alreadyLogged && " ✓"}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Swap line — offered only while the plan is not yet complete; hidden once
           allLogged because the end sentence already marks the day as done (§2.4). */}
       {!allLogged && (
-        <a href="/swap">{TODAY.swapLine}</a>
+        <a
+          href="/swap"
+          className={`self-start rounded-md py-2 text-sm font-medium text-indigo-700 underline-offset-4 hover:underline dark:text-indigo-300 ${focusRing}`}
+        >
+          {TODAY.swapLine}
+        </a>
       )}
 
       {/* End-of-day note — absolute bottom of State B, after the anchor row and
           swap line, so no content ever follows it (parent §3.3). */}
-      {allLogged && <p>{TODAY.endOfDay}</p>}
-    </main>
+      {allLogged && (
+        <p className="py-6 text-center text-base leading-relaxed text-gray-700 dark:text-gray-300">
+          {TODAY.endOfDay}
+        </p>
+      )}
+    </div>
   );
 }

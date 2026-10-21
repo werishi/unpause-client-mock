@@ -4,11 +4,19 @@
  * Look Back screen (/look-back).
  *
  * Renders four summary blocks in the fixed order from concept §2.1:
- *   (a) "Since you started"
- *   (b) "This month"
+ *   (a) "Since you started" — indigo hero card (things done, values, rewards enjoyed)
+ *   (b) stat tiles: all-time days showing up and "This month"
+ *
+ * Breakpoints: one column at 360 px; the stat tiles go two-up from `sm`; from `lg`
+ * the page is a two-column grid inside the 896 px column `ShellWidth` gives this
+ * route, with the header, (a) and (b) spanning both columns and (c) and (d) side by
+ * side below. Whenever (c) or (d) would sit alone (plain version, or nothing done
+ * yet) it spans both columns too, so no column is left empty. Every grid class is
+ * `lg:`-prefixed, so the layouts below `lg` are unchanged.
  *   (c) "What tended to help"
- *   (d) "Points and your reward" — omitted entirely when `plainVersion` is true
- *       (concept §2.9: omitting avoids a points flash for users who chose the plain view).
+ *   (d) "Points and your reward" — rendered by `LookBackRewardCard`; omitted entirely
+ *       when `plainVersion` is true (concept §2.9: omitting avoids a points flash for users
+ *       who chose the plain view). The inline reward form lives in that component.
  *
  * Hydration guard: the page heading renders immediately; all counts wait for
  * `hydrated === true`. Before hydration the store holds seed defaults, so displaying
@@ -21,10 +29,6 @@
  * Reward-reached effect: fires on mount when `hydrated && reward !== null &&
  * pointsTotal >= reward.at`. Only fires here — never on Today or welcome-back —
  * so the reward does not interrupt the daily loop (concept §2.6).
- *
- * Inline reward form: `showRewardForm` is local `useState<boolean>(false)`. No route
- * change. A focused route /look-back/reward was refused because one reward needs no
- * id and FlowCloseButton always returns to /today (LookBackMap.md § Rejected Alternatives).
  *
  * Parent requirement: UserDataProvider is mounted (app/layout.tsx satisfies this).
  */
@@ -39,10 +43,10 @@ import {
   valuesServed,
   categoryPatterns,
   pointsTotal,
-  FIRST_REWARD_AT,
 } from "@/lib/domain/look-back";
 import { withOverride } from "@/lib/domain/override";
 import { LOOK_BACK } from "@/lib/copy";
+import LookBackRewardCard from "@/components/LookBackRewardCard";
 
 // Module-level: synchronous in-memory reads; stable references across renders.
 const activities = getActivities();
@@ -52,6 +56,20 @@ const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
+
+// Visual language copied from app/today/page.tsx (rounded-2xl cards, indigo accent,
+// gray neutrals, min-h-12 buttons) so Look back reads as part of the same app.
+const pageTitle = "text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100";
+const sectionTitle = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100";
+const eyebrow = "text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300";
+const muted = "text-sm text-gray-600 dark:text-gray-400";
+const card =
+  "rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-none";
+const softCard =
+  "flex flex-col gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50";
+// Stat tile: number and label side by side at 360 px, stacked once the grid goes two-up.
+const tile = `${card} flex items-baseline gap-2 p-4 sm:flex-col sm:items-start sm:gap-1`;
+const tileNumber = "text-3xl font-semibold tracking-tight text-gray-900 dark:text-gray-100";
 
 /**
  * Formats startedAt as "{day} {MonthName}", appending the year only when it
@@ -76,49 +94,42 @@ export default function LookBackPage() {
     comebackGrants,
     reward,
     rewardsReached,
-    rewardOfferDismissed,
     plainVersion,
     markRewardReached,
-    dismissRewardOffer,
-    setReward: setRewardAction,
-    removeReward,
   } = useUserData();
 
-  const [showRewardForm, setShowRewardForm] = useState<boolean>(false);
-  const [localRewardText, setLocalRewardText] = useState<string>("");
   const [justReached, setJustReached] = useState<boolean>(false);
-  const [chosenLevel, setChosenLevel] = useState<50 | 100 | 200>(50);
 
-  // Reward-reached effect — fires only on /look-back (concept §2.6).
-  // Premise: `markRewardReached` transitions reward → null and appends to
-  // rewardsReached. `justReached` shows the "reached" card until the user
-  // dismisses it by clicking "Set the next one".
+  // Reward reached — handled only on /look-back (concept §2.6), split in two:
+  // - The local `justReached` flag is set during render (React's "adjust state
+  //   while rendering" pattern), so the lint rule against setState inside an
+  //   effect is satisfied. It runs before the hydration guard below, which is
+  //   safe because `reachNow` is false until `hydrated` is true. `justReached`
+  //   shows the "reached" card until the user dismisses it with "Set the next one".
+  // - The store transition stays in the effect: `markRewardReached` updates the
+  //   parent provider's state, and calling it during this render would be a
+  //   cross-component render update. Premise: it transitions reward → null and
+  //   appends to rewardsReached.
   // Note: `markRewardReached` is a new reference on every render (hand-written
   // closure in user-store.tsx). It is included in deps to satisfy the exhaustive-
   // deps rule; the guard `reward !== null && total >= reward.at` makes the body
   // a no-op after the first fire, so repeated effect calls are safe.
   const total = hydrated ? pointsTotal(log, comebackGrants) : 0;
+  const reachNow = hydrated && reward !== null && total >= reward.at;
+  // Adjust state while rendering: the guard on `!justReached` stops a render loop.
+  if (reachNow && !justReached) setJustReached(true);
   useEffect(() => {
     if (hydrated && reward !== null && total >= reward.at) {
       markRewardReached(today);
-      setJustReached(true);
     }
   }, [hydrated, reward, total, today, markRewardReached]);
-
-  // Reset the form fields each time the form opens.
-  useEffect(() => {
-    if (showRewardForm) {
-      setLocalRewardText("");
-      setChosenLevel(50);
-    }
-  }, [showRewardForm]);
 
   // Hydration guard: render only the heading until the store has rehydrated.
   if (!hydrated) {
     return (
-      <main className="flex flex-col gap-4 px-4 py-6">
-        <h1 className="text-2xl font-semibold">{LOOK_BACK.heading}</h1>
-      </main>
+      <div className="flex flex-col gap-6 py-6">
+        <h1 className={pageTitle}>{LOOK_BACK.heading}</h1>
+      </div>
     );
   }
 
@@ -137,273 +148,155 @@ export default function LookBackPage() {
   const totalActiveDays = activeDays(log, safeStartedAt, today);
   const monthActiveDays = activeDays(log, firstOfCurrentMonth, today);
   const patterns = isPerNew ? [] : categoryPatterns(log, activities, today);
-  const lastReached =
-    rewardsReached.length > 0 ? rewardsReached[rewardsReached.length - 1] : null;
-
-  // Reward card state flags — mutually exclusive by construction given the state
-  // machine (offer shown only before any reward set; active shown while reward
-  // is set and not yet reached; reached shown via justReached; collapsed shown
-  // when the offer was dismissed and no reward is active).
-  const showOffer =
-    !plainVersion &&
-    total >= FIRST_REWARD_AT &&
-    reward === null &&
-    !rewardOfferDismissed &&
-    !justReached;
-  const showCollapsedLink =
-    !plainVersion && reward === null && rewardOfferDismissed && !justReached;
-  const showActiveReward =
-    !plainVersion && reward !== null && total < reward.at;
-  const showReached = !plainVersion && justReached && lastReached !== null;
-
-  function handleSaveReward() {
-    if (!localRewardText.trim()) return;
-    // `setRewardAction` signature from part 2 Public Surface: (text, at, today).
-    // `at` is the caller-computed target level, not derived in the slice (layer rule:
-    // look-back-slice must not import from lib/domain/).
-    setRewardAction(localRewardText.trim(), total + chosenLevel, today);
-    setShowRewardForm(false);
-  }
 
   return (
-    <main className="flex flex-col gap-8 px-4 py-6">
-      <h1 className="text-2xl font-semibold">{LOOK_BACK.heading}</h1>
-
-      {/* (a) Since you started ─────────────────────────────────────────── */}
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-medium">{LOOK_BACK.sinceStarted.heading}</h2>
-        <p className="text-base">
+    <div className="flex flex-col gap-6 py-6 lg:grid lg:grid-cols-2 lg:gap-6">
+      <header className="flex flex-col gap-1 lg:col-span-2">
+        <h1 className={pageTitle}>{LOOK_BACK.heading}</h1>
+        <p className={muted}>
           {LOOK_BACK.startedOnLabel} {formatStartDate(safeStartedAt, today)}.
         </p>
+      </header>
+
+      {/* (a) Since you started — hero summary ───────────────────────────── */}
+      <section
+        aria-labelledby="lb-since"
+        className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 lg:col-span-2 dark:border-indigo-900/60 dark:bg-indigo-950/40"
+      >
+        <h2 id="lb-since" className={eyebrow}>
+          {LOOK_BACK.sinceStarted.heading}
+        </h2>
 
         {isPerNew ? (
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">
             {LOOK_BACK.perNewMessage}
           </p>
         ) : (
           <>
-            <p className="text-base">
-              {count}{" "}
-              {count === 1
-                ? LOOK_BACK.sinceStarted.thingDoneSuffix
-                : LOOK_BACK.sinceStarted.thingsDoneSuffix}
-              .
+            <p className="flex flex-wrap items-baseline gap-x-2">
+              <span className="text-5xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+                {count}
+              </span>
+              <span className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                {count === 1
+                  ? LOOK_BACK.sinceStarted.thingDoneSuffix
+                  : LOOK_BACK.sinceStarted.thingsDoneSuffix}
+              </span>
             </p>
-            <p className="text-base">
-              {totalActiveDays}{" "}
-              {totalActiveDays === 1
-                ? LOOK_BACK.sinceStarted.activeDaySuffix
-                : LOOK_BACK.sinceStarted.activeDaysSuffix}
-              .
-            </p>
+
             {servedLabels.length > 0 && (
-              <p className="text-base">
-                {LOOK_BACK.valuesHeading}: {servedLabels.join(", ")}.
-              </p>
-            )}
-            {!plainVersion &&
-              rewardsReached.length > 0 &&
-              rewardsReached.map((r, i) => (
-                <p key={i} className="text-base">
-                  {LOOK_BACK.rewardEnjoyedLabel} {r.text}.
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {LOOK_BACK.valuesHeading}
                 </p>
-              ))}
+                <ul className="flex flex-wrap gap-2">
+                  {servedLabels.map((label) => (
+                    <li
+                      key={label}
+                      className="rounded-full bg-white px-3 py-1 text-sm font-medium text-indigo-700 dark:bg-gray-900 dark:text-indigo-300"
+                    >
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {!plainVersion && rewardsReached.length > 0 && (
+              <ul className="flex flex-col gap-1 border-t border-indigo-100 pt-3 dark:border-indigo-900/60">
+                {rewardsReached.map((r, i) => (
+                  <li key={i} className="text-sm text-gray-700 dark:text-gray-300">
+                    {LOOK_BACK.rewardEnjoyedLabel} <span className="font-medium">{r.text}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </>
         )}
       </section>
 
-      {/* (b) This month — omitted under per-new quiet state ──────────────── */}
+      {/* (b) Stat tiles: all-time days and this month — omitted for per-new ─ */}
       {!isPerNew && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">{LOOK_BACK.thisMonthHeading}</h2>
-          {monthActiveDays > 0 ? (
-            <p className="text-base">
-              {monthActiveDays}{" "}
-              {monthActiveDays === 1
-                ? LOOK_BACK.monthReview.activeDaySuffix
-                : LOOK_BACK.monthReview.activeDaysSuffix}
-              .
-            </p>
-          ) : (
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              {LOOK_BACK.noActiveDaysThisMonthMessage}
-            </p>
-          )}
+        <section aria-label={LOOK_BACK.thisMonthHeading} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
+          <div className={tile}>
+            <span className={tileNumber}>{totalActiveDays}</span>
+            <span className={muted}>
+              {totalActiveDays === 1
+                ? LOOK_BACK.sinceStarted.activeDaySuffix
+                : LOOK_BACK.sinceStarted.activeDaysSuffix}
+            </span>
+          </div>
+          <div className={tile}>
+            {monthActiveDays > 0 ? (
+              <>
+                <span className={tileNumber}>{monthActiveDays}</span>
+                <span className={muted}>
+                  {monthActiveDays === 1
+                    ? LOOK_BACK.monthReview.activeDaySuffix
+                    : LOOK_BACK.monthReview.activeDaysSuffix}{" "}
+                  · {LOOK_BACK.thisMonthHeading.toLowerCase()}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {LOOK_BACK.thisMonthHeading}
+                </span>
+                <span className={muted}>{LOOK_BACK.noActiveDaysThisMonthMessage}</span>
+              </>
+            )}
+          </div>
         </section>
       )}
 
-      {/* (c) What tended to help — omitted under per-new quiet state ──────── */}
+      {/* (c) What tended to help — omitted for per-new ─────────────────── */}
       {!isPerNew && (
-        <section className="flex flex-col gap-2">
-          <h2 className="text-lg font-medium">{LOOK_BACK.patternsHeading}</h2>
+        <section
+          aria-labelledby="lb-patterns"
+          className={`flex flex-col gap-3${plainVersion ? " lg:col-span-2" : ""}`}
+        >
+          <h2 id="lb-patterns" className={sectionTitle}>
+            {LOOK_BACK.patternsHeading}
+          </h2>
           {patterns.length === 0 ? (
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              {LOOK_BACK.noPatternsYetMessage}
-            </p>
+            <p className={`${softCard} ${muted}`}>{LOOK_BACK.noPatternsYetMessage}</p>
           ) : (
-            patterns.map((result, i) => (
-              <p key={i} className="text-base">
-                {LOOK_BACK.categoryLabels[result.categoryKey]}{" "}
-                {result.rank === 0 ? LOOK_BACK.patternPrimary : LOOK_BACK.patternSecondary}
-              </p>
-            ))
+            <ul className={`${card} divide-y divide-gray-100 py-1 dark:divide-gray-800`}>
+              {patterns.map((result) => (
+                <li key={result.categoryKey} className="flex items-start gap-3 px-4 py-3">
+                  <span
+                    aria-hidden="true"
+                    className={`mt-2 size-2 shrink-0 rounded-full ${
+                      result.rank === 0
+                        ? "bg-indigo-600 dark:bg-indigo-400"
+                        : "bg-indigo-300 dark:bg-indigo-700"
+                    }`}
+                  />
+                  <p className="text-base leading-relaxed text-gray-800 dark:text-gray-200">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {LOOK_BACK.categoryLabels[result.categoryKey]}
+                    </span>{" "}
+                    {result.rank === 0 ? LOOK_BACK.patternPrimary : LOOK_BACK.patternSecondary}
+                  </p>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
       )}
 
       {/* (d) Points and your reward — omitted entirely when plainVersion ─── */}
       {!plainVersion && (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">{LOOK_BACK.pointsHeading}</h2>
-          <p className="text-base">
-            {total}{" "}
-            {total === 1
-              ? LOOK_BACK.sinceStarted.pointSuffix
-              : LOOK_BACK.sinceStarted.pointsSuffix}
-            .
-          </p>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-            {LOOK_BACK.pointsExplanation}
-          </p>
-
-          {/* Offer card */}
-          {showOffer && (
-            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-              <p className="text-base font-medium">{LOOK_BACK.rewardOffer.heading}</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                {LOOK_BACK.rewardOffer.body}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setShowRewardForm(true)}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white"
-                >
-                  {LOOK_BACK.chooseRewardLabel}
-                </button>
-                <button
-                  onClick={() => dismissRewardOffer()}
-                  className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-neutral-600 dark:text-neutral-300"
-                >
-                  {LOOK_BACK.rewardOffer.dismissLabel}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Collapsed link */}
-          {showCollapsedLink && (
-            <button
-              onClick={() => setShowRewardForm(true)}
-              className="self-start text-sm text-indigo-600 underline dark:text-indigo-400"
-            >
-              {LOOK_BACK.setRewardLink}
-            </button>
-          )}
-
-          {/* Active reward */}
-          {showActiveReward && reward && (
-            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-              <p className="text-base font-medium">{LOOK_BACK.reward.heading}</p>
-              <p className="text-base">{reward.text}</p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setShowRewardForm(true)}
-                  className="text-sm text-indigo-600 underline dark:text-indigo-400"
-                >
-                  {LOOK_BACK.reward.changeLabel}
-                </button>
-                <button
-                  onClick={() => removeReward()}
-                  className="text-sm text-neutral-500 dark:text-neutral-400"
-                >
-                  {LOOK_BACK.reward.removeLabel}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Reached card */}
-          {showReached && lastReached && (
-            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-              <p className="text-base font-medium">{LOOK_BACK.reward.reachedHeading}</p>
-              <p className="text-base">{lastReached.text}</p>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                {LOOK_BACK.reward.reachedBody}
-              </p>
-              <button
-                onClick={() => {
-                  setJustReached(false);
-                  setShowRewardForm(true);
-                }}
-                className="self-start text-sm text-indigo-600 underline dark:text-indigo-400"
-              >
-                {LOOK_BACK.setNextRewardLabel}
-              </button>
-            </div>
-          )}
-
-          {/* Inline reward form */}
-          {showRewardForm && (
-            <div className="flex flex-col gap-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-              <div className="flex flex-wrap gap-2">
-                {LOOK_BACK.rewardSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setLocalRewardText(s)}
-                    className="rounded-full border border-neutral-300 px-3 py-1 text-sm dark:border-neutral-600"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <textarea
-                value={localRewardText}
-                onChange={(e) => setLocalRewardText(e.target.value)}
-                maxLength={60}
-                placeholder={LOOK_BACK.rewardOffer.inputPlaceholder}
-                rows={2}
-                className="w-full rounded-lg border border-neutral-300 p-3 text-sm dark:border-neutral-600 dark:bg-neutral-800"
-              />
-              <fieldset className="flex flex-wrap gap-4">
-                <legend className="sr-only">Reward level</legend>
-                {([50, 100, 200] as const).map((offset) => (
-                  <label
-                    key={offset}
-                    className="flex cursor-pointer items-center gap-1.5 text-sm"
-                  >
-                    <input
-                      type="radio"
-                      name="reward-level"
-                      value={offset}
-                      checked={chosenLevel === offset}
-                      onChange={() => setChosenLevel(offset)}
-                    />
-                    {total + offset} {LOOK_BACK.pointsAbbreviation}
-                  </label>
-                ))}
-              </fieldset>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveReward}
-                  disabled={!localRewardText.trim()}
-                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40"
-                >
-                  {LOOK_BACK.rewardOffer.saveLabel}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowRewardForm(false)}
-                  className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 dark:border-neutral-600 dark:text-neutral-300"
-                >
-                  {LOOK_BACK.rewardOffer.dismissLabel}
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
+        // Plain block wrapper: spans both columns when (b) and (c) are omitted, so the
+        // card never sits alone in the left column; below `lg` it adds no spacing.
+        <div className={isPerNew ? "lg:col-span-2" : undefined}>
+          <LookBackRewardCard
+            total={total}
+            justReached={justReached}
+            onReachedAcknowledged={() => setJustReached(false)}
+          />
+        </div>
       )}
-    </main>
+    </div>
   );
 }

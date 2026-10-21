@@ -4,6 +4,8 @@ import type { NextConfig } from "next";
 // resources (HMR WebSocket) when the dev server is opened via https://dev.local.
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["dev.local"],
+  // Dev-tools indicator off at the user's request; runtime error overlays still show (no config switch).
+  devIndicators: false,
   // output: "export" produces the out/ directory of static HTML/CSS/JS.
   // trailingSlash makes every route route/index.html, which plain static servers
   // (npx serve, python -m http.server) resolve for /route/ without rewrite rules.

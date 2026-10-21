@@ -1,5 +1,7 @@
 /**
- * Route predicates shared by the tab bar and the notification banner.
+ * Route predicates shared by the tab bar and the notification banner
+ * (`isTabRoute`), plus the shell-width decision (`isWideRoute`), which is consumed only
+ * by `ShellWidth`.
  *
  * Pure TS, no React — the components pass in what `usePathname()` returned.
  *
@@ -42,4 +44,19 @@ export function isTabRoute(pathname: string): boolean {
     // focused flows under /you/values are excluded, mirroring the /plan exact guard.
     (p.startsWith("/you") && !p.startsWith("/you/values"))
   );
+}
+
+/**
+ * True on exactly the routes whose content may use the wide shell: `/look-back` and
+ * `/you`. Accepts raw (`/you/`) or normalized input; `normalizePathname` runs first
+ * because `trailingSlash: true` makes `usePathname()` return `/you/`.
+ *
+ * The match is exact on purpose and must never become `startsWith`: the `/you/*`
+ * sub-pages (`/you/values`, `/you/about`, `/you/demo`, `/you/digest`, `/you/media`,
+ * `/you/buddy`, `/you/therapist`, ...) were designed for the 448 px column and stay
+ * there. Consumed only by `ShellWidth`, so no component hard-codes route literals.
+ */
+export function isWideRoute(pathname: string): boolean {
+  const p = normalizePathname(pathname);
+  return p === "/look-back" || p === "/you";
 }

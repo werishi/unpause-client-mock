@@ -138,6 +138,22 @@ describe('data integrity', () => {
     }
   })
 
+  it('persona seed rows are relative to today: every log and check-in row has an integer dayOffset <= 0 and no date field', () => {
+    // The repo overwrites `date` with addDays(today, dayOffset), so an absolute `date` renders as NaN-NaN-NaN.
+    // `<= 0` is deliberately tighter than "numeric dayOffset": a positive offset would be seed history in the future.
+    const sources: Array<[string, any[]]> = [
+      ['persona-log.json', personaLog as any[]],
+      ['persona-checkins.json', personaCheckins as any[]],
+    ]
+    for (const [file, rows] of sources) {
+      for (const row of rows) {
+        expect(Number.isInteger(row.dayOffset), `${file} row '${row.id}': dayOffset is not an integer`).toBe(true)
+        expect(row.dayOffset <= 0, `${file} row '${row.id}': dayOffset ${row.dayOffset} is in the future`).toBe(true)
+        expect('date' in row, `${file} row '${row.id}': has an absolute date field`).toBe(false)
+      }
+    }
+  })
+
   it('every reason has a rank-1 template', () => {
     // The planner selects the rank-1 template as the default offer for each reason.
     // A reason with no rank-1 row silently produces no template for that reason.

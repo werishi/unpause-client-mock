@@ -19,7 +19,7 @@
  * in `app/page.tsx` has already verified that `startedAt` is set.
  */
 
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useUserData } from "@/lib/store/user-store";
 import { pruneHomeworkItems } from "@/lib/store/sharing-slice";
@@ -38,25 +38,46 @@ import { PLAN } from "@/lib/copy";
 const allActivities = getActivities();
 const allTemplates = getTemplates();
 
+// Shared class strings (presentation only) — same design language as
+// app/today/page.tsx, whose constants these mirror.
+const focusRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400";
+const btnPrimary = `inline-flex min-h-12 items-center justify-center rounded-xl bg-indigo-600 px-5 text-sm font-medium text-white hover:bg-indigo-700 ${focusRing}`;
+const btnSecondary = `inline-flex min-h-12 items-center justify-center rounded-xl border border-gray-300 bg-white px-5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 ${focusRing}`;
+const offerCard =
+  "flex flex-col gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50";
+const offerTitle = "font-medium text-gray-900 dark:text-gray-100";
+const muted = "text-sm text-gray-600 dark:text-gray-400";
+const sectionHeading = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100";
+// Rows sit inside one card with inset dividers. `empty:hidden` drops the card
+// when every row branch rendered nothing, instead of leaving an empty box.
+const listCard =
+  "flex flex-col divide-y divide-gray-100 rounded-2xl border border-gray-200 bg-white px-4 shadow-sm empty:hidden dark:divide-gray-800 dark:border-gray-700 dark:bg-gray-900 dark:shadow-none";
+const calmNote =
+  "rounded-2xl border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400";
+
 /**
  * Plan tab page. Shows the week strip, the detail for the selected day, and
  * the week-offers section for the user's active templates.
  *
- * Hydration guard: renders `null` until `mounted` is true, so the server
- * prerender (which has no localStorage) never shows stale or incorrect dates.
+ * Hydration guard: renders `null` until the store's `hydrated` flag is true.
+ * The body calls `new Date()` and reads store data that is only correct after
+ * the provider has read localStorage, so the prerender and the first client
+ * render must both be `null` to stay identical. `hydrated` is false on both
+ * and, on initial load, turns true in the same commit a page-local mount flag
+ * would have; on client-side navigation it is already true at mount. A
+ * page-local mount flag or `useSyncExternalStore` "is client" hook was refused
+ * because it would be a second readiness signal beside the store's.
  */
 export default function PlanPage() {
-  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides, buddy, sharedActivities, homework } = useUserData();
-  const [mounted, setMounted] = useState(false);
-  // `selected` is empty until mount; `effectiveSelected` falls back to `today`.
+  const { log, todayPlan, templateIds, moveUpPutOff, putOffMoveUp, setTemplates, activityOverrides, buddy, sharedActivities, homework, hydrated } = useUserData();
+  // `selected` is empty until the user picks a day; `effectiveSelected` falls back to `today`.
   const [selected, setSelected] = useState("");
 
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
+  if (!hydrated) return null;
 
   const today = localDateString(new Date());
-  // On first render after mount `selected` is ""; fall back to today so the
+  // On first render after hydration `selected` is ""; fall back to today so the
   // current day is pre-selected without a second state update.
   const effectiveSelected = selected || today;
   const dates = weekDates(today);
@@ -104,30 +125,30 @@ export default function PlanPage() {
       (e) => e.date === effectiveSelected && e.outcome === "done",
     );
     if (doneEntries.length === 0) {
-      dayDetail = <p>{PLAN.quietDay}</p>;
+      dayDetail = <p className={calmNote}>{PLAN.quietDay}</p>;
     } else {
       dayDetail = (
-        <>
+        <div className={listCard}>
           {doneEntries.map((e) => {
             const activity = allActivities.find((a) => a.id === e.activityId);
             if (!activity) {
               return (
-                <p key={`${e.date}-${e.activityId}`}>{PLAN.noActivity}</p>
+                <p key={`${e.date}-${e.activityId}`} className={`py-3 ${muted}`}>{PLAN.noActivity}</p>
               );
             }
             // Apply the user's override so past-day titles and two-minute versions
             // reflect any edits the user made on /plan/activity (part5-activity-edit).
             const merged = withOverride(activity, activityOverrides[e.activityId]);
             return (
-              <div key={`${e.date}-${e.activityId}`}>
-                <p>{merged.title}</p>
+              <div key={`${e.date}-${e.activityId}`} className="flex flex-col gap-1 py-3">
+                <p className="font-medium leading-snug text-gray-900 dark:text-gray-100">{merged.title}</p>
                 {e.version === "twoMinute" && (
-                  <p className="text-sm">{merged.twoMinuteVersion}</p>
+                  <p className={`leading-relaxed ${muted}`}>{merged.twoMinuteVersion}</p>
                 )}
               </div>
             );
           })}
-        </>
+        </div>
       );
     }
   } else if (
@@ -137,10 +158,10 @@ export default function PlanPage() {
     // Today before check-in: prompt the user to start their day on the Today
     // screen, where `startDay` will compute and store the plan.
     dayDetail = (
-      <>
-        <p>{PLAN.beforeCheckIn}</p>
-        <Link href="/today">{PLAN.goToToday}</Link>
-      </>
+      <div className={offerCard}>
+        <p className={offerTitle}>{PLAN.beforeCheckIn}</p>
+        <Link href="/today" className={`self-start ${btnPrimary}`}>{PLAN.goToToday}</Link>
+      </div>
     );
   } else if (
     effectiveSelected === today &&
@@ -152,7 +173,8 @@ export default function PlanPage() {
     // older localStorage blob; default to [] as a runtime guard.
     const anchors = todayPlan.plan.anchors ?? [];
     dayDetail = (
-      <>
+      <div className="flex flex-col gap-3">
+        <div className={listCard}>
         {todayPlan.plan.activities.map((item) => {
           const activity = allActivities.find((a) => a.id === item.activityId);
           const isDone = log.some(
@@ -208,8 +230,9 @@ export default function PlanPage() {
             />
           );
         })()}
+        </div>
         {anchors.length > 0 && (
-          <p>
+          <p className={`px-1 leading-relaxed ${muted}`}>
             {PLAN.anchorPrefix}{" "}
             {anchors
               .map(
@@ -220,7 +243,7 @@ export default function PlanPage() {
               .join(", ")}
           </p>
         )}
-      </>
+      </div>
     );
   } else {
     // Future day: no plan has been computed yet for this date, but homework
@@ -230,8 +253,9 @@ export default function PlanPage() {
       (h) => h.date === effectiveSelected,
     );
     dayDetail = (
-      <>
-        <p>{PLAN.futureDay}</p>
+      <div className="flex flex-col gap-3">
+        <p className={calmNote}>{PLAN.futureDay}</p>
+        <div className={listCard}>
         {futureHomework.map((h) => {
           const activity = allActivities.find((a) => a.id === h.activityId);
           return (
@@ -243,12 +267,14 @@ export default function PlanPage() {
             />
           );
         })}
-      </>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
+    // A <div>, not <main>: AppShell already renders the page's <main>.
+    <div className="flex flex-col gap-8 py-6">
       <WeekStrip
         dates={dates}
         today={today}
@@ -256,12 +282,12 @@ export default function PlanPage() {
         onSelect={setSelected}
       />
 
-      <section>{dayDetail}</section>
+      <section className="-mt-2">{dayDetail}</section>
 
-      <section>
-        <h2>{PLAN.weekOffersHeading}</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className={sectionHeading}>{PLAN.weekOffersHeading}</h2>
         {offers.anchors.length > 0 && (
-          <p>
+          <p className={`-mt-2 px-1 leading-relaxed ${muted}`}>
             {PLAN.anchorPrefix}{" "}
             {offers.anchors.map((a) => a.title).join(", ")}
           </p>
@@ -269,8 +295,13 @@ export default function PlanPage() {
         {offers.byTemplate.map((entry) => {
           const template = allTemplates.find((t) => t.id === entry.templateId);
           return (
-            <div key={entry.templateId}>
-              {template && <h3>{template.title}</h3>}
+            <div key={entry.templateId} className="flex flex-col gap-2">
+              {template && (
+                <h3 className="px-1 text-sm font-medium text-gray-600 dark:text-gray-400">
+                  {template.title}
+                </h3>
+              )}
+              <div className={listCard}>
               {entry.activities.map((activity) => (
                 <PlanActivityRow
                   key={activity.id}
@@ -279,22 +310,28 @@ export default function PlanPage() {
                   editHref={`/plan/activity?id=${activity.id}`}
                 />
               ))}
+              </div>
             </div>
           );
         })}
       </section>
 
       {/* Templates section — shows active templates and links to /plan/templates */}
-      <section>
-        <h2>{PLAN.templatesSectionHeading}</h2>
+      <section className="flex flex-col gap-3">
+        <h2 className={sectionHeading}>{PLAN.templatesSectionHeading}</h2>
         {activeTemplates.map((t) => (
-          <div key={t.id}>
-            <p>{t.title}</p>
-            <p>{t.summary}</p>
-            <p>{PLAN.templateLevel} {t.level}</p>
+          <div
+            key={t.id}
+            className="flex flex-col gap-1.5 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:shadow-none"
+          >
+            <p className="font-medium leading-snug text-gray-900 dark:text-gray-100">{t.title}</p>
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{t.summary}</p>
+            <p className="mt-1 self-start rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {PLAN.templateLevel} {t.level}
+            </p>
           </div>
         ))}
-        <Link href="/plan/templates">{PLAN.changeTemplates}</Link>
+        <Link href="/plan/templates" className={`self-start ${btnSecondary}`}>{PLAN.changeTemplates}</Link>
       </section>
 
       {/* Move-up offer — conditional on suggestNextTemplate qualifying and the
@@ -303,21 +340,25 @@ export default function PlanPage() {
         const currentTitle = allTemplates.find((t) => t.id === moveUpOffer!.currentId)?.title ?? "";
         const nextTpl = allTemplates.find((t) => t.id === moveUpOffer!.nextId);
         return (
-          <div>
-            <p>{PLAN.moveUpOfferText
-              .replace("{current}", currentTitle)
-              .replace("{next}", nextTpl?.title ?? "")}</p>
-            <p>{nextTpl?.summary}</p>
-            <button onClick={() =>
-              setTemplates(templateIds.map((id) => id === moveUpOffer!.currentId ? moveUpOffer!.nextId : id))
-            }>{PLAN.moveUpButton}</button>
-            <button onClick={() => putOffMoveUp(currentWeekStart)}>{PLAN.moveUpDismiss}</button>
+          <div className={offerCard}>
+            <div className="flex flex-col gap-1">
+              <p className={offerTitle}>{PLAN.moveUpOfferText
+                .replace("{current}", currentTitle)
+                .replace("{next}", nextTpl?.title ?? "")}</p>
+              <p className={`leading-relaxed ${muted}`}>{nextTpl?.summary}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className={btnPrimary} onClick={() =>
+                setTemplates(templateIds.map((id) => id === moveUpOffer!.currentId ? moveUpOffer!.nextId : id))
+              }>{PLAN.moveUpButton}</button>
+              <button className={btnSecondary} onClick={() => putOffMoveUp(currentWeekStart)}>{PLAN.moveUpDismiss}</button>
+            </div>
           </div>
         );
       })()}
 
       {/* "Changes start next check-in" notice — only when today has a plan */}
-      {todayPlan && <p>{PLAN.changesNextCheckIn}</p>}
-    </main>
+      {todayPlan && <p className={`-mt-4 px-1 text-center ${muted}`}>{PLAN.changesNextCheckIn}</p>}
+    </div>
   );
 }

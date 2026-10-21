@@ -50,7 +50,9 @@ export default function WeekStrip({
   onSelect,
 }: WeekStripProps) {
   return (
-    <div className="flex w-full" role="group" aria-label="Week">
+    // grid-cols-7 + gap-2 leaves ~40 px per cell at 360 px (328 px content),
+    // and the gap absorbs the selected ring's 2 px offset without overlap.
+    <div className="grid w-full grid-cols-7 gap-2" role="group" aria-label="Week">
       {dates.map((date) => {
         const { initial, day } = parseDayCell(date);
         const isToday = date === today;
@@ -64,20 +66,32 @@ export default function WeekStrip({
             aria-label={`${initial} ${day}${isToday ? " (today)" : ""}${isSelected ? " (selected)" : ""}`}
             aria-pressed={isSelected}
             className={[
-              "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-sm font-medium",
-              "rounded-lg transition-colors",
-              // Today: filled background highlight — purely structural, not data-driven
+              "flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-xl border transition-colors",
+              "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400",
+              // Today: filled background highlight — purely structural, not data-driven.
+              // Selected (not today): soft indigo tint. Neither: plain surface.
               isToday
-                ? "bg-indigo-600 text-white"
-                : "text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800",
+                ? "border-indigo-600 bg-indigo-600 text-white"
+                : isSelected
+                  ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300"
+                  : "border-gray-200 bg-white text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800",
               // Selected: distinct outline ring so today+selected is visually separate
-              isSelected ? "ring-2 ring-indigo-600 ring-offset-1 dark:ring-indigo-400 dark:ring-offset-gray-950" : "",
+              isSelected ? "ring-2 ring-indigo-600 ring-offset-2 ring-offset-white dark:ring-indigo-400 dark:ring-offset-gray-950" : "",
             ]
               .filter(Boolean)
               .join(" ")}
           >
-            <span className="text-xs leading-none">{initial}</span>
-            <span className="text-base leading-none">{day}</span>
+            <span
+              aria-hidden="true"
+              className={
+                isToday
+                  ? "text-xs font-medium uppercase leading-none tracking-wide text-indigo-100"
+                  : "text-xs font-medium uppercase leading-none tracking-wide text-gray-600 dark:text-gray-400"
+              }
+            >
+              {initial}
+            </span>
+            <span aria-hidden="true" className="text-lg font-semibold leading-none tabular-nums">{day}</span>
           </button>
         );
       })}
