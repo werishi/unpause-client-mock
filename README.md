@@ -151,7 +151,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The dev server hot-reloads on file changes.
+Open http://localhost:3000. The dev server hot-reloads on file changes. The mockup opens on a character picker at `/login`, where you tick the demo notice once per browser and then choose a character or start your own. The privacy notice and the imprint are at `/privacy` and `/imprint`.
 
 ```sh
 npm run test   # Vitest domain tests — must pass green

@@ -1,7 +1,10 @@
 /**
  * Route predicates shared by the tab bar and the notification banner
  * (`isTabRoute`), plus the shell-width decision (`isWideRoute`), which is consumed only
- * by `ShellWidth`.
+ * by `ShellWidth`. Also the bare-route test (`isBareRoute`: pages rendered without the
+ * app chrome) and the entry-route decision (`entryRouteFor`: where opening the app lands).
+ * Also the login-gate exemption (`isGateExemptRoute`: the bare routes plus `/safety` and
+ * every `/safety/*` sub-page, which the demo login gate must never stand in front of).
  *
  * Pure TS, no React — the components pass in what `usePathname()` returned.
  *
@@ -59,4 +62,61 @@ export function isTabRoute(pathname: string): boolean {
 export function isWideRoute(pathname: string): boolean {
   const p = normalizePathname(pathname);
   return p === "/look-back" || p === "/you";
+}
+
+/**
+ * True on exactly the bare routes: the root `/`, `/login`, `/privacy` and `/imprint`.
+ * Accepts raw (`/login/`) or normalized input; `normalizePathname` runs first because
+ * `trailingSlash: true` makes `usePathname()` return the slashed form.
+ *
+ * `/` is the investor page: it renders full width, wider than the shell's 448 px column,
+ * and because `isGateExemptRoute` passes every bare route, an anonymous visitor reads it
+ * without the demo login gate.
+ *
+ * Exact match on purpose, never `startsWith`, for the same reason as `isWideRoute`:
+ * `/login` must not swallow a later `/login-help`. This is the single copy of the bare
+ * paths, so no component hard-codes them.
+ */
+export function isBareRoute(pathname: string): boolean {
+  const p = normalizePathname(pathname);
+  return p === "/" || p === "/login" || p === "/privacy" || p === "/imprint";
+}
+
+/**
+ * True on the routes the demo login gate lets through without a login: the bare routes
+ * (`isBareRoute`) plus `/safety` and every page under `/safety/`. Accepts raw
+ * (`/safety/edit/`) or normalized input.
+ *
+ * The `/safety/` part is a prefix match on purpose, unlike the exact `isBareRoute`:
+ * `/safety/edit` already exists and any later safety sub-page is crisis-adjacent, and
+ * the Tone invariant forbids putting a demo checkbox in front of help. The trailing `/`
+ * in the prefix keeps `/safety-plan` out. The gate in `ShellFrame` is the only caller.
+ */
+export function isGateExemptRoute(pathname: string): boolean {
+  const p = normalizePathname(pathname);
+  return isBareRoute(p) || p === "/safety" || p.startsWith("/safety/");
+}
+
+/**
+ * The slice of store state `entryRouteFor` needs. A structural type rather than the
+ * store's state type, because `lib/domain/` must not import from `lib/store/` (cycle).
+ */
+export interface EntryRouteInput {
+  /** When the journey started; `null` until the first start. */
+  startedAt: string | null;
+  /** Whether the welcome-back screen is due after a break. */
+  welcomeBackDue: boolean;
+}
+
+/**
+ * Where opening the app lands: `/welcome` before any journey has started, else
+ * `/welcome-back` when a welcome back is due, else `/today`.
+ *
+ * `startedAt === null` is checked first, so `welcomeBackDue: true` with no start still
+ * returns `/welcome`: the flag only means something once a journey has started.
+ */
+export function entryRouteFor(state: EntryRouteInput): "/welcome" | "/welcome-back" | "/today" {
+  if (state.startedAt === null) return "/welcome";
+  if (state.welcomeBackDue) return "/welcome-back";
+  return "/today";
 }

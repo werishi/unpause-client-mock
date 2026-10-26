@@ -40,7 +40,12 @@ import {
   CONNECTION,
   BUDDY,
   THERAPIST,
+  LOGIN,
+  PRIVACY,
+  IMPRINT,
+  INVESTOR,
 } from '../lib/copy'
+import { GATE_STORAGE_KEY } from '../lib/store/gate-store'
 import { SHARE_TYPES } from '../lib/domain/sharing'
 
 /**
@@ -65,6 +70,7 @@ describe('copy tone', () => {
       CHECK_IN, TASK_SCREEN, TABS, FLOW, TODAY, WELCOME, ONBOARDING,
       ABOUT, DEMO, BANNER, WELCOME_BACK, PLAN, YOU, LOOK_BACK,
       CONNECTION, BUDDY, THERAPIST,
+      LOGIN, PRIVACY, IMPRINT, INVESTOR,
     ]
     const strings = allExports.flatMap(collectStrings)
 
@@ -276,5 +282,110 @@ describe("THERAPIST copy — wording rules", () => {
     expect(YOU.therapistEntry.length).toBeGreaterThan(0);
     expect(PLAN.fromTherapist.length).toBeGreaterThan(0);
     expect(DEMO.replacesDataNote).toContain("therapist");
+  });
+});
+
+describe("LOGIN, PRIVACY and IMPRINT copy", () => {
+  // Profile Safety plan invariant: no digit on the login page, where a viewer could
+  // read it as a number to call. PRIVACY is excluded because "7 days" and
+  // "Art. 6(1)(f)" are legitimate legal facts there.
+  const loginStrings = collectStrings(LOGIN);
+
+  it.each(loginStrings)("LOGIN string '%s' has no digit and no tel:/mailto:", (s) => {
+    expect(s).not.toMatch(/\d/);
+    expect(s.toLowerCase()).not.toContain("tel:");
+    expect(s.toLowerCase()).not.toContain("mailto:");
+  });
+
+  it("has exactly one {name} token in the templated labels and three how-to steps", () => {
+    expect(LOGIN.cardAriaLabel.split("{name}").length - 1).toBe(1);
+    expect(LOGIN.continueTitle.split("{name}").length - 1).toBe(1);
+    expect(LOGIN.howSteps).toHaveLength(3);
+  });
+
+  it("lists exactly the two localStorage keys the store and the gate write", () => {
+    // Literal "unpause.demo.v2" because STORAGE_KEY in lib/store/user-store.tsx is
+    // not exported; GATE_STORAGE_KEY is.
+    expect(PRIVACY.storageRows).toHaveLength(2);
+    expect(PRIVACY.storageRows.some((r) => r.key === GATE_STORAGE_KEY)).toBe(true);
+    expect(PRIVACY.storageRows.some((r) => r.key === "unpause.demo.v2")).toBe(true);
+  });
+
+  it("links only to nilsfeldeisen.de over https", () => {
+    expect(PRIVACY.hostingLinkHref.startsWith("https://nilsfeldeisen.de/")).toBe(true);
+    expect(IMPRINT.linkHref.startsWith("https://nilsfeldeisen.de/")).toBe(true);
+  });
+});
+
+describe("INVESTOR copy", () => {
+  // The LOGIN no-digit / no-mailto rule is deliberately not applied here: the amount, the
+  // study figures and the contact link need digits, and INVESTOR reuses LOGIN.crisisNote
+  // instead of carrying its own crisis numbers.
+  const strings = collectStrings(INVESTOR);
+
+  it("makes no treatment claim", () => {
+    // Trailing \b is deliberate: without it `heal` matches "health" ("digital health app").
+    // Leading \b keeps "secure" from matching `cure`.
+    for (const s of strings) {
+      expect(s, `treatment claim in '${s}'`).not.toMatch(
+        /\b(?:cures?|cured|heal|heals|healed|healing|clinically proven|guarantee\w*)\b/i,
+      );
+    }
+  });
+
+  it("promises no DiGA status", () => {
+    // Profile "Not a medical product" invariant: the page may not claim a medical intended purpose.
+    for (const s of strings) {
+      expect(s, `DiGA promise in '${s}'`).not.toMatch(/\b(?:will|going to)\s+(?:become|be)\s+a\s+DiGA\b/i);
+    }
+  });
+
+  it("states the evidence caveat and that it is not a medical product", () => {
+    expect(INVESTOR.evidence.caveat).toMatch(/not been tested/i);
+    expect(INVESTOR.principles.notMedical).toMatch(/not a medical product/i);
+  });
+
+  it("has exactly the twelve placeholder keys, each visibly marked", () => {
+    expect(Object.keys(INVESTOR.placeholders).sort()).toEqual(
+      [
+        "prevalence",
+        "careGap",
+        "marketSize",
+        "founderName",
+        "founderBio",
+        "fundsShareDevelopment",
+        "fundsShareClinical",
+        "fundsSharePilot",
+        "fundsShareOperations",
+        "runwayMonths",
+        "roadmapDates",
+        "contactEmail",
+      ].sort(),
+    );
+    expect(INVESTOR.placeholders.roadmapDates).toHaveLength(3);
+    for (const [key, value] of Object.entries(INVESTOR.placeholders)) {
+      if (key === "contactEmail") continue;
+      const values: readonly string[] = Array.isArray(value) ? value : [value as string];
+      for (const v of values) {
+        expect(v.startsWith("Placeholder: "), `placeholder '${key}' is not marked: '${v}'`).toBe(true);
+      }
+    }
+    expect(INVESTOR.placeholders.contactEmail).toBe("founder@example.com");
+  });
+
+  it("has the list shapes the page renders", () => {
+    expect(INVESTOR.solution.cards).toHaveLength(6);
+    expect(INVESTOR.ask.rows).toHaveLength(4);
+    expect(INVESTOR.roles.cards).toHaveLength(3);
+    expect(INVESTOR.status.steps).toHaveLength(5);
+    expect(INVESTOR.goals.items).toHaveLength(4);
+    expect(INVESTOR.evidence.points).toHaveLength(4);
+    expect(INVESTOR.status.currentStep).toBe(2);
+  });
+
+  it("reuses the shell and login safety strings instead of copying them", () => {
+    expect(INVESTOR.safetyAndLegal.disclaimer).toBe(SHELL.footer);
+    expect(INVESTOR.safetyAndLegal.crisisNote).toBe(LOGIN.crisisNote);
+    expect(LOGIN.aboutProjectLinkLabel.length).toBeGreaterThan(0);
   });
 });

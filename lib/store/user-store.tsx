@@ -304,8 +304,10 @@ export type UserDataContext = {
   /** Removes one homework item by id. No-op if the id is absent. */
   removeHomework: (homeworkId: string) => void;
   // Provider functions (not reducers — see module doc)
-  loadPersona: (id: string) => void;
-  resetDemoData: () => void;
+  /** Loads a demo persona; returns the applied state, or null (nothing persisted) for an unknown id. */
+  loadPersona: (id: string) => UserDataState | null;
+  /** Clears stored user data and returns the fresh initial state it applied; never touches the gate key. */
+  resetDemoData: () => UserDataState;
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -553,22 +555,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
    * persona's (`sharingFromPersona`); a persona without a therapist loads
    * unlinked, all switches off, no homework.
    *
-   * `wakeTime` and `valueIds` are cast via `unknown` because the Persona
-   * interface omits them (planner does not yet consume them); the cast avoids
-   * widening the interface prematurely.
+   * Returns the state it applied, or `null` for an unknown id (in which case
+   * nothing was set or persisted), so callers can compute the next route from
+   * it synchronously — `setState` cannot hand the new state back.
    *
    * Must be called after mount (today state must be set); "use client" prevents
    * the server path.
    */
-  function loadPersona(id: string): void {
+  function loadPersona(id: string): UserDataState | null {
     const personas = getPersonas();
     const persona = personas.find((p) => p.id === id);
-    if (!persona) return;
-
-    const rawValueIds =
-      (persona as unknown as { valueIds?: string[] }).valueIds ?? [];
-    const rawWakeTime =
-      (persona as unknown as { wakeTime?: string }).wakeTime ?? "08:00";
+    if (!persona) return null;
 
     let log: LogEntry[] = [];
     let checkIns: CheckIn[] = [];
@@ -596,7 +593,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       lastOpenedDate = latestDate([...checkIns.map((c) => c.date), ...log.map((e) => e.date)]);
       welcomeBackDue = isWelcomeBackDue(lastOpenedDate, today, WELCOME_BACK_GAP_DAYS);
       personaliseDismissed = true;
-      wakeTime = rawWakeTime;
+      wakeTime = persona.wakeTime;
     }
 
     // Resolve media seed before setState so day-offset arithmetic uses the same
@@ -613,58 +610,65 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    setState((prev) => {
-      const next: UserDataState = {
-        // Spreads plan-slice defaults (activityOverrides, moveUpPutOff) so new
-        // slice fields are never undefined when a persona is loaded.
-        ...buildInitialState(),
-        personaId: id,
-        reasonIds: persona.reasonIds,
-        templateIds: persona.templateIds,
-        valueIds: rawValueIds,
-        log,
-        checkIns,
-        startedAt,
-        personalisedAt,
-        personaliseDismissed,
-        wakeTime,
-        lastOpenedDate,
-        welcomeBackDue,
-        todayPlan: null,
-        // LookBack fields reset to defaults; plainVersion is a UI preference, not
-        // persona data, so it is preserved across demo-persona switches.
-        comebackGrants: [],
-        reward: null,
-        rewardsReached: [],
-        rewardOfferDismissed: false,
-        reviewSeen: { week: null, month: null },
-        reviewPreview: false,
-        plainVersion: prev.plainVersion,
-        // Banner records (checkInReminderShownDay, digestBannerShownSlot) are deliberately NOT
-        // carried: they come back null from ...buildInitialState(), so a persona switch re-arms
-        // both banners. A switched-to persona has not had today's reminder yet; carrying the
-        // records would make the switch look like it skipped the notification.
-        // Media seed — applied after buildInitialState() so persona-specific values
-        // override the empty defaults. Absent when mediaSeed is null; the spread
-        // resolves to an empty object and the defaults from buildInitialState() stand.
-        ...(mediaSeed
-          ? {
-              interests: mediaSeed.interests,
-              digestTimes: mediaSeed.digestTimes,
-              media: {
-                estimateMinutes: mediaSeed.estimateMinutes,
-                budgetMinutes: mediaSeed.budgetMinutes,
-              },
-              mediaMinutesByDate,
-            }
-          : {}),
-        // Therapist link, switches and homework. Without this the three fields
-        // stay at buildInitialState() defaults and a linked persona loads unlinked.
-        ...sharingFromPersona(persona, id, today),
-      };
-      persist(next);
-      return next;
-    });
+    // Built here and set directly (not via a setState updater) so the applied
+    // state can be returned to the caller. Every field except plainVersion is
+    // built from buildInitialState() and the seed, never from previous state.
+    // plainVersion is read from this render's `state` closure: it is a toggle
+    // that cannot change between a render and a click handler it produced on
+    // the same page, so it equals what `prev.plainVersion` would have been.
+    // Keeping persist() outside an updater also stops React running that side
+    // effect twice in development.
+    const next: UserDataState = {
+      // Spreads plan-slice defaults (activityOverrides, moveUpPutOff) so new
+      // slice fields are never undefined when a persona is loaded.
+      ...buildInitialState(),
+      personaId: id,
+      reasonIds: persona.reasonIds,
+      templateIds: persona.templateIds,
+      valueIds: persona.valueIds,
+      log,
+      checkIns,
+      startedAt,
+      personalisedAt,
+      personaliseDismissed,
+      wakeTime,
+      lastOpenedDate,
+      welcomeBackDue,
+      todayPlan: null,
+      // LookBack fields reset to defaults; plainVersion is a UI preference, not
+      // persona data, so it is preserved across demo-persona switches.
+      comebackGrants: [],
+      reward: null,
+      rewardsReached: [],
+      rewardOfferDismissed: false,
+      reviewSeen: { week: null, month: null },
+      reviewPreview: false,
+      plainVersion: state.plainVersion,
+      // Banner records (checkInReminderShownDay, digestBannerShownSlot) are deliberately NOT
+      // carried: they come back null from ...buildInitialState(), so a persona switch re-arms
+      // both banners. A switched-to persona has not had today's reminder yet; carrying the
+      // records would make the switch look like it skipped the notification.
+      // Media seed — applied after buildInitialState() so persona-specific values
+      // override the empty defaults. Absent when mediaSeed is null; the spread
+      // resolves to an empty object and the defaults from buildInitialState() stand.
+      ...(mediaSeed
+        ? {
+            interests: mediaSeed.interests,
+            digestTimes: mediaSeed.digestTimes,
+            media: {
+              estimateMinutes: mediaSeed.estimateMinutes,
+              budgetMinutes: mediaSeed.budgetMinutes,
+            },
+            mediaMinutesByDate,
+          }
+        : {}),
+      // Therapist link, switches and homework. Without this the three fields
+      // stay at buildInitialState() defaults and a linked persona loads unlinked.
+      ...sharingFromPersona(persona, id, today),
+    };
+    persist(next);
+    setState(next);
+    return next;
   }
 
   /**
@@ -678,14 +682,20 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
    * provider does not unmount on navigation and the snapshot is never re-read.
    * After this call, the store's `startedAt` is null, which
    * causes the entry redirect to send the user to `/welcome`.
+   *
+   * Returns the fresh state it applied so callers can route on it. Never
+   * touches the gate key (`unpause.gate.v1`): resetting demo data does not
+   * sign the visitor out of the gate.
    */
-  function resetDemoData(): void {
+  function resetDemoData(): UserDataState {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
       // Storage unavailable — continue in-memory.
     }
-    setState(buildInitialState());
+    const next = buildInitialState();
+    setState(next);
+    return next;
   }
 
   // ── Context value ──────────────────────────────────────────────────────────

@@ -15,7 +15,8 @@
     "reasonIds": ["rsn-cant-get-going"],
     "templateIds": ["tpl-small-steps"],
     "valueIds": ["val-health", "val-nature", "val-home"],
-    "wakeTime": "07:00"
+    "wakeTime": "07:00",
+    "profile": { "stage": "First week · 5 check-ins so far, a few small first steps set up", "tryThis": "Open Today and pick one small first step, then see how the plan fits your energy." }
   },
   {
     "id": "per-jonas",
@@ -25,6 +26,7 @@
     "templateIds": ["tpl-games-in-balance", "tpl-reconnect"],
     "valueIds": ["val-play", "val-friends", "val-learning"],
     "wakeTime": "08:00",
+    "profile": { "stage": "Two weeks in · has a buddy, Robin", "tryThis": "Plan the shared walk with Robin, then look at your media balance in the digest." },
     "buddy": { "name": "Robin" },
     "sharedActivities": [{ "activityId": "act-walk-with-someone", "dayOffset": 0 }]
   },
@@ -35,7 +37,8 @@
     "reasonIds": ["rsn-only-work"],
     "templateIds": ["tpl-life-beyond-work"],
     "valueIds": ["val-home", "val-friends", "val-creativity"],
-    "wakeTime": "06:30"
+    "wakeTime": "06:30",
+    "profile": { "stage": "Back after a break · plan built around life beyond work", "tryThis": "Open the app and you land on the welcome-back screen, then pick up gently where you left off." }
   },
   {
     "id": "per-ayla",
@@ -44,7 +47,8 @@
     "reasonIds": ["rsn-keep-it-going"],
     "templateIds": ["tpl-keep-it-going"],
     "valueIds": ["val-health", "val-nature", "val-friends"],
-    "wakeTime": "07:00"
+    "wakeTime": "07:00",
+    "profile": { "stage": "Four weeks in · 28 check-ins, keeping it going", "tryThis": "Open Look back to see a month of check-ins and activities at a glance." }
   },
   {
     "id": "per-mira",
@@ -53,7 +57,8 @@
     "reasonIds": ["rsn-cant-get-going"],
     "templateIds": ["tpl-small-steps"],
     "valueIds": ["val-health", "val-home"],
-    "wakeTime": "07:30"
+    "wakeTime": "07:30",
+    "profile": { "stage": "Four weeks in · a steady routine, ready for more", "tryThis": "Open Look back to see the reward you have reached and what comes next." }
   },
   {
     "id": "per-noor",
@@ -63,6 +68,7 @@
     "templateIds": ["tpl-start-tiny"],
     "valueIds": ["val-learning", "val-health", "val-home"],
     "wakeTime": "07:30",
+    "profile": { "stage": "Three weeks in · linked with her therapist, Dr. Hartmann", "tryThis": "Open the Therapist area under You to see what you share and what you keep, and the two small things set for this week." },
     "therapist": { "name": "Dr. Hartmann" },
     "sharing": { "moodRatings": true, "activityLog": false, "weekSummary": true, "safetyPlan": false },
     "homework": [

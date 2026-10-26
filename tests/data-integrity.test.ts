@@ -17,6 +17,8 @@ import personas from '../data/personas.json'
 import personaCheckins from '../data/persona-checkins.json'
 import personaLog from '../data/persona-log.json'
 import digestItems from '../data/digest-items.json'
+import { getCharacterCards } from '../lib/repo/persona-repo'
+import { personaFirstName } from '../lib/domain/persona-name'
 
 // ─── ID sets (derived once at module level) ───────────────────────────────────
 
@@ -240,6 +242,16 @@ describe('data integrity', () => {
         row.starters === undefined || row.starters === null,
         `activity ${row.id} (category '${row.category}'): non-social rows must not have starters`
       ).toBe(true)
+    }
+  })
+
+  it('every character card displayName yields a non-empty first name with no comma', () => {
+    // The login card title is personaFirstName(displayName); a displayName that breaks the
+    // "first name, optional comma and prose" convention would render a blank or prose title.
+    for (const card of getCharacterCards()) {
+      const name = personaFirstName(card.displayName)
+      expect(name.length > 0, `persona ${card.id}: first name of '${card.displayName}' is empty`).toBe(true)
+      expect(name.includes(','), `persona ${card.id}: first name '${name}' contains a comma`).toBe(false)
     }
   })
 

@@ -2,7 +2,7 @@
 
 _Scope: the whole `unpause-client-mock` repository — one npm package (`app`), a frontend-only clickable Next.js mockup of the Unpause app. Root file; no module-level files, because the single package has no independently evolving unit and fails the necessity test._
 _Parent: none — this is the root_
-_Last updated: 2026-10-17_
+_Last updated: 2026-10-26_
 
 > **Where this file lives, and why.** It sits at the root of the Unpause repo because other people
 > will work on the product and need to read its direction there — the user, 2026-10-17: "the goal
@@ -15,7 +15,17 @@ _Last updated: 2026-10-17_
 > they are guiding concept agents to a fitting answer." Each goal therefore names an outcome, the
 > evidence behind it, and which way to lean when two designs compete — not a feature list. Hard
 > rules (no backend, placeholder data only, not a medical product, placeholder crisis numbers, no
-> shaming copy, 360 px phone-first) are the profile's `## Invariants` and are not repeated as goals.
+> shaming copy, a layout designed for phone, tablet and desktop and still usable from 360 px, with
+> the amount of content on one screen set by what fits a phone) are the profile's `## Invariants`
+> and are not repeated as goals — except that the multi-device rule also stands as G12, because it
+> changes what a concept has to design rather than only what it must not break.
+>
+> **Correction, 2026-10-26.** Until this date the file and the profile treated Unpause as a phone
+> app ("360 px phone-first"), and the mock's whole shell was built as a phone column. The user
+> corrected that, verbatim: "needs some correction, currently it is developed only for mobile. it
+> needs to work with mobile/tablet/pc ... we only use a mobile first approach for the level of
+> content on one page. please correct goals in this project". G1's viewing context, G12 and the
+> Non-Goal on using desktop width for more content come from that correction.
 >
 > **Provenance.** Every goal below is traced to a section of the repo `README.md` or a file in
 > `documentation/` (the user's own writing), cited inline. What the sources do not supply is the
@@ -32,7 +42,7 @@ Life on pause — hours of watching and scrolling while the days lose their shap
 
 ### G1 — Viewers can judge Unpause's look, feel and tone and give feedback, so believable clickable flows win over screen coverage and polish
 
-**What:** A person shown the mockup on a phone can walk through Unpause's main flows with placeholder data and react to how it feels and sounds, and concept choices lean toward a flow that clicks through believably over adding more screens.
+**What:** A person shown the mockup on a phone, a tablet or a desktop browser can walk through Unpause's main flows with placeholder data and react to how it feels and sounds, and concept choices lean toward a flow that clicks through believably over adding more screens.
 **Why:** The README states the repo's whole purpose as visualising the main screens and flows, testing look, feel and tone, and gathering feedback before the real client exists (README `Goal of this repo`). Tone is the thing Unpause most depends on — the design principles are almost all about how the app treats someone on a bad day — and tone can only be judged in motion, by tapping through a day, never from a static screen list. The ranking "flow over coverage" is what follows from that purpose: a missing feature costs one feedback comment, while a dead click in the middle of the core loop costs the whole test. _(UNVERIFIED — the flow-over-coverage ranking is inferred from README `Goal of this repo` and the caller's brief; correct or delete)_
 **Done looks like:** In a walkthrough, feedback is about wording, pacing and feel ("this sentence would make me feel bad", "too many taps before I can start") rather than "what does this screen do" or "this button does nothing".
 **Status:** pursuing
@@ -107,6 +117,13 @@ Life on pause — hours of watching and scrolling while the days lose their shap
 **Done looks like:** A viewer can point to the screen where they would decide what their therapist or buddy sees, and to where they would take it back.
 **Status:** pursuing
 
+### G12 — Unpause works on phone, tablet and desktop, each with a layout designed for that width, while one screen never carries more content than its phone version
+
+**What:** Every screen of the mock has a layout designed for phone, tablet and desktop — a wider screen may rearrange the same content into columns, side-by-side panels, larger type and spacing or persistent navigation in place of the bottom tab bar — but shows no more items, tasks, choices or scrollable material than the phone version of that screen.
+**Why:** The user stated on 2026-10-26 that Unpause is used on phone, tablet and PC and that "mobile first" applies only to "the level of content on one page" (verbatim in the header note above). Until then the mock locked its whole shell to a phone column (`max-w-md` in `components/ShellWidth.tsx`, widened only on `/look-back` and `/you`), so a viewer on a desktop browser saw a phone in the middle of an empty screen and could not judge how Unpause would feel on the device in front of them — which G1 needs. The content cap is what keeps the wider layouts honest: a desktop screen that fills its width with more tasks, more digest items or more choices re-creates the overload and the feed that G3 (one doable action in few taps), G6 (short visits, finite content) and G10 (no screen that leaves a low-energy user facing a wall of undone things) exist to prevent, so the width buys arrangement and breathing room, never volume. _(UNVERIFIED — the link from the content cap to G3, G6 and G10 is the goal agent's translation of the user's instruction; correct or delete)_
+**Done looks like:** A viewer on a desktop browser and on a tablet walks the same flows as on a phone without seeing a stretched phone column or a phone-sized strip in the middle of the screen, and placing any desktop screen next to its phone counterpart shows the same items, tasks and choices, only arranged differently.
+**Status:** pursuing
+
 ## Non-Goals
 
 | Not doing | Why not | Revisit when |
@@ -118,6 +135,7 @@ Life on pause — hours of watching and scrolling while the days lose their shap
 | Replacing the therapist, a crisis service or follow-up care, or implying Unpause is watched in real time | The evidence does not cover people in acute crisis, Unpause must not be the only support for severe depression, and users must be told plainly nobody is watching live (`00-behavioral-activation.md`, Evidence gaps; `06-safety-plan.md` 7, 10). Repair toward: link out to professional help and the safety plan at the moments a feature would otherwise try to handle a crisis itself. | — |
 | An open peer community or forum | Peer support for depression shows mixed, modest effects and unmoderated forums showed no benefit and more distress (`04-social-connection.md`, Peer communities). Repair toward: the buddy flow with one trusted, known person (G7). | Active moderation, pseudonyms and suicide-content rules are designed in (`04-social-connection.md`) |
 | Extra therapy modules beyond activation — home-made CBT-I, relaxation programmes, light-therapy advice | More modules are not automatically better, relaxation may worsen outcomes, and sleep and light advice belongs with a clinician (`00-behavioral-activation.md` 9; `01-daily-structure.md`, Rhythm anchors). Repair toward: a simple rhythm anchor plus a pointer to a doctor or evidence-based programme. | New evidence for a specific component appears |
+| Using desktop or tablet width to show more content per screen — dashboards, multi-panel feeds, more tasks or digest items visible at once | The user's 2026-10-26 correction keeps "mobile first" for exactly this: the amount of content on one page is set by the phone. More visible items per screen work against one doable action in few taps (G3) and short, finite visits (G6). Repair toward: the same content as the phone screen, re-laid out for the width (G12). | The user revises the 2026-10-26 rule |
 | Real health, mood or questionnaire data, real backends, accounts or network services in the mock | The mock exists to judge look, feel and tone (G1), and holding real mental-health data would add risk with nothing to learn from it; the profile's `Architecture` and `Data` invariants make it binding. Repair toward: believable placeholder personas and in-browser state. | The real client is built in a separate project |
 
 ## Open Direction Questions

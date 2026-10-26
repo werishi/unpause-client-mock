@@ -128,6 +128,19 @@ export interface Source {
 // ─── Personas and history ────────────────────────────────────────────────────
 
 /**
+ * The two lines a persona's character card on the login screen shows. Both are
+ * authored in `data/personas.json`, not derived: the seed history carries only
+ * day offsets, so a calendar duration such as "two weeks in" cannot be computed
+ * from it, and deriving it would drift from the persona's `displayName`.
+ */
+export interface PersonaProfile {
+  /** Where the persona is in their journey, e.g. "Two weeks in · has a buddy, Robin". */
+  stage: string;
+  /** One concrete thing a demo viewer can try after picking this persona. */
+  tryThis: string;
+}
+
+/**
  * A demo persona. wakeTime is an "HH:MM" string — never a Date or minutes — so
  * it round-trips through JSON without a conversion step. Code that uses it (the
  * planner) owns the parsing.
@@ -135,9 +148,18 @@ export interface Source {
 export interface Persona {
   id: string;
   displayName: string;
+  /** The persona's own words about why they came to the app (seed text). */
+  blurb: string;
   wakeTime: string;
   reasonIds: string[];
   templateIds: string[];
+  /** Value ids chosen in intake; empty for `per-new`, whose intake is not yet done. */
+  valueIds: string[];
+  /**
+   * Character-card text for the login screen. Present on every demo persona
+   * except `per-new`, which is the fresh start rather than a character.
+   */
+  profile?: PersonaProfile;
   /**
    * Optional buddy linked to this persona. When present the Connection & Buddy
    * feature shows the buddy's name and offers shared activities. Absent for
@@ -168,6 +190,9 @@ export interface Persona {
    */
   homework?: { activityId: string; dayOffset: number }[];
 }
+
+/** A persona guaranteed to carry its character-card text; see `getCharacterCards`. */
+export type CharacterCard = Persona & { profile: PersonaProfile };
 
 /**
  * One activity the user (or a demo persona) completed or skipped.

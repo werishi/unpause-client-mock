@@ -1,7 +1,7 @@
 {
   "name": "Unpause",
   "short_name": "Unpause",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#111827",

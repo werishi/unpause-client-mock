@@ -96,6 +96,8 @@ const SECTIONS: Section[] = [
     rows: [
       { href: "/you/about", label: YOU.youPageAboutLabel, hint: YOU.aboutHint, icon: "info" },
       { href: "/you/demo", label: YOU.youPageDemoLabel, hint: YOU.demoHint, icon: "play" },
+      // Plain link back to the picker; it clears nothing, the Continue card there leads back in.
+      { href: "/login", label: YOU.switchCharacterEntry, hint: YOU.switchCharacterHint, icon: "person" },
     ],
   },
 ];

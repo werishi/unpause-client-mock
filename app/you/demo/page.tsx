@@ -3,41 +3,34 @@
 /**
  * Demo page (/you/demo).
  *
- * Lets reviewers load a pre-seeded persona or reset to a blank first-run state.
- * After either action, navigation goes to `/` and the entry redirect
- * (`app/page.tsx`) routes to `/welcome`, `/welcome-back`, or `/today` based on
- * the loaded state. The demo page does not decide which screen to show — it
- * only sets state and navigates to the redirect. Both the persona switch and
- * the reset replace the user's safety plan along with all other saved data,
- * which the `DEMO.replacesDataNote` line under the intro tells reviewers.
+ * Holds the reset action, the plain-version and review-preview toggles, and the
+ * notification replay row. It no longer loads personas: the character picker
+ * lives only on /login, and this page links there ("Switch character") so the
+ * two pickers cannot drift apart.
  *
- * Guards on `hydrated` before enabling the persona rows: `loadPersona` depends
- * on the store's mount effect having run (today is set in that effect, and
- * getPersonaSeed resolves dayOffset against it). The reset button is not gated
- * because `resetDemoData` does not depend on `today`.
+ * Reset wipes all saved data (including the safety plan and any therapist link,
+ * which `DEMO.replacesDataNote` tells reviewers), turns the plain version off,
+ * and navigates to `/login`. Not `/`, because `/` is the investor landing page
+ * and so the wrong place for someone who just reset the demo; not `entryRouteFor(...)`, because on the fresh state that
+ * returns `/welcome` and skips the picker. `resetDemoData` never touches the
+ * acceptance flag (`unpause.gate.v1`), so the visitor lands on the picker, not
+ * on a gate. The reset button and the link are not gated on `hydrated`: neither
+ * depends on `today` or on the store having mounted.
  *
  * The replay row (inside the hydrated-gated toggle list) lets a presenter show
  * the check-in or digest banner again on demand via `requestReplay`; it writes
  * no stored state and does not navigate, so the viewer stays on this page.
  */
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserData } from "@/lib/store/user-store";
 import { useNotificationBanner } from "@/lib/store/notification-banner-store";
-import { getPersonas } from "@/lib/repo/persona-repo";
-import type { Persona } from "@/lib/domain/types";
 import { DEMO, LOOK_BACK } from "@/lib/copy";
-
-/** `blurb` exists in personas.json but is not on the public Persona interface. */
-type PersonaWithBlurb = Persona & { blurb?: string };
-
-// Called at module level — pure synchronous read from in-memory seed data.
-const personas = getPersonas() as unknown as PersonaWithBlurb[];
 
 export default function DemoPage() {
   const {
     hydrated,
-    loadPersona,
     resetDemoData,
     plainVersion,
     setPlainVersion,
@@ -47,42 +40,23 @@ export default function DemoPage() {
   const { requestReplay } = useNotificationBanner();
   const router = useRouter();
 
-  const handleLoad = (id: string) => {
-    loadPersona(id);
-    router.push("/");
-  };
-
   const handleReset = () => {
     resetDemoData();
     setPlainVersion(false);
-    router.push("/");
+    router.push("/login");
   };
 
   return (
     <div className="flex flex-col gap-6 py-6">
       <h1 className="text-xl font-semibold">{DEMO.heading}</h1>
-      <p className="text-sm text-gray-600 dark:text-gray-400">{DEMO.intro}</p>
       <p className="text-sm text-gray-600 dark:text-gray-400">{DEMO.replacesDataNote}</p>
 
-      {hydrated && (
-        <ul className="flex flex-col gap-2">
-          {personas.map((p) => (
-            <li key={p.id}>
-              <button
-                onClick={() => handleLoad(p.id)}
-                className="w-full text-left flex flex-col gap-0.5 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700"
-              >
-                <span className="font-medium">{p.displayName}</span>
-                {p.blurb && (
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {p.blurb}
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Link
+        href="/login"
+        className="rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 active:bg-gray-100 dark:active:bg-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400"
+      >
+        {DEMO.switchCharacterLabel}
+      </Link>
 
       {/*
        * Demo toggles — disabled until hydrated to avoid pre-hydration overwrites.

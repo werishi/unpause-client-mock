@@ -17,7 +17,7 @@ import personasJson from "@/data/personas.json";
 import checkInsJson from "@/data/persona-checkins.json";
 import personaLogJson from "@/data/persona-log.json";
 import personaMediaJson from "@/data/persona-media.json";
-import type { Persona, LogEntry, CheckIn, EnergyLevel } from "../domain/types";
+import type { Persona, CharacterCard, LogEntry, CheckIn, EnergyLevel } from "../domain/types";
 import { addDays } from "../domain/planner";
 
 /** Raw shape of a row in `data/persona-checkins.json`. */
@@ -87,6 +87,19 @@ export function getPersonaMediaSeed(id: string): PersonaMediaSeed | null {
  */
 export function getPersonas(): Persona[] {
   return personasJson as unknown as Persona[];
+}
+
+/**
+ * Returns the personas shown as character cards on the login screen, in seed order.
+ *
+ * Two exclusions: `per-new` (the fresh start, not a character) and any persona without
+ * a `profile`. A missing profile is dropped silently rather than thrown, because a throw
+ * here would blank the whole login page; the persona-repo test catches a silent drop.
+ */
+export function getCharacterCards(): CharacterCard[] {
+  return getPersonas()
+    .filter((p) => p.id !== "per-new")
+    .filter((p): p is CharacterCard => p.profile !== undefined);
 }
 
 /**

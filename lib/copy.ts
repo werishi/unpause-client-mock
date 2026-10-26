@@ -15,6 +15,9 @@
  *   - No claim that doing a task will improve or lift mood — ratings are
  *     informational, not a promise (concept Section 2.4, Goal G4).
  *   - No phone numbers or tel: links anywhere.
+ *   - Legal copy (PRIVACY, IMPRINT) states facts about this repo; if the
+ *     Architecture invariant (no network calls) ever changes, the `healthBody`
+ *     and `storageIntro` sentences become false and must be revisited.
  *
  * All user-facing strings live here. Add new exports; never rename or remove
  * an existing key — live pages render them and a missing key is a build error.
@@ -359,10 +362,9 @@ export const ABOUT = {
 /** Strings for the Demo page (/you/demo). */
 export const DEMO = {
   heading: "Demo",
-  /** One sentence for reviewers explaining what the Demo section does. */
-  intro:
-    "Tap a persona to explore how Unpause looks at different points in someone's journey.",
   resetLabel: "Reset demo data",
+  /** Link on /you/demo back to the character picker on /login. */
+  switchCharacterLabel: "Switch character",
   /**
    * Label for the plain-version toggle on /you/demo (concept §2.9).
    * Plain version hides points and the reward card for users who prefer a simpler
@@ -370,13 +372,14 @@ export const DEMO = {
    */
   plainVersionLabel: "Plain version",
   /**
-   * Shown on /you/demo to tell reviewers that loading a persona or resetting
-   * replaces the user's saved data, including their own safety plan and any
-   * therapist link (`loadPersona` and `resetDemoData` wipe `safetyEntries` and the
-   * therapist state; concept §2.9).
+   * Shown on /you/demo to tell reviewers that the reset action replaces the
+   * user's saved data, including their own safety plan and any therapist link
+   * (`resetDemoData` wipes `safetyEntries` and the therapist state; concept §2.9).
+   * Persona loading moved to /login, so this note describes the reset only.
+   * Must keep the word "therapist": tests/copy.test.ts asserts it.
    */
   replacesDataNote:
-    "Loading a persona or resetting replaces everything saved in this browser, including your own safety plan and any therapist link.",
+    "Resetting replaces everything saved in this browser, including your own safety plan and any therapist link.",
   /** Heading of the notification-replay controls on /you/demo. */
   replayHeading: "Show a notification",
   /** Button that replays the check-in reminder banner. */
@@ -579,7 +582,11 @@ export const YOU = {
   /** Second line of the about row in the You hub. */
   aboutHint: "What this mockup is, and what stays on your device",
   /** Second line of the demo row in the You hub. */
-  demoHint: "Try personas, replay notifications, reset data",
+  demoHint: "Replay notifications, plain version, reset data",
+  /** Navigation link to /login (the character picker) in the You hub. */
+  switchCharacterEntry: "Switch character",
+  /** Second line of the switch-character row in the You hub. */
+  switchCharacterHint: "Pick another character, or start your own",
 } as const;
 
 /**
@@ -1090,4 +1097,412 @@ export const MEDIA_BUDGET = {
    * Quiet text; only shown when `todayPlan !== null` (concept §2.5 gate).
    */
   linkToSwap: "Adjust budget",
+} as const;
+
+/** Strings for the login / start page: what Unpause is, the demo gate and the character choice. */
+export const LOGIN = {
+  /** Page heading. */
+  pageTitle: "Welcome to Unpause",
+  /** One-line tagline under the heading. */
+  tagline: "Your life, unpaused.",
+  /** Heading of the "what is this" section. */
+  aboutHeading: "What Unpause is",
+  /**
+   * What the product is and who it is for. Deliberately says "people who find it
+   * hard to get going" instead of the concept's "people with depression": the
+   * word is in tests/banned-words.ts and this block is part of that scan.
+   */
+  aboutBody:
+    "Unpause is an app idea that helps people bring small, planned activities back into their day, built on behavioral activation. It is made for people who find it hard to get going: small steps, no blank page, no pressure.",
+  /** Says this is a clickable mockup made to collect feedback on look, feel and wording. */
+  mockupNote:
+    "What you see here is a clickable mockup, made to gather feedback on how Unpause looks, feels and sounds. Thoughts on the wording are exactly what is wanted.",
+  /** Heading of the how-to section. */
+  howHeading: "How to use it",
+  /** Exactly three how-to steps, rendered as an ordered list. */
+  howSteps: [
+    "Pick a character to see Unpause at a different stage of use, or start as a new character to go through onboarding.",
+    "Everything you click is stored only in this browser.",
+    "Under You → Demo you can reset the demo data or replay a notification, and under You → Switch character you come back here.",
+  ],
+  /** Heading of the notices section. */
+  noticesHeading: "Good to know",
+  /**
+   * Crisis notice. No digit, no phone number, no service name and no tel:/mailto:
+   * (profile Safety plan invariant: a wrong crisis number in a demo is worse than none).
+   */
+  crisisNote:
+    "Unpause is not monitored and is not a crisis service. If you are in crisis, please contact your local emergency services or a crisis line.",
+  /** Link to the safety page next to the crisis notice. */
+  crisisLinkLabel: "Open the safety page",
+  /**
+   * Demo-data notice. Not "all data is fictitious": a new character's own entries
+   * are the visitor's real input, so that claim would be false for exactly that data.
+   */
+  demoDataNote:
+    "The example characters and everything they contain are fictitious. What you enter yourself stays in this browser and is never sent anywhere.",
+  /** Link label to the privacy addendum page. */
+  privacyLinkLabel: "Privacy",
+  /** Link label to the imprint page. */
+  imprintLinkLabel: "Imprint",
+  /** Link label on the login page to the investor page at `/`. */
+  aboutProjectLinkLabel: "About the project",
+  /** Label of the demo-notice checkbox that gates the character choice. */
+  gateLabel: "I understand this is a demo and not medical help.",
+  /** Hint shown while the gate checkbox is unticked. */
+  gateHint: "Tick the box above to choose a character.",
+  /** Heading of the character section. */
+  charactersHeading: "Choose a character",
+  /** One line under the character heading. */
+  charactersIntro: "Each one shows Unpause at a different stage.",
+  /** Small label before each character's suggested thing to try. */
+  tryThisLabel: "Try this",
+  /** Accessible name of a character card; `{name}` is replaced with the character's name. */
+  cardAriaLabel: "Open Unpause as {name}",
+  /** Continue-card title; `{name}` is the saved character's name or `continueOwnCharacter`. */
+  continueTitle: "Continue as {name}",
+  /** Fills `{name}` in `continueTitle` when the saved state is the visitor's own character. */
+  continueOwnCharacter: "your own character",
+  /** Line under the continue-card title. */
+  continueHint: "Pick up where you left off in this browser.",
+  /** Label of the new-character card. */
+  newCharacterLabel: "Start as a new character",
+  /** Line under the new-character label. */
+  newCharacterHint: "Go through onboarding and build your own plan.",
+  /** Warning shown when choosing a card would overwrite saved state in this browser. */
+  replacesNote: "This replaces the character saved in this browser.",
+} as const;
+
+/**
+ * Strings for the privacy addendum page. Draft legal text; it states facts about
+ * this repo (no network calls, two localStorage keys) and must change with them.
+ */
+export const PRIVACY = {
+  /** Page heading. */
+  heading: "Privacy: mockup addendum",
+  /** Visible draft marker; stays until the text has been checked before launch. */
+  draftNote:
+    "Draft legal text: to be checked against an IHK or eRecht24 template, or by a lawyer, before launch.",
+  /** Says this page only adds to the privacy policy of nilsfeldeisen.de. */
+  intro:
+    "This page adds to the privacy policy of nilsfeldeisen.de and covers only what this mockup does differently.",
+  /** Heading of the hosting section. */
+  hostingHeading: "Hosting and server logs",
+  /** Hosting and server-log facts, shared with nilsfeldeisen.de. */
+  hostingBody:
+    "This mockup runs on the same Hetzner hosting package as nilsfeldeisen.de and produces the same server logs: pseudonymised IP address, time, URL, referrer, user agent, status and bytes. They are deleted after 7 days (Art. 6(1)(f) GDPR). The details are in the privacy policy of nilsfeldeisen.de.",
+  /** Label of the link to the main privacy policy. */
+  hostingLinkLabel: "Privacy policy of nilsfeldeisen.de",
+  /** Target of the link to the main privacy policy. */
+  hostingLinkHref: "https://nilsfeldeisen.de/privacy/",
+  /** Heading of the browser-storage section. */
+  storageHeading: "Browser storage",
+  /** Intro to the storage table. True only while the app makes no network calls. */
+  storageIntro:
+    "Unpause stores two entries in your browser's local storage. Both are written only by this mockup, in your own browser, and are never sent anywhere.",
+  /** Storage table column header for the key. */
+  storageColumnKey: "Key",
+  /** Storage table column header for the purpose. */
+  storageColumnPurpose: "What it holds",
+  /**
+   * Storage table rows. The key texts must equal `STORAGE_KEY` in
+   * lib/store/user-store.tsx and `GATE_STORAGE_KEY` in lib/store/gate-store.ts;
+   * they are literals because this file is a leaf module (tests/copy.test.ts checks them).
+   */
+  storageRows: [
+    {
+      key: "unpause.demo.v2",
+      purpose:
+        "The demo state: the chosen character, plans, mood ratings, activities and settings.",
+    },
+    {
+      key: "unpause.gate.v1",
+      purpose: "That you ticked the demo notice on the start page.",
+    },
+  ] as readonly { key: string; purpose: string }[],
+  /** Three notes under the storage table. */
+  storageNotes: [
+    "An older entry, unpause.demo.v1, is deleted when the page loads, if it exists.",
+    "Reset demo data deletes the demo state and keeps the notice record, so you are not asked again.",
+    "Clearing this site's data in your browser deletes both entries.",
+  ],
+  /** Heading of the health-data section. */
+  healthHeading: "Mood ratings and activities",
+  /** Health-data statement. True only while the app makes no network calls. */
+  healthBody:
+    "If you start as a new character, the mood ratings and activities you enter are health-related information. They never leave your browser, and the operator of this site never receives them.",
+  /** Heading of the cookies and tracking section. */
+  trackingHeading: "Cookies and tracking",
+  /** Cookies and tracking statement. */
+  trackingBody:
+    "Unpause sets no cookies, uses no analytics and loads no external fonts or scripts.",
+  /** Back link label. */
+  backLabel: "Back",
+} as const;
+
+/**
+ * Strings for the imprint page. Points to the legal notice of nilsfeldeisen.de;
+ * no name, address or other personal data of the operator may appear in this repo.
+ */
+export const IMPRINT = {
+  /** Page heading. */
+  heading: "Imprint",
+  /** Who operates the mockup, without personal data. */
+  body: "This mockup is operated by the owner of nilsfeldeisen.de.",
+  /** Label of the link to the legal notice. */
+  linkLabel: "Legal notice on nilsfeldeisen.de",
+  /** Target of the link to the legal notice. */
+  linkHref: "https://nilsfeldeisen.de/legal-notice/",
+  /** Back link label. */
+  backLabel: "Back",
+} as const;
+
+/**
+ * Strings for the investor page at `/`: what Unpause is, the evidence it rests on, where the
+ * project stands and the pre-seed ask. Every value the author has not supplied is in
+ * `INVESTOR.placeholders` and renders in a visible placeholder box. Banned-word scan applies
+ * (tests/copy.test.ts), so the problem text says "low mood" and never names a diagnosis.
+ */
+export const INVESTOR = {
+  /** Title and description for the page's `metadata` export. */
+  meta: {
+    title: "Unpause: project and pre-seed round",
+    description:
+      "Unpause is an app idea that helps people bring small, planned activities back into their day. This page describes the project, the research it rests on and the pre-seed round.",
+  },
+  /** Small label inside every placeholder box. */
+  placeholderLabel: "Placeholder",
+  /** Section 1: hero. */
+  hero: {
+    name: "Unpause",
+    tagline: "Your life, unpaused.",
+    /** What Unpause is, in one sentence. */
+    summary:
+      "Unpause is an app idea built on behavioral activation. It helps people take small, realistic steps back into an active life.",
+    /** Funding status line. */
+    status: "Pre-seed · seeking €300,000",
+    /** Says what the demo button leads to; the demo is not a product. */
+    mockupNotice:
+      "The demo you reach with the button is a clickable mockup with placeholder data.",
+    /** Primary button, links to /login. */
+    tryDemoLabel: "Try the demo",
+    /** Secondary button, links to the mailto: of placeholders.contactEmail. */
+    contactLabel: "Get in touch",
+  },
+  /** Section 2: the problem. */
+  problem: {
+    heading: "The problem",
+    intro:
+      "Many days lose their shape. Hours go to watching and scrolling, plans slip, and the withdrawal that follows can deepen low mood. Life goes on pause.",
+    /** Sourced data line; the association is longitudinal, not causal, and the line says so. */
+    lonelinessLine:
+      "Adults who are often lonely have more than twice the odds of new-onset low mood over time (odds ratio 2.33; an association over time, not proof of cause).",
+    /** Sourced data line on app retention. */
+    retentionLine:
+      "Most mental-health apps lose almost all of their users quickly: the median 15-day retention is 3.9%.",
+  },
+  /** Section 3: project goals, condensed from GOALS.md G2 to G6. */
+  goals: {
+    heading: "What we are working towards",
+    items: [
+      "On a low-energy day there is always a small step that is doable.",
+      "People can see for themselves that doing things helps their mood.",
+      "Progress is never lost on a bad day.",
+      "Less passive screen time, including time spent in Unpause itself.",
+    ],
+    centreLine:
+      "At the centre is one loop: plan an activity, do it, rate the mood. Every feature feeds it.",
+  },
+  /** Section 4: the six core ideas, one card each. */
+  solution: {
+    heading: "What Unpause does",
+    cards: [
+      {
+        title: "Activity planning",
+        body: "Plan small activities and rate your mood before and after each one, so you can see what helps.",
+      },
+      {
+        title: "Daily structure",
+        body: "An energy check-in suggests a plan that fits the day, and every task has a two-minute version.",
+      },
+      {
+        title: "Gentle progress",
+        body: "Points and levels reward doing and are never taken away on a quiet day. No counter ever resets.",
+      },
+      {
+        title: "An interest digest",
+        body: "A short digest of what you care about, instead of an endless feed.",
+      },
+      {
+        title: "Reaching out",
+        body: "Gentle nudges to get in touch with people you know.",
+      },
+      {
+        title: "Support when wanted",
+        body: "Optional sharing with a therapist, and a safety plan one tap away.",
+      },
+    ],
+  },
+  /** Section 5: the evidence, ending in the caveat about Unpause's own features. */
+  evidence: {
+    heading: "Why it can work",
+    points: [
+      "Behavioral activation worked about as well as cognitive behavioral therapy across 53 trials with 5,495 adults (Cochrane review, risk ratio 0.99).",
+      "Delivered by junior mental-health workers, it was non-inferior to cognitive behavioral therapy at 12 months (COBRA trial).",
+      "The NICE guideline NG222 lists behavioral activation as a first-line option for less severe low mood.",
+      "Internet-delivered versions reduced symptoms (g = −0.49, 12 randomized trials).",
+    ],
+    caveatHeading: "What is not shown yet",
+    /** The honest limit; must stay directly after `points`. */
+    caveat:
+      "Unpause is built on this research, but its own features (mood rating, energy check-in, two-minute version, gamification) are design choices that have not been tested as features yet. The effects of digital programmes also fade over 6 to 12 months and are weaker without guidance.",
+    notesOffer: "The full research notes are available on request.",
+  },
+  /** Section 6: design principles, commitments and the not-medical statement. */
+  principles: {
+    heading: "Safety and ethics",
+    principles: [
+      "Small steps: every task has a version that takes two minutes.",
+      "Encouraging, never shaming: a missed day is not punished.",
+      "Less screen time: Unpause is meant to be used briefly, then closed.",
+      "Privacy first: in this mockup, what you enter stays in your browser.",
+    ],
+    commitmentsHeading: "Our commitments",
+    commitments: [
+      "No point losses and no counters that reset.",
+      "Sharing with a therapist is explicit, per item and revocable.",
+      "The safety plan follows the Stanley-Brown structure and sits outside points and limits.",
+    ],
+    /** Last text line of the section, before the safety link. */
+    notMedical: "Unpause is not a medical product and not a crisis service.",
+  },
+  /** Section 7: where the project stands; `currentStep` is 1-based. */
+  status: {
+    heading: "Where we are",
+    steps: [
+      {
+        title: "Research",
+        body: "Seven research notes on behavioral activation, daily structure, gamification, media use, social connection, therapist access and safety planning.",
+      },
+      {
+        title: "Clickable mockup",
+        body: "A frontend-only mockup with placeholder data, made to test look, feel and wording and to gather feedback.",
+      },
+      {
+        title: "MVP",
+        body: "A first real version of the app.",
+      },
+      {
+        title: "Pilot study",
+        body: "A pilot study with a clinical partner.",
+      },
+      {
+        title: "Possible path: DiGA",
+        body: "A DiGA is a digital health app that German statutory health insurance can reimburse once it is prescribed. Unpause would pursue this only after a pilot study and regulatory and clinical advice.",
+      },
+    ],
+    currentStep: 2,
+    doneLabel: "Done",
+    nowLabel: "Now",
+  },
+  /** Section 8: the founder. Name and bio are placeholders. */
+  team: {
+    heading: "Founder",
+    role: "Founder",
+    soloLine: "Currently a one-person project.",
+    /** Shown in the CSS avatar circle until the founder's real initials replace it. */
+    avatarInitials: "?",
+  },
+  /** Section 9: the ask. Shares and runway are placeholders. */
+  ask: {
+    heading: "The ask",
+    amountLine: "Pre-seed round: €300,000.",
+    intro: "Planned use of the funds:",
+    useColumn: "Use",
+    shareColumn: "Share",
+    /** Fixed order: development, clinical, pilot, operations. Shares come from `placeholders` in the same order. */
+    rows: [
+      {
+        label: "Product development (MVP)",
+        purpose: "Building the first real version of the app.",
+      },
+      {
+        label: "Clinical and regulatory groundwork",
+        purpose: "Clinical advice and the regulatory questions that come before any medical claim.",
+      },
+      {
+        label: "Pilot study",
+        purpose: "Testing with a clinical partner whether the approach helps in practice.",
+      },
+      {
+        label: "Operations",
+        purpose: "Hosting, legal, data protection and running the company.",
+      },
+    ],
+    runwayLabel: "Runway",
+  },
+  /** Section 10: who the project is looking for. */
+  roles: {
+    heading: "Who we are looking for",
+    cards: [
+      {
+        title: "Clinical co-founder",
+        body: "A background in psychotherapy or psychiatry. The safety plan and any use of questionnaires need clinical owners.",
+      },
+      {
+        title: "Psychotherapist advisors",
+        body: "Practitioners who review the wording, the safety plan and the design of therapist sharing.",
+      },
+      {
+        title: "Investors and angels",
+        body: "People with health-sector experience who can open doors and ask the hard questions.",
+      },
+    ],
+  },
+  /** Section 11: contact; the address is `placeholders.contactEmail`. */
+  contact: {
+    heading: "Get in touch",
+    body: "Investors and possible collaborators are welcome to write.",
+  },
+  /**
+   * Safety link, disclaimer and legal links (Section 12 and the hero link). References to the
+   * existing strings, not copies, so the crisis wording cannot drift between pages.
+   */
+  safetyAndLegal: {
+    disclaimer: SHELL.footer,
+    crisisNote: LOGIN.crisisNote,
+    safetyLinkLabel: SHELL.safetyLinkLabel,
+    crisisLinkLabel: LOGIN.crisisLinkLabel,
+    privacyLinkLabel: LOGIN.privacyLinkLabel,
+    imprintLinkLabel: LOGIN.imprintLinkLabel,
+  },
+  /**
+   * Every value the author has not supplied yet. Each renders in a visible placeholder box and
+   * must never look like real content. All start with "Placeholder: " except `contactEmail`,
+   * which is the bare address on a reserved domain that can never reach a real person.
+   */
+  placeholders: {
+    prevalence:
+      "Placeholder: how many adults in Germany live with long-lasting low mood, with source and year.",
+    careGap:
+      "Placeholder: the care gap, for example the typical waiting time for a therapy place in Germany, with source and year.",
+    marketSize: "Placeholder: size of the target market, with source and year.",
+    founderName: "Placeholder: the founder's name.",
+    founderBio:
+      "Placeholder: two or three sentences on the founder's background and why they are building Unpause.",
+    fundsShareDevelopment:
+      "Placeholder: share of the €300,000 for MVP development, in %.",
+    fundsShareClinical:
+      "Placeholder: share of the €300,000 for clinical and regulatory groundwork, in %.",
+    fundsSharePilot: "Placeholder: share of the €300,000 for the pilot study, in %.",
+    fundsShareOperations: "Placeholder: share of the €300,000 for operations, in %.",
+    runwayMonths: "Placeholder: runway in months.",
+    /** One string per roadmap step 3 to 5, in that order. */
+    roadmapDates: [
+      "Placeholder: date or quarter for the MVP.",
+      "Placeholder: date or quarter for the pilot study.",
+      "Placeholder: date or quarter for the DiGA decision.",
+    ],
+    contactEmail: "founder@example.com",
+  },
 } as const;
