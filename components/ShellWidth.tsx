@@ -2,8 +2,10 @@
  * ShellWidth — the single place the app shell's column width is decided.
  *
  * Every page sits in a centred, padded column that is `max-w-md` by default.
- * Two routes (see isWideRoute in lib/domain/routes.ts) widen that column to
- * `max-w-4xl` from the `lg` breakpoint up. AppShell is a server component, so
+ * Wide routes (see isWideRoute in lib/domain/routes.ts) widen that column in
+ * two steps: `max-w-2xl` (672 px) from the `lg` breakpoint and `max-w-4xl`
+ * (896 px) from `xl`. The sidebar takes 224 px, so the two-column page layouts
+ * only fit their 896 px of content from 1280 px. AppShell is a server component, so
  * the pathname is read here in a client child, the same way TabBar and
  * NotificationBanner read it. Under `output: "export"` each route is
  * prerendered with its own pathname, so the static HTML already carries the
@@ -15,8 +17,9 @@
  * Deliberately NOT applied to TabBar or NotificationBanner: both are fixed
  * overlays with their own width rules and must keep them.
  *
- * The widening class below is written as one unbroken literal so Tailwind's
- * source scanner emits the utility. These classes carry no colour, so there is
+ * The widening classes below are written as one unbroken literal so Tailwind's
+ * source scanner emits the utilities; a template or concatenation would drop
+ * them silently and leave the column at 448 px. These classes carry no colour, so there is
  * no dark-mode twin to maintain.
  *
  * Import: client component ("use client") because it reads usePathname.
@@ -39,7 +42,7 @@ export default function ShellWidth({ children, className }: ShellWidthProps) {
   const pathname = usePathname();
   const classes = [
     BASE_CLASSES,
-    isWideRoute(pathname) ? "lg:max-w-4xl" : "",
+    isWideRoute(pathname) ? "lg:max-w-2xl xl:max-w-4xl" : "",
     className ?? "",
   ]
     .filter(Boolean)

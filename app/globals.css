@@ -2,3 +2,53 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 :root { color-scheme: light dark; }
+
+/*
+ * Warm dark palette (2026-10-26). Light mode is untouched: these overrides sit
+ * inside the same media query that Tailwind 4's default `dark:` variant
+ * compiles to, so they only exist while the OS is dark. Every utility reads
+ * its colour through `var(--color-*)`, so `dark:bg-gray-950`, `text-white`
+ * and friends in all components turn warm without a single class changing.
+ *
+ * Each scale step keeps roughly its stock lightness, so every existing
+ * contrast decision (and tests/dark-mode.test.ts rule 3) still holds.
+ * Neutrals: warm taupe/charcoal (hue ~55-80, chroma <= 0.016).
+ * Accent: indigo re-tuned to a softer "iris" (hue ~285, lower chroma); blue
+ * (focus rings, the task button) follows it so there is one accent. Red and
+ * amber are deliberately NOT overridden: crisis/error red and the amber
+ * PLACEHOLDER markers must stay distinct from the accent and the surfaces.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-white: oklch(98.7% 0.005 82);    /* #fcfaf7 */
+
+    --color-gray-50: oklch(98.2% 0.004 80);  /* #faf9f6 */
+    --color-gray-100: oklch(95.8% 0.007 78); /* #f4f1ec headings */
+    --color-gray-200: oklch(91.5% 0.01 76);  /* #e7e2dc */
+    --color-gray-300: oklch(86% 0.013 74);   /* #d6d0c8 body */
+    --color-gray-400: oklch(75.5% 0.016 72); /* #b6aea5 muted */
+    --color-gray-500: oklch(64% 0.015 68);   /* #928b83 */
+    --color-gray-600: oklch(48.5% 0.012 64); /* #645e58 */
+    --color-gray-700: oklch(38% 0.011 60);   /* #47413d */
+    --color-gray-800: oklch(30% 0.01 58);    /* #322d29 raised */
+    --color-gray-900: oklch(24% 0.009 56);   /* #231e1b surface */
+    --color-gray-950: oklch(19% 0.008 55);   /* #171310 canvas */
+
+    --color-indigo-50: oklch(96.5% 0.015 288);
+    --color-indigo-100: oklch(93% 0.03 288);
+    --color-indigo-200: oklch(88.5% 0.045 288); /* #d7d5f6 */
+    --color-indigo-300: oklch(81.5% 0.07 287);  /* #bfbcee */
+    --color-indigo-400: oklch(73.5% 0.095 286); /* #a4a1e3 */
+    --color-indigo-500: oklch(63.5% 0.115 285); /* #8480cd */
+    --color-indigo-600: oklch(52% 0.135 283);   /* #605bb3 */
+    --color-indigo-700: oklch(45.5% 0.125 283); /* #4f4a99 */
+    --color-indigo-800: oklch(39% 0.1 285);     /* #413b78 */
+    --color-indigo-900: oklch(32% 0.075 286);   /* #302c57 */
+    --color-indigo-950: oklch(26% 0.038 287);   /* #232136 */
+
+    --color-blue-400: var(--color-indigo-400);
+    --color-blue-500: var(--color-indigo-500);
+    --color-blue-600: var(--color-indigo-600);
+    --color-blue-700: var(--color-indigo-700);
+  }
+}

@@ -4,20 +4,24 @@
  * ShellFrame — the one client component that decides, per route, whether the
  * shell chrome renders and whether the visitor is sent to /login.
  *
- * AppShell (a server component) builds the header, banner, footer and tab bar
- * and hands them in as props; ShellFrame only places them. Receiving the chrome
- * as props rather than importing it keeps AppShell server-side and the header
- * server-rendered, while the pathname — readable only in a client component —
- * is read here.
+ * AppShell (a server component) builds the header, sidebar, banner, footer and
+ * tab bar and hands them in as props; ShellFrame only places them. Receiving the
+ * chrome as props rather than importing it keeps AppShell server-side and the
+ * header server-rendered, while the pathname — readable only in a client
+ * component — is read here. The non-bare wrapper pads `lg:pl-56` so everything
+ * in flow clears the fixed `w-56` DesktopNav sidebar from `lg` up.
  *
  * It is mounted exactly once, so there is exactly one gate effect. Wrapping
  * header, banner and footer separately was refused because three wrapper
  * instances would run three redirect effects. A route group was refused by the
  * concept because it would move about 19 route folders.
  *
- * Bare routes (isBareRoute, e.g. /login) render only <main> with no header,
- * banner, footer, tab bar or ShellWidth — the login page sets its own
- * max-w-5xl column.
+ * Bare routes (isBareRoute, e.g. /login) render <main> followed by the footer,
+ * with no header, sidebar, banner, tab bar or ShellWidth — the login page sets
+ * its own max-w-5xl column. The footer is kept there because it is the only
+ * <footer> landmark and carries the not-a-medical-product disclaimer, which has
+ * to stay reachable on every route. Bare routes have no tab bar, so the footer
+ * needs no clearance there.
  */
 
 import { useEffect } from "react";
@@ -28,13 +32,22 @@ import { useGate } from "@/lib/store/use-gate";
 
 interface ShellFrameProps {
   header: React.ReactNode;
+  /** The `lg`-only DesktopNav sidebar; rendered on non-bare routes only, like the header. */
+  sidebar: React.ReactNode;
   banner: React.ReactNode;
   footer: React.ReactNode;
   tabBar: React.ReactNode;
   children: React.ReactNode;
 }
 
-export default function ShellFrame({ header, banner, footer, tabBar, children }: ShellFrameProps) {
+export default function ShellFrame({
+  header,
+  sidebar,
+  banner,
+  footer,
+  tabBar,
+  children,
+}: ShellFrameProps) {
   const pathname = usePathname();
   const router = useRouter();
   const bare = isBareRoute(pathname);
@@ -57,13 +70,16 @@ export default function ShellFrame({ header, banner, footer, tabBar, children }:
     return (
       <div className="flex min-h-screen flex-col">
         <main className="w-full flex-1 pt-[env(safe-area-inset-top)]">{children}</main>
+        {footer}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen lg:pl-56">
       {header}
+
+      {sidebar}
 
       {banner}
 

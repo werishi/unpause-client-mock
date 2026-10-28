@@ -191,9 +191,12 @@ interface BannerPanelProps {
 }
 
 /**
- * The notification panel itself. Fixed under the header at `z-20` (header and tab bar are
- * `z-10`), never over it, so SafetyPlanLink stays tappable; the full-width outer layer is
+ * The notification panel itself. Fixed under the header at `z-20` (the header is `z-30` so the
+ * user-menu panel rises above this banner; the tab bar is `z-10`). It still never overlaps the
+ * header because it starts below it, so SafetyPlanLink stays tappable; the full-width outer layer is
  * `pointer-events-none` so the strip beside the panel does not swallow taps meant for the page.
+ * From `lg` the layer starts right of the sidebar (`lg:left-56`), so the panel centres over the
+ * content, not under the sidebar.
  * The slide-in is `motion-safe:`-gated, so under reduced motion it is visible from frame one.
  * Remounted per banner by the parent's `key`, so each one animates in.
  */
@@ -203,7 +206,7 @@ function BannerPanel({ kind, onOpen, onDismiss }: BannerPanelProps) {
   useEffect(() => setEntered(true), []);
 
   return (
-    <div className="fixed left-0 right-0 z-20 px-4 top-[calc(3.5rem+env(safe-area-inset-top))] pointer-events-none">
+    <div className="fixed left-0 lg:left-56 right-0 z-20 px-4 top-[calc(3.5rem+env(safe-area-inset-top))] pointer-events-none">
       <div className="max-w-md mx-auto pointer-events-auto">
         <div
           role="status"

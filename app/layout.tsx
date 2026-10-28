@@ -29,10 +29,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   viewportFit: "cover",
   colorScheme: "light dark",
-  // #ffffff is the light header; #030712 is Tailwind gray-950, the dark canvas.
+  // #ffffff is the light header; #171310 is the warm dark canvas (gray-950 as
+  // redefined for dark mode in app/globals.css; keep the two in step).
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#030712" },
+    { media: "(prefers-color-scheme: dark)", color: "#171310" },
   ],
 };
 

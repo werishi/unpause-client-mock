@@ -48,7 +48,14 @@ const offerCard =
   "flex flex-col gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50";
 const offerTitle = "font-medium text-gray-900 dark:text-gray-100";
 const muted = "text-sm text-gray-600 dark:text-gray-400";
-const sectionHeading = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100";
+const sectionHeading = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 lg:text-xl";
+// Two-column arrangement from `xl`. The column wrappers are `display: contents`
+// below `xl`, so the phone flex column cannot tell they exist and the phone
+// order is unchanged. `xl:gap-8` inside each column reproduces the root's
+// `gap-8`, because the `-mt-2` and `-mt-4` offsets below were tuned against a
+// 32 px gap.
+const planRoot = "flex flex-col gap-8 py-6 xl:grid xl:grid-cols-2 xl:items-start xl:gap-8";
+const planColumn = "contents xl:flex xl:min-w-0 xl:flex-col xl:gap-8";
 // Rows sit inside one card with inset dividers. `empty:hidden` drops the card
 // when every row branch rendered nothing, instead of leaving an empty box.
 const listCard =
@@ -58,7 +65,9 @@ const calmNote =
 
 /**
  * Plan tab page. Shows the week strip, the detail for the selected day, and
- * the week-offers section for the user's active templates.
+ * the week-offers section for the user's active templates. From `xl` the page
+ * is a two-column grid with the week strip across the top, built from two
+ * `display: contents` column wrappers so the phone order is unchanged.
  *
  * Hydration guard: renders `null` until the store's `hydrated` flag is true.
  * The body calls `new Date()` and reads store data that is only correct after
@@ -274,15 +283,18 @@ export default function PlanPage() {
 
   return (
     // A <div>, not <main>: AppShell already renders the page's <main>.
-    <div className="flex flex-col gap-8 py-6">
-      <WeekStrip
-        dates={dates}
-        today={today}
-        selected={effectiveSelected}
-        onSelect={setSelected}
-      />
+    <div className={planRoot}>
+      <div className="xl:col-span-2">
+        <WeekStrip
+          dates={dates}
+          today={today}
+          selected={effectiveSelected}
+          onSelect={setSelected}
+        />
+      </div>
 
-      <section className="-mt-2">{dayDetail}</section>
+      <div className={planColumn}>
+      <section className="-mt-2 xl:mt-0">{dayDetail}</section>
 
       <section className="flex flex-col gap-4">
         <h2 className={sectionHeading}>{PLAN.weekOffersHeading}</h2>
@@ -315,7 +327,9 @@ export default function PlanPage() {
           );
         })}
       </section>
+      </div>
 
+      <div className={planColumn}>
       {/* Templates section — shows active templates and links to /plan/templates */}
       <section className="flex flex-col gap-3">
         <h2 className={sectionHeading}>{PLAN.templatesSectionHeading}</h2>
@@ -359,6 +373,7 @@ export default function PlanPage() {
 
       {/* "Changes start next check-in" notice — only when today has a plan */}
       {todayPlan && <p className={`-mt-4 px-1 text-center ${muted}`}>{PLAN.changesNextCheckIn}</p>}
+      </div>
     </div>
   );
 }

@@ -10,9 +10,8 @@
  * hidden on this route; removing it would break the profile's "safety plan one tap away" rule.
  * It is never gated or disabled.
  *
- * The footer row links to `/`, the investor landing page, so a viewer who starts here can still
- * find the pitch; it sits with the legal links rather than the picker column so it never competes
- * with the character cards.
+ * The privacy, imprint and About-the-project links now come from the shared footer
+ * (`components/SiteFooter.tsx`), so this page no longer carries a link row of its own.
  *
  * Server component: static content only. Importing the client `LoginPicker` is valid. No `<main>`,
  * because the frame supplies it.
@@ -24,7 +23,6 @@ import { LOGIN, START_SCREEN } from "@/lib/copy";
 
 const H2 = "text-lg font-semibold";
 const BODY = "text-sm leading-relaxed";
-const FOOTER_LINK = "text-sm text-gray-500 underline underline-offset-2 dark:text-gray-400";
 
 export default function LoginPage() {
   return (
@@ -58,18 +56,6 @@ export default function LoginPage() {
           </p>
           <p className={BODY}>{LOGIN.demoDataNote}</p>
         </section>
-
-        <div className="flex flex-wrap gap-4">
-          <Link href="/privacy" className={FOOTER_LINK}>
-            {LOGIN.privacyLinkLabel}
-          </Link>
-          <Link href="/imprint" className={FOOTER_LINK}>
-            {LOGIN.imprintLinkLabel}
-          </Link>
-          <Link href="/" className={FOOTER_LINK}>
-            {LOGIN.aboutProjectLinkLabel}
-          </Link>
-        </div>
       </div>
       <LoginPicker />
     </div>

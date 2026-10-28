@@ -1,10 +1,13 @@
 // /privacy: the mockup's privacy addendum. A bare route, so ShellFrame renders it
-// inside its own <main> with no header, footer or tab bar; this page's root is an
-// <article> and sets its own width and padding. Server component on purpose: it is
-// reachable before the demo notice is accepted and must not depend on the store.
+// inside its own <main> with no header or tab bar; the shared footer follows <main>.
+// This page's root is an <article> and sets its own width and padding. Its first row
+// carries the back link and the safety entry, because the footer is reached only after
+// scrolling and goal G9 asks for one tap to /safety from any screen. Server component
+// on purpose: it is reachable before the demo notice is accepted and must not depend
+// on the store; BackLink is the only client island.
 // All text comes from PRIVACY in lib/copy.ts, where the copy tests can reach it.
-import Link from "next/link";
-
+import BackLink from "@/components/BackLink";
+import SafetyPlanLink from "@/components/SafetyPlanLink";
 import { PRIVACY } from "@/lib/copy";
 
 const focusRing =
@@ -20,12 +23,10 @@ const linkClass = `underline underline-offset-2 ${focusRing}`;
 export default function PrivacyPage() {
   return (
     <article className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-8">
-      <Link
-        href="/login"
-        className={`self-start text-sm text-gray-600 underline underline-offset-2 dark:text-gray-400 ${focusRing}`}
-      >
-        {PRIVACY.backLabel}
-      </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BackLink label={PRIVACY.backLabel} />
+        <SafetyPlanLink />
+      </div>
 
       <h1 className="text-xl font-semibold">{PRIVACY.heading}</h1>
       <p className="text-xs text-gray-500 dark:text-gray-400">{PRIVACY.draftNote}</p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isTabRoute, normalizePathname } from "@/lib/domain/routes";
+import { isActiveTab, isTabRoute, normalizePathname } from "@/lib/domain/routes";
 
 interface Tab {
   href: string;
@@ -19,10 +19,10 @@ interface TabBarProps {
  *
  * The allow-list lives in `lib/domain/routes.ts` and is shared with the notification
  * banner, so the two can never disagree about which routes are tabbed.
+ * From `lg` both the bar and its spacer are hidden and DesktopNav takes over, sharing `isActiveTab`.
  */
 export default function TabBar({ tabs }: TabBarProps) {
   const raw = usePathname();
-  // Normalized pathname is still needed for the isActive computation below.
   const pathname = normalizePathname(raw);
 
   if (!isTabRoute(pathname)) return null;
@@ -35,25 +35,21 @@ export default function TabBar({ tabs }: TabBarProps) {
        */}
       <div
         aria-hidden="true"
-        className="h-[calc(3.5rem+env(safe-area-inset-bottom))]"
+        className="h-[calc(3.5rem+env(safe-area-inset-bottom))] lg:hidden"
       />
 
       {/*
-       * Fixed nav bar — bg-white matches AppShell's header; z-10 matches too.
+       * Fixed nav bar — bg-white matches AppShell's header; z-10 keeps it above page content.
        * pb-[env(safe-area-inset-bottom)] lifts the touch targets above the home indicator.
        * min-h-14 ensures the bar is at least 56 px tall on devices with no safe area.
        */}
       <nav
-        className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-[env(safe-area-inset-bottom)]"
+        className="fixed bottom-0 left-0 right-0 z-10 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 pb-[env(safe-area-inset-bottom)] lg:hidden"
         aria-label="Main tabs"
       >
         <div className="max-w-md mx-auto flex">
           {tabs.map((tab) => {
-            // Today is active on exact match; /you/* is active on prefix match.
-            const isActive =
-              tab.href === "/today"
-                ? pathname === "/today"
-                : pathname === tab.href || pathname.startsWith(tab.href + "/");
+            const isActive = isActiveTab(pathname, tab.href);
 
             return (
               <Link

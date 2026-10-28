@@ -34,6 +34,22 @@ export const SHELL = {
    * invariant (concept Section 2.3).
    */
   footer: "Unpause is not a substitute for professional help.",
+  /**
+   * Label of the mobile toggle in the shared SiteFooter that shows or hides the crisis note and
+   * the legal links below `lg`. One static label: the open/closed state is carried by
+   * `aria-expanded`, so a "More"/"Less" flip would announce the state twice.
+   */
+  footerMoreLabel: "More information",
+  /** Accessible label of the header's user-menu trigger button. */
+  userMenuLabel: "User menu",
+  /** `{name}` is replaced with the character's first name, or with `LOGIN.continueOwnCharacter` for the visitor's own character. */
+  signedInAs: "Signed in as {name}",
+  /** Label of the user-menu item that leaves the current character and returns to `/login`. */
+  logOutLabel: "Log out",
+  /** Heading of the user menu's demo part; says plainly that the control is for the demo, not the product. */
+  demoSwitchHeading: "Demo: switch character",
+  /** Hint under the demo heading in the user menu; frames the switch as a way to try the mockup. */
+  demoSwitchHint: "Only for trying out this mockup. Pick a character to see the app as them.",
 } as const;
 
 /** Strings for the SafetyPlanLink component. */
@@ -1465,8 +1481,14 @@ export const INVESTOR = {
     body: "Investors and possible collaborators are welcome to write.",
   },
   /**
-   * Safety link, disclaimer and legal links (Section 12 and the hero link). References to the
-   * existing strings, not copies, so the crisis wording cannot drift between pages.
+   * Safety link, disclaimer and legal links. References to the existing strings, not copies, so
+   * the crisis wording cannot drift between pages. The investor page now renders only
+   * `safetyLinkLabel` and `crisisLinkLabel` (the hero link and the principles section); the
+   * disclaimer, crisis note and legal links moved to the shared `SiteFooter`, which renders the
+   * same strings straight from `SHELL`/`LOGIN`. The other four keys are kept as references
+   * because `tests/copy.test.ts` pins `disclaimer` to `SHELL.footer` and `crisisNote` to
+   * `LOGIN.crisisNote`; removing them would break that drift guard and the never-remove rule in
+   * this file's header.
    */
   safetyAndLegal: {
     disclaimer: SHELL.footer,

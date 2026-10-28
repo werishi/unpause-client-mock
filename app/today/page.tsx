@@ -50,6 +50,20 @@ const offerCard =
 const offerTitle = "font-medium text-gray-900 dark:text-gray-100";
 const muted = "text-sm text-gray-600 dark:text-gray-400";
 
+// State B desktop layout. The three wrappers are `display: contents` below xl, so the phone
+// flex column (and its gap) is untouched; they only become grid items at xl, and only when a
+// side block renders. The 1fr second row stops a tall side panel from stretching the first row.
+const stateBRootWithPanel =
+  "flex flex-col gap-4 py-6 lg:gap-6 xl:grid xl:grid-cols-[minmax(0,1fr)_20rem] xl:grid-rows-[auto_1fr] xl:gap-x-8";
+const stateBRootNoPanel = "flex flex-col gap-4 py-6 lg:gap-6 xl:mx-auto xl:max-w-2xl";
+const mainTopWithPanel =
+  "contents xl:col-start-1 xl:row-start-1 xl:flex xl:min-w-0 xl:flex-col xl:gap-6";
+const sideWithPanel =
+  "contents xl:col-start-2 xl:row-start-1 xl:row-span-2 xl:flex xl:flex-col xl:gap-6 xl:self-start";
+const mainBottomWithPanel =
+  "contents xl:col-start-1 xl:row-start-2 xl:flex xl:min-w-0 xl:flex-col xl:gap-6";
+const wrapperNoPanel = "contents";
+
 export default function TodayPage() {
   const {
     hydrated,
@@ -99,10 +113,10 @@ export default function TodayPage() {
 
   if (isStateA) {
     return (
-      <div className="flex flex-col gap-6 py-8">
+      <div className="flex flex-col gap-6 py-8 lg:gap-8 xl:mx-auto xl:max-w-2xl">
         <div className="flex flex-col gap-2">
           <p className="text-base text-gray-600 dark:text-gray-400">{getGreeting()}</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 lg:text-3xl dark:text-gray-100">
             {CHECK_IN.heading}
           </h1>
         </div>
@@ -266,11 +280,16 @@ export default function TodayPage() {
     dayEnded: allLogged,
   });
 
+  // Exactly the blocks the side panel holds, so the grid exists only when it has something to show.
+  const hasSidePanel =
+    showMonthCard || showWeekCard || digestSlot !== null || showPersonaliseOffer || showSafetySetup;
+
   return (
-    <div className="flex flex-col gap-4 py-6">
+    <div className={hasSidePanel ? stateBRootWithPanel : stateBRootNoPanel}>
+      <div className={hasSidePanel ? mainTopWithPanel : wrapperNoPanel}>
       {/* Plan header */}
       <div className="flex min-h-11 items-center justify-between gap-3">
-        <p className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+        <p className="text-xl font-semibold tracking-tight text-gray-900 lg:text-3xl dark:text-gray-100">
           {TODAY.planHeading} <span className="capitalize">{todayPlan.energy}</span>
         </p>
 
@@ -364,7 +383,9 @@ export default function TodayPage() {
           </div>
         );
       })}
+      </div>
 
+      <div className={hasSidePanel ? sideWithPanel : wrapperNoPanel}>
       {/* Review cards — at most one shown; month card takes precedence when Monday is also 1st */}
       {showMonthCard && (
         <div className={offerCard}>
@@ -458,7 +479,9 @@ export default function TodayPage() {
           </div>
         </div>
       )}
+      </div>
 
+      <div className={hasSidePanel ? mainBottomWithPanel : wrapperNoPanel}>
       {/* Anchor row — wake-time anchor and quick-log chips */}
       <div className="mt-2 flex flex-col gap-2">
         <p className={muted}>
@@ -520,6 +543,7 @@ export default function TodayPage() {
           {TODAY.endOfDay}
         </p>
       )}
+      </div>
     </div>
   );
 }

@@ -8,11 +8,15 @@
  *   (b) stat tiles: all-time days showing up and "This month"
  *
  * Breakpoints: one column at 360 px; the stat tiles go two-up from `sm`; from `lg`
- * the page is a two-column grid inside the 896 px column `ShellWidth` gives this
- * route, with the header, (a) and (b) spanning both columns and (c) and (d) side by
- * side below. Whenever (c) or (d) would sit alone (plain version, or nothing done
- * yet) it spans both columns too, so no column is left empty. Every grid class is
- * `lg:`-prefixed, so the layouts below `lg` are unchanged.
+ * to `xl` the page stays a single 672 px column (only the type and the row gap step
+ * up), because the sidebar takes 224 px and two columns there would be about 372 px
+ * each, too narrow for the reward form, which needs about 420 px per column. From
+ * `xl` the page is a two-column grid inside the 896 px column `ShellWidth` gives this
+ * route (864 px content box, so `gap-x-6` leaves exactly 420 px per column), with the
+ * header, (a) and (b) spanning both columns and (c) and (d) side by side below.
+ * Whenever (c) or (d) would sit alone (plain version, or nothing done yet) it spans
+ * both columns too, so no column is left empty. Every grid class is `xl:`-prefixed,
+ * so the layouts below `xl` stay single-column.
  *   (c) "What tended to help"
  *   (d) "Points and your reward" — rendered by `LookBackRewardCard`; omitted entirely
  *       when `plainVersion` is true (concept §2.9: omitting avoids a points flash for users
@@ -59,8 +63,8 @@ const MONTH_NAMES = [
 
 // Visual language copied from app/today/page.tsx (rounded-2xl cards, indigo accent,
 // gray neutrals, min-h-12 buttons) so Look back reads as part of the same app.
-const pageTitle = "text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100";
-const sectionTitle = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100";
+const pageTitle = "text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 lg:text-3xl";
+const sectionTitle = "text-lg font-semibold tracking-tight text-gray-900 dark:text-gray-100 lg:text-xl";
 const eyebrow = "text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300";
 const muted = "text-sm text-gray-600 dark:text-gray-400";
 const card =
@@ -150,8 +154,8 @@ export default function LookBackPage() {
   const patterns = isPerNew ? [] : categoryPatterns(log, activities, today);
 
   return (
-    <div className="flex flex-col gap-6 py-6 lg:grid lg:grid-cols-2 lg:gap-6">
-      <header className="flex flex-col gap-1 lg:col-span-2">
+    <div className="flex flex-col gap-6 py-6 lg:gap-8 xl:grid xl:grid-cols-2 xl:gap-x-6">
+      <header className="flex flex-col gap-1 xl:col-span-2">
         <h1 className={pageTitle}>{LOOK_BACK.heading}</h1>
         <p className={muted}>
           {LOOK_BACK.startedOnLabel} {formatStartDate(safeStartedAt, today)}.
@@ -161,7 +165,7 @@ export default function LookBackPage() {
       {/* (a) Since you started — hero summary ───────────────────────────── */}
       <section
         aria-labelledby="lb-since"
-        className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 lg:col-span-2 dark:border-indigo-900/60 dark:bg-indigo-950/40"
+        className="flex flex-col gap-4 rounded-2xl border border-indigo-100 bg-indigo-50 p-5 xl:col-span-2 dark:border-indigo-900/60 dark:bg-indigo-950/40"
       >
         <h2 id="lb-since" className={eyebrow}>
           {LOOK_BACK.sinceStarted.heading}
@@ -217,7 +221,7 @@ export default function LookBackPage() {
 
       {/* (b) Stat tiles: all-time days and this month — omitted for per-new ─ */}
       {!isPerNew && (
-        <section aria-label={LOOK_BACK.thisMonthHeading} className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-2">
+        <section aria-label={LOOK_BACK.thisMonthHeading} className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:col-span-2">
           <div className={tile}>
             <span className={tileNumber}>{totalActiveDays}</span>
             <span className={muted}>
@@ -253,7 +257,7 @@ export default function LookBackPage() {
       {!isPerNew && (
         <section
           aria-labelledby="lb-patterns"
-          className={`flex flex-col gap-3${plainVersion ? " lg:col-span-2" : ""}`}
+          className={`flex flex-col gap-3${plainVersion ? " xl:col-span-2" : ""}`}
         >
           <h2 id="lb-patterns" className={sectionTitle}>
             {LOOK_BACK.patternsHeading}
@@ -288,8 +292,8 @@ export default function LookBackPage() {
       {/* (d) Points and your reward — omitted entirely when plainVersion ─── */}
       {!plainVersion && (
         // Plain block wrapper: spans both columns when (b) and (c) are omitted, so the
-        // card never sits alone in the left column; below `lg` it adds no spacing.
-        <div className={isPerNew ? "lg:col-span-2" : undefined}>
+        // card never sits alone in the left column; below `xl` it adds no spacing.
+        <div className={isPerNew ? "xl:col-span-2" : undefined}>
           <LookBackRewardCard
             total={total}
             justReached={justReached}

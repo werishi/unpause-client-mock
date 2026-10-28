@@ -4,9 +4,11 @@
  * Settings-style hub for the current user: an identity header, then the
  * sub-pages grouped into four calm sections of list rows (what matters to you,
  * your people, safety, about this app). The tab bar shows automatically
- * because "/you" matches the TabBar allow-list prefix. From the lg breakpoint
+ * because "/you" matches the TabBar allow-list prefix. From the `xl` breakpoint
  * the four section cards sit on a two-column grid under the full-width header;
- * the column width itself is set by ShellWidth in AppShell.
+ * from `lg` to `xl` they are one column in the 672 px shell column, because the
+ * sidebar leaves too little width for two. The column width itself is set by
+ * ShellWidth in AppShell.
  *
  * The Therapist & sharing row is deliberately as quiet as the others: no badge,
  * no count, no "set up" prompt. The app works fully without a therapist (concept
@@ -119,12 +121,12 @@ export default function YouPage() {
           <Icon name="person" className="size-7" />
         </div>
         <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100">{YOU.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-gray-100 lg:text-3xl">{YOU.title}</h1>
           <p className="text-base text-gray-600 dark:text-gray-400">{YOU.subtitle}</p>
         </div>
       </header>
 
-      <div className="flex flex-col gap-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+      <div className="flex flex-col gap-8 xl:grid xl:grid-cols-2 xl:items-start xl:gap-8">
         {SECTIONS.map((section) => {
           const chip =
             section.tone === "safety"
@@ -132,7 +134,7 @@ export default function YouPage() {
               : "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400";
           return (
             <section key={section.id} aria-labelledby={`you-${section.id}`} className="flex flex-col gap-2">
-              <h2 id={`you-${section.id}`} className="px-1 text-sm font-medium text-gray-600 dark:text-gray-400">
+              <h2 id={`you-${section.id}`} className="px-1 text-sm font-medium text-gray-600 dark:text-gray-400 lg:text-base">
                 {section.heading}
               </h2>
               <ul className="divide-y divide-gray-200 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:divide-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:shadow-none">

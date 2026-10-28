@@ -36,7 +36,9 @@ const SECTION_IDS = [
   'contact',
 ]
 
-const LINKS = ['href="/login"', 'href="/safety"', 'href="/privacy"', 'href="/imprint"']
+// The privacy and imprint links moved to the shared SiteFooter and are pinned in
+// tests/site-footer.test.ts.
+const LINKS = ['href="/login"', 'href="/safety"']
 
 // The page is a static server component with no network access (profile Architecture invariant).
 const FORBIDDEN = ['"use client"', '<form', '<input', '<img', 'fetch(', 'http://', 'https://']
@@ -57,15 +59,20 @@ describe('investor page source scan', () => {
     expect(missingRefs('INVESTOR.placeholders', INVESTOR.placeholders)).toEqual([])
   })
 
-  it('references every INVESTOR.safetyAndLegal key', () => {
-    expect(missingRefs('INVESTOR.safetyAndLegal', INVESTOR.safetyAndLegal)).toEqual([])
+  // Only these two keys are still rendered by the page (hero link and principles section). The
+  // other four safetyAndLegal keys are rendered by the shared SiteFooter via SHELL/LOGIN
+  // (tests/site-footer.test.ts); tests/copy.test.ts pins disclaimer === SHELL.footer and
+  // crisisNote === LOGIN.crisisNote, but not the privacy/imprint labels.
+  it('references the INVESTOR.safetyAndLegal keys the page still renders', () => {
+    const refs = ['safetyLinkLabel', 'crisisLinkLabel'].map((key) => `INVESTOR.safetyAndLegal.${key}`)
+    expect(refs.filter((ref) => !src.includes(ref))).toEqual([])
   })
 
   it('renders every section id', () => {
     expect(SECTION_IDS.filter((id) => !src.includes(`id="${id}"`))).toEqual([])
   })
 
-  it('links to the demo, safety and legal pages', () => {
+  it('links to the demo and safety pages', () => {
     expect(LINKS.filter((link) => !src.includes(link))).toEqual([])
   })
 

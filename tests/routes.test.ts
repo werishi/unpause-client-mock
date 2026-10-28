@@ -1,17 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { isWideRoute, isBareRoute, isGateExemptRoute, entryRouteFor } from '@/lib/domain/routes'
+import { isWideRoute, isActiveTab, isBareRoute, isGateExemptRoute, entryRouteFor } from '@/lib/domain/routes'
 
 // ─── isWideRoute ─────────────────────────────────────────────────────────────
 
 describe('isWideRoute', () => {
-  const wideRoutes = ['/look-back', '/look-back/', '/you', '/you/']
+  // /today and /plan were flipped from narrow to wide on purpose when the desktop layouts were added.
+  const wideRoutes = ['/today', '/today/', '/plan', '/plan/', '/look-back', '/look-back/', '/you', '/you/']
   const narrowRoutes = [
     '/you/values',
     '/you/about/',
     '/you/demo/',
     '/you/therapist/preview/',
-    '/today/',
-    '/plan/',
     '/',
     '/look-back/x/',
     '/yours',
@@ -23,6 +22,34 @@ describe('isWideRoute', () => {
 
   it.each(narrowRoutes)('%s is not a wide route', (path) => {
     expect(isWideRoute(path)).toBe(false)
+  })
+})
+
+// ─── isActiveTab ─────────────────────────────────────────────────────────────
+
+describe('isActiveTab', () => {
+  // Today matches exactly; the other tabs own their sub-pages via the href + '/' prefix.
+  it.each([
+    ['/today', '/today'],
+    ['/today/', '/today'],
+    ['/plan', '/plan'],
+    ['/plan/edit', '/plan'],
+    ['/look-back/', '/look-back'],
+    ['/you', '/you'],
+    ['/you/', '/you'],
+    ['/you/about/', '/you'],
+  ])('%s activates the %s tab', (pathname, href) => {
+    expect(isActiveTab(pathname, href)).toBe(true)
+  })
+
+  it.each([
+    ['/today/anything', '/today'],
+    ['/yours', '/you'],
+    ['/you/about', '/today'],
+    ['/plan', '/you'],
+    ['/today', '/plan'],
+  ])('%s does not activate the %s tab', (pathname, href) => {
+    expect(isActiveTab(pathname, href)).toBe(false)
   })
 })
 

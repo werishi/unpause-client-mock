@@ -16,6 +16,8 @@
  *   would skip `/welcome-back` and leave the check-in reminder silenced.
  * - It does not flash: until both the gate and the user store have read localStorage it renders
  *   only a fixed-height placeholder.
+ * - A character load (card pick or new character) also clears the flow store with `reset()`, so a
+ *   half-finished task flow of the previous character does not leak into the next one.
  *
  * The parent renders it without props; no auth or data needs resolving first.
  */
@@ -26,6 +28,7 @@ import { entryRouteFor } from "@/lib/domain/routes";
 import { personaFirstName } from "@/lib/domain/persona-name";
 import type { CharacterCard } from "@/lib/domain/types";
 import { getCharacterCards } from "@/lib/repo/persona-repo";
+import { useFlow } from "@/lib/store/flow-store";
 import { useGate } from "@/lib/store/use-gate";
 import { useUserData } from "@/lib/store/user-store";
 
@@ -150,6 +153,7 @@ function NewCharacter({ accepted, hasSaved, onStart }: NewCharacterProps) {
 export function LoginPicker() {
   const { ready, accepted, accept } = useGate();
   const { hydrated, personaId, startedAt, welcomeBackDue, loadPersona } = useUserData();
+  const { reset } = useFlow();
   const router = useRouter();
   const cards = getCharacterCards();
 
@@ -161,7 +165,10 @@ export function LoginPicker() {
     if (!accepted) return;
     // Navigate from the returned state: the render closure still holds the old persona's flags.
     const next = loadPersona(id);
-    if (next) router.push(entryRouteFor(next));
+    if (next) {
+      reset();
+      router.push(entryRouteFor(next));
+    }
   }
 
   function continueSaved() {
@@ -174,6 +181,7 @@ export function LoginPicker() {
   function startNew() {
     if (!accepted) return;
     loadPersona("per-new");
+    reset();
     router.push("/welcome");
   }
 

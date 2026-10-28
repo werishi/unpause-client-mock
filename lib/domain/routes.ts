@@ -5,6 +5,8 @@
  * app chrome) and the entry-route decision (`entryRouteFor`: where opening the app lands).
  * Also the login-gate exemption (`isGateExemptRoute`: the bare routes plus `/safety` and
  * every `/safety/*` sub-page, which the demo login gate must never stand in front of).
+ * Also the active-tab test (`isActiveTab`), shared by the tab bar and the desktop sidebar
+ * so the two navigations can never disagree about which tab is current.
  *
  * Pure TS, no React — the components pass in what `usePathname()` returned.
  *
@@ -50,18 +52,41 @@ export function isTabRoute(pathname: string): boolean {
 }
 
 /**
- * True on exactly the routes whose content may use the wide shell: `/look-back` and
- * `/you`. Accepts raw (`/you/`) or normalized input; `normalizePathname` runs first
- * because `trailingSlash: true` makes `usePathname()` return `/you/`.
+ * True when the tab whose link is `href` is the current tab for `pathname`. The single
+ * copy of the active-tab rule, shared by `TabBar` and `DesktopNav`: two navigations
+ * disagreeing about the active tab (e.g. on `/you/about`) would be a visible bug that no
+ * test would catch.
+ *
+ * `pathname` is normalized here, so callers may pass the raw `usePathname()` value
+ * (`/you/`). `href` is not normalized: it is one of the four literal tab hrefs (`/today`,
+ * `/plan`, `/look-back`, `/you`), none with a trailing slash.
+ *
+ * `/today` matches exactly, because it has no sub-pages that belong to the Today tab.
+ * The other three tabs own their sub-pages (`/you/about`, `/you/demo`, ...), so they
+ * match `href` itself or any path under `href + "/"`; the `/` in the prefix keeps
+ * `/yours` from activating the You tab.
+ */
+export function isActiveTab(pathname: string, href: string): boolean {
+  const p = normalizePathname(pathname);
+  if (href === "/today") return p === "/today";
+  return p === href || p.startsWith(href + "/");
+}
+
+/**
+ * True on exactly the routes whose page has a designed desktop layout: `/today`,
+ * `/plan`, `/look-back` and `/you`. Accepts raw (`/you/`) or normalized input;
+ * `normalizePathname` runs first because `trailingSlash: true` makes `usePathname()`
+ * return `/you/`.
  *
  * The match is exact on purpose and must never become `startsWith`: the `/you/*`
  * sub-pages (`/you/values`, `/you/about`, `/you/demo`, `/you/digest`, `/you/media`,
  * `/you/buddy`, `/you/therapist`, ...) were designed for the 448 px column and stay
- * there. Consumed only by `ShellWidth`, so no component hard-codes route literals.
+ * there until each gets its own wide design. Consumed only by `ShellWidth`, so no
+ * component hard-codes route literals.
  */
 export function isWideRoute(pathname: string): boolean {
   const p = normalizePathname(pathname);
-  return p === "/look-back" || p === "/you";
+  return p === "/today" || p === "/plan" || p === "/look-back" || p === "/you";
 }
 
 /**
